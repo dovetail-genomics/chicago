@@ -591,21 +591,12 @@ estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBai
     
   message("Estimating technical noise based on trans-counts...")
 
-  transNA = FALSE
-  if(any(is.na(x[,distcol]))){
-    transNA = TRUE
-    transD = max(x[!is.na(x[,distcol]),distcol])+binsize
-    x[is.na(x[,distcol]), distcol] = transD
-  }
-  else{
-    transD = max(x[,distcol])
-    message("Warning: No NA's found in input. Assuming the max distance of ", transD, " is a dummy for trans-counts.")
-  }
-    
+  ##TODO: considering turning trans counts into "Inf"
+
   if (!"tlb" %in% names(x)){
     message("Binning other ends based on trans-counts...")
     x = .addTLB(x, adjBait2bait=adjBait2bait, filterTopPercent=filterTopPercent, 
-                minProxOEPerBin=minProxOEPerBin, minProxB2BPerBin=minProxB2BPerBin)    
+                minProxOEPerBin=minProxOEPerBin, minProxB2BPerBin=minProxB2BPerBin)
   }
   
   x = data.table(x)
@@ -613,7 +604,7 @@ estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBai
   
   message("Binning baits based on observed trans-counts...")
   
-  transBaitLen = x[, length(.I[get(distcol)==transD]), by=baitIDcol]
+  transBaitLen = x[, sum(is.na(get(distcol))), by=baitIDcol] ##Number of trans counts per bait
   setnames(transBaitLen, "V1", "transBaitLen")
   
   transBaitLen$tblb = cut2(transBaitLen$transBaitLen, m=minBaitsPerBin, levels.mean=FALSE)
