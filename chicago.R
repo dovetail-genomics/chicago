@@ -721,7 +721,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
 }
 
 getFDRs <- function(x, method="weightedRelative",
-                    relAbundance=1E4, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
+                    relAbundance=1E5, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
                     outcol="log.FDR", includeBait2Bait=FALSE)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
