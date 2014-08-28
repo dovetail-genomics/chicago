@@ -1294,9 +1294,9 @@ getFDRs <- function(x, method="weightedRelative",
   invisible(x)
 }
 
-plotProximalExamples=function(x, pcol, Ncol="N", n=25, baits=NULL,       
-                              plevel1 = 6, plevel2 =4, outfile=NULL, 
-                              Nfilter=3, minDistFilter=8e3, width=20, height=20){
+plotProximalExamples=function(x, pcol="log.q", Ncol="N", n=16, baits=NULL,       
+                              plevel1 = 12, plevel2 =10, outfile=NULL, 
+                              Nfilter=3, minDistFilter=8e3, width=20, height=20, ...){
   if (is.null(baits)){
     baits = sample(unique(x[,baitIDcol]),n)
   }
@@ -1307,24 +1307,33 @@ plotProximalExamples=function(x, pcol, Ncol="N", n=25, baits=NULL,
   if (!is.null(outfile)){ 
     pdf(outfile, width=width, height=height)
   }
-  if(n>=5){
-    par(mfrow=c(5, ceiling(n/5)))
+  if(n>=4){
+    par(mfrow=c(4, ceiling(n/4)))
   }
   else{
     par(mfrow=c(1, n))
   }
   for(i in 1:n){
     this = x[x[,baitIDcol]==baits[i],]
-    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=paste("baitID=", baits[i], sep=""))
-    if (any(this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter)) {
-      points(this[this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter ,distcol], 
-             this[this[,pcol]>=plevel1  & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter ,Ncol], col="red", pch=20)
-    }         
-    if (any(this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter)) {
-      points(this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter,distcol], 
-             this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter,Ncol], 
-             col="blue", pch=20)
-    }
+    
+    cols <- rep("Black", nrow(this))
+    pchs <- rep(1, nrow(this))
+    sel1 <- this[,pcol] >=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter
+    sel2 <- this[,pcol] >=plevel2 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter
+    cols[sel2] <- "Blue" ##less stringent first
+    cols[sel1] <- "Red"
+    pchs[sel1 | sel2] <- 20
+    
+    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=paste("baitID=", baits[i], sep=""), col=cols, pch=pchs, ...)
+#     if (any(this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter)) {
+#       points(this[this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter ,distcol], 
+#              this[this[,pcol]>=plevel1  & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter ,Ncol], col="red", pch=20)
+#     }         
+#     if (any(this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter)) {
+#       points(this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter,distcol], 
+#              this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter,Ncol], 
+#              col="blue", pch=20)
+#     }
     abline(v=0, col="grey", lwd=1)
   }
   if (!is.null(outfile)){ 
