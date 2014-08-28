@@ -1294,6 +1294,161 @@ getFDRs <- function(x, method="weightedRelative",
   invisible(x)
 }
 
+plotProximalExamples=function(x, pcol, Ncol="N", n=25, baits=NULL,       
+                              plevel1 = 6, plevel2 =4, outfile=NULL, 
+                              Nfilter=3, minDistFilter=8e3, width=20, height=20){
+  if (is.null(baits)){
+    baits = sample(unique(x[,baitIDcol]),n)
+  }
+  else{
+    n = length(baits)
+  }
+  
+  if (!is.null(outfile)){ 
+    pdf(outfile, width=width, height=height)
+  }
+  if(n>=5){
+    par(mfrow=c(5, ceiling(n/5)))
+  }
+  else{
+    par(mfrow=c(1, n))
+  }
+  for(i in 1:n){
+    this = x[x[,baitIDcol]==baits[i],]
+    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=paste("baitID=", baits[i], sep=""))
+    if (any(this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter)) {
+      points(this[this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter ,distcol], 
+             this[this[,pcol]>=plevel1  & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter ,Ncol], col="red", pch=20)
+    }         
+    if (any(this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter)) {
+      points(this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter,distcol], 
+             this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter,Ncol], 
+             col="blue", pch=20)
+    }
+    abline(v=0, col="grey", lwd=1)
+  }
+  if (!is.null(outfile)){ 
+    dev.off()
+  }
+  baits
+}
+
+exportProximalResults = function(x, outfile, pcol, cutoff, format=c("seqMonk","interBed")[1], order=c("position", "score")[1],
+                                 b2bcutoff=NULL, abscutoff=T, rmap=NULL, baitmap=NULL, #logp=T, 
+                                 b2bcol = "isBait2bait"){
+  
+  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
+    stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
+  }
+  if (! format %in% c("seqMonk","interBed")){
+    stop ("Format must be either seqMonk (default) or interBed\n")
+  }
+  if (! order %in% c("position","score")){
+    stop ("Order must be either position (default) or score\n")
+  }
+  
+  if (is.null(rmap)){
+    cat("Reading the restriction map file...\n")
+    rmap = read.table(rmapfile, stringsAsFactors=F)
+  }
+  names(rmap) = c("rChr", "rStart", "rEnd", "otherEndID")
+  
+  if (is.null(baitmap)){
+    cat("Reading the bait map file...\n")
+    baitmap = read.table(baitmapfile, stringsAsFactors=F)
+  }
+  names(baitmap)[1:3] = c("bChr", "bStart", "bEnd") 
+  names(baitmap)[baitmapGeneIDcol] = "bID"
+  
+  if (baitIDformat=="chr_st_end"){
+    if (!"index" %in% names(baitmap)){
+      cat("Generating baitmap index...\n")
+      baitmap[,1] = as.character(baitmap[,1])
+      baitmap$index = paste(baitmap[,1], baitmap[,2], baitmap[,3], sep="_")  
+    }
+  }
+  cat("Preparing the output table...\n")
+  # just in case
+  baitmap = baitmap[!duplicated(baitmap$V4),]
+  rmap = rmap[!duplicated(rmap$otherEndID),]
+  if (abscutoff) { ps = abs(x[,pcol]) }
+  else { ps = x[,pcol] }
+  
+  if (is.null(b2bcutoff)){
+    x = x[ ps>=cutoff, ]
+  }
+  else{
+    x = x[ ( (!x[,b2bcol]) & ps>=cutoff ) | ( (x[,b2bcol]) & ps>=b2bcutoff ) , ]
+  }
+  x = data.table(x)
+  rmap = data.table(rmap)
+  setnames(x, otherEndIDcol, "otherEndID")
+  setkey(x, otherEndID)
+  setkey(rmap, otherEndID)
+  
+  xa = merge(x,rmap, all.x=T, all.y=F, allow.cartesian=T)
+  baitmap = data.table(baitmap)
+  setkey(xa, baitID)
+  
+  if (baitIDformat =="chr_st_end") { 
+    setnames(baitmap, "index", names(baitmap)[baitmapFragIDcol], "baitID")
+    setkey(baitmap, baitID)  
+    xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
+  }
+  else{
+    setnames(baitmap, names(baitmap)[baitmapFragIDcol], "baitID")
+    setkey(baitmap, baitID)  
+    xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
+  }
+  
+  out = as.data.frame(xb)
+  
+  out = merge(out, as.data.frame(baitmap)[,c(baitmapFragIDcol, baitmapGeneIDcol)], # note that baitmapGeneIDcol has been renamed into "bID" above 
+              by.x=otherEndIDcol, by.y=1, all.x=T, all.y=F, sort=F)  # this way we can be sure that the new column will be called bID.y
+  
+  if (any (is.na(out$bID.y))) { 
+    out$bID.y[is.na(out$bID.y)] = "."
+  }
+  #out = out[order(out$bID.x, out[,otherEndIDcol]),]
+  
+  out = out[,c("bChr", "bStart", "bEnd", "bID.x", "rChr", "rStart", "rEnd", otherEndIDcol, pcol, Ncol, "bID.y"),]
+  names(out) = c("bait_chr", "bait_start", "bait_end", "bait_name", "otherEnd_chr", 
+                 "otherEnd_start", "otherEnd_end", "otherEnd_ID", "score", "N_reads", "otherEnd_name")
+  
+  out$N_reads [ is.na(out$N_reads) ] = 0
+  
+  out$score = round(out$score,2)
+  if (order=="position"){
+    out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
+  }
+  if (order=="score"){
+    out = out[order(out$score, decreasing=T), ]
+  }
+  
+  if (format=="seqMonk"){
+    out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
+    
+    #out$star = "*"
+    #out$starNewLineOEChr = paste("*\n",out[,"otherEnd_chr"], sep="")
+    
+    out$newLineOEChr = paste("\n",out[,"otherEnd_chr"], sep="")
+    
+    out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", 
+                 "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
+    cat("Writing out for seqMonk...\n")		
+    write.table(out, outfile, sep="\t", quote=F, row.names=F, col.names=F)
+    
+  }	
+  if (format=="interBed"){
+    cat("Writing out interBed...\n")
+    out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
+                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
+                 "N_reads", "score")]
+    write.table(out, outfile, sep="\t", quote=F, row.names=F)	
+  }
+  
+}
+
 
 whichbait2bait = function(x, baitmap=NULL){
   if (is.null(baitmap)){
