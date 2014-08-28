@@ -1294,7 +1294,7 @@ getFDRs <- function(x, method="weightedRelative",
   invisible(x)
 }
 
-plotProximalExamples=function(x, pcol="log.q", Ncol="N", n=16, baits=NULL,       
+plotBaits=function(x, pcol="log.q", Ncol="N", n=16, baits=NULL,       
                               plevel1 = 12, plevel2 =10, outfile=NULL, 
                               Nfilter=3, minDistFilter=8e3, width=20, height=20, ...){
   if (is.null(baits)){
