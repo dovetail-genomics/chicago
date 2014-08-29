@@ -717,6 +717,13 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
   message("Calculating p-values...")
   x[,outcol] <- pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
   
+  ##pdelap can output NaNs when N large, mean small. Correct this: 
+  sel <- which(is.nan(x[,outcol]))
+  if(length(sel) > 0)
+  {
+    x[sel,outcol] <- -Inf
+  }
+  
   invisible(x)
 }
 
