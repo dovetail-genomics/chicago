@@ -717,11 +717,18 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
   message("Calculating p-values...")
   x[,outcol] <- pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
   
+  ##pdelap can output NaNs when N large, mean small. Correct this: 
+  sel <- which(is.nan(x[,outcol]))
+  if(length(sel) > 0)
+  {
+    x[sel,outcol] <- -Inf
+  }
+  
   invisible(x)
 }
 
 getFDRs <- function(x, method="weightedRelative",
-                    relAbundance=1E4, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
+                    relAbundance=1E5, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
                     outcol="log.FDR", includeBait2Bait=FALSE)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
@@ -821,6 +828,7 @@ getFDRs <- function(x, method="weightedRelative",
     ##Get weights, weight p-values
     x$log.w <- log(1 + eta*(relAbundance - 1)) - log(1 + eta.bar*(relAbundance - 1)) ##weight
     x$log.q <- x$log.p - x$log.w ##weighted p-val
+    x$score <- -x$log.q ##final score (may omit log.q in final release)
   }
   
   ##How many hypotheses are we testing? Depends how many fragments we are considering. (algebra on p129 of JMC's lab notebook)
