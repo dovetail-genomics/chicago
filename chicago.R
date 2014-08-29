@@ -746,7 +746,11 @@ getScores <- function(x, method="weightedRelative",
   if(!includeBait2Bait)
   {
     message("Removing bait2bait interactions...")
-    x <- x[-whichbait2bait(x),] ##remove all bait2bait interactions here
+    sel <- whichbait2bait(x)
+    if(length(sel) > 0)
+    {
+      x <- x[-sel,] ##remove all bait2bait interactions here
+    }
   }
   
   if(method == "weightedRelative")
