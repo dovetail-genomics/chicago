@@ -821,6 +821,7 @@ getFDRs <- function(x, method="weightedRelative",
     ##Get weights, weight p-values
     x$log.w <- log(1 + eta*(relAbundance - 1)) - log(1 + eta.bar*(relAbundance - 1)) ##weight
     x$log.q <- x$log.p - x$log.w ##weighted p-val
+    x$score <- -x$log.q ##final score (may omit log.q in final release)
   }
   
   ##How many hypotheses are we testing? Depends how many fragments we are considering. (algebra on p129 of JMC's lab notebook)
