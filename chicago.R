@@ -727,7 +727,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
   invisible(x)
 }
 
-getFDRs <- function(x, method="weightedRelative",
+getScores <- function(x, method="weightedRelative",
                     relAbundance=1E5, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
                     outcol="log.FDR", includeBait2Bait=FALSE)
 {
@@ -746,7 +746,11 @@ getFDRs <- function(x, method="weightedRelative",
   if(!includeBait2Bait)
   {
     message("Removing bait2bait interactions...")
-    x <- x[-whichbait2bait(x),] ##remove all bait2bait interactions here
+    sel <- whichbait2bait(x)
+    if(length(sel) > 0)
+    {
+      x <- x[-sel,] ##remove all bait2bait interactions here
+    }
   }
   
   if(method == "weightedRelative")
@@ -849,9 +853,8 @@ getFDRs <- function(x, method="weightedRelative",
     warning(sum(is.na(pvals))," ", col," values were NA - assuming that means they are -Inf.") ##i.e. underflow in pdelap()
     pvals[is.na(pvals)] <- (-Inf)
   }
-  message("Correcting ", col," values for FDR...")
-  #x$FDR <- p.adjust(pvals, method="BH", n=N.hyp) ##Incorrect - needs to be on log scale
-  
+  #message("Correcting ", col," values for FDR...")
+ 
   temp.FDR <- pvals + log(N.hyp) - log(rank(pvals, ties.method="max"))
   sel <- order(pvals, na.last=FALSE) ##"NA" means -Inf, thus these should be first
   x$log.FDR[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
