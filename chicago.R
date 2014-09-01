@@ -1305,7 +1305,7 @@ getScores <- function(x, method="weightedRelative",
   invisible(x)
 }
 
-plotBaits=function(x, pcol="log.q", Ncol="N", n=16, baits=NULL,       
+plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,       
                               plevel1 = 12, plevel2 =10, outfile=NULL, 
                               Nfilter=3, minDistFilter=8e3, width=20, height=20, ...){
   if (is.null(baits)){
@@ -1356,6 +1356,8 @@ plotBaits=function(x, pcol="log.q", Ncol="N", n=16, baits=NULL,
 exportProximalResults = function(x, outfile, pcol, cutoff, format=c("seqMonk","interBed")[1], order=c("position", "score")[1],
                                  b2bcutoff=NULL, abscutoff=T, rmap=NULL, baitmap=NULL, #logp=T, 
                                  b2bcol = "isBait2bait"){
+  
+  stop("Not yet supported")
   
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
