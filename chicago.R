@@ -1311,7 +1311,7 @@ getScores <- function(x, method="weightedRelative",
 
 plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,       
                               plevel1 = 12, plevel2 =10, outfile=NULL, 
-                              Nfilter=3, minDistFilter=8e3, width=20, height=20, ...){
+                              width=20, height=20, ...){
   if (is.null(baits)){
     baits = sample(unique(x[,baitIDcol]),n)
   }
@@ -1333,8 +1333,8 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
     
     cols <- rep("Black", nrow(this))
     pchs <- rep(1, nrow(this))
-    sel1 <- this[,pcol] >=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter
-    sel2 <- this[,pcol] >=plevel2 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter
+    sel1 <- this[,pcol] >=plevel1
+    sel2 <- this[,pcol] >=plevel2
     cols[sel2] <- "Blue" ##less stringent first
     cols[sel1] <- "Red"
     pchs[sel1 | sel2] <- 20
