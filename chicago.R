@@ -537,7 +537,7 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
   
   if(reEstimateMean)
   {
-    error("Not implemented yet")
+    stop("Not implemented yet")
     ##Basically you need to grab the means from the x object - reestimating means on xAll doesn't work due to 0 truncation.
   } else {
     xAll$Bmean <- .estimateBMean(xAll, f, reEstimateMean=FALSE)
@@ -759,7 +759,7 @@ getScores <- function(x, method="weightedRelative",
     message("Calculating q-values...")
     if(is.null(relAbundance))
     {
-      error("relAbundance estimation not supported yet.")
+      stop("relAbundance estimation not supported yet.")
       ##Tech: look at p-values with distance in range Tdom ---------------------------------------------------------------
       sel.T <- abs(x[,distcol]) > Trange[1] & abs(x[,distcol]) < Trange[2]
       sel.T[is.na(sel.T)] <- FALSE ##could be changed to allow trans counts
