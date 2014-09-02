@@ -6,7 +6,8 @@ library(MASS)
 library(Hmisc)
 library(Delaporte)
 
-fileDir = "../Resources"
+# fileDir = "../Resources"
+fileDir = "/bi/group/sysgen/CHIC"
 rmapfile= file.path(fileDir, "Digest_Human_HindIII.bed")
 baitmapfile= file.path(fileDir, "Digest_Human_HindIII_baits_ID.bed")
 nperbinfile = file.path(fileDir, "Digest_Human_HindIII_NperBin.txt")
@@ -729,7 +730,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
 
 getScores <- function(x, method="weightedRelative",
                     relAbundance=1E5, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
-                    outcol="log.FDR", includeBait2Bait=FALSE)
+                    outcol="log.FDR", includeBait2Bait=FALSE, plot=T, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
   ## - Then, use Benjamini-Hochberg to calculate FDRs
@@ -798,10 +799,12 @@ getScores <- function(x, method="weightedRelative",
       ##Plot histograms -------------------------------------------------------------------------------------------------
       if(plot)
       {
+        if (!is.null(outfile)){ pdf(outfile) }
         hist(log.p.B, 1000, main="log(p-values), Brownian zone (except zeros)")
         hist(log.p.T, 1000, main="log(p-values), Technical zone (except zeros)")
         hist(exp(log.p.B), 1000, main="p-values, Brownian zone (except zeros)")
         hist(exp(log.p.T), 1000, main="p-values, Technical zone (except zeros)")
+        if (!is.null(outfile)){ dev.off() }        
       }
       
       ##Get abundances --------------------------------------------------------------------------------------------------
