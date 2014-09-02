@@ -835,29 +835,30 @@ getScores <- function(x, method="weightedRelative",
     x$score <- -x$log.q ##final score (may omit log.q in final release)
   }
   
-  ##How many hypotheses are we testing? Depends how many fragments we are considering. (algebra on p129 of JMC's lab notebook)
-  N.frag <- nrow(fread(rmapfile))
-  
-  if(includeBait2Bait)
-  {
-    N.hyp <- (N.frag^2 - N.frag)/2
-  }else{
-    N.bait <- nrow(fread(baitmapfile))
-    N.hyp <- (N.frag^2 - N.frag + N.bait - N.bait^2)/2
-  }
-
-  ##sort pvals and derive threshold
-  pvals <- x[,col]
-  if(any(is.na(pvals)))
-  {
-    warning(sum(is.na(pvals))," ", col," values were NA - assuming that means they are -Inf.") ##i.e. underflow in pdelap()
-    pvals[is.na(pvals)] <- (-Inf)
-  }
-  #message("Correcting ", col," values for FDR...")
- 
-  temp.FDR <- pvals + log(N.hyp) - log(rank(pvals, ties.method="max"))
-  sel <- order(pvals, na.last=FALSE) ##"NA" means -Inf, thus these should be first
-  x$log.FDR[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
+#   ##calculate FDR
+#   ##How many hypotheses are we testing? Depends how many fragments we are considering. (algebra on p129 of JMC's lab notebook)
+#   N.frag <- nrow(fread(rmapfile))
+#   
+#   if(includeBait2Bait)
+#   {
+#     N.hyp <- (N.frag^2 - N.frag)/2
+#   }else{
+#     N.bait <- nrow(fread(baitmapfile))
+#     N.hyp <- (N.frag^2 - N.frag + N.bait - N.bait^2)/2
+#   }
+# 
+#   ##sort pvals and derive threshold
+#   pvals <- x[,col]
+#   if(any(is.na(pvals)))
+#   {
+#     warning(sum(is.na(pvals))," ", col," values were NA - assuming that means they are -Inf.") ##i.e. underflow in pdelap()
+#     pvals[is.na(pvals)] <- (-Inf)
+#   }
+#   #message("Correcting ", col," values for FDR...")
+#  
+#   temp.FDR <- pvals + log(N.hyp) - log(rank(pvals, ties.method="max"))
+#   sel <- order(pvals, na.last=FALSE) ##"NA" means -Inf, thus these should be first
+#   x$log.FDR[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
 
   
   x
