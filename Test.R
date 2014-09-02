@@ -1,4 +1,4 @@
-### Test changing the file
+### Example workflow
 
 #Get code:
 setwd("~/CHiCAGOtest/")
@@ -18,6 +18,7 @@ dataFileDir <- "/bi/group/sysgen/hESC"
 datafile <- file.path(dataFileDir, "sample_hESC811_new/hESC811_new_bait_otherEnd_N_len_distSign.txt")
 peakfile <- file.path(dataFileDir, "res_hESC_811/data/hESC_811.RData")
 
+pi.rel = 1E5
 
 #Run CHiCAGO on data:
 
@@ -36,12 +37,12 @@ x <- estimateBrownianNoise(x, f, subset=1000)
 gc()
 x <- getPvals(x)
 gc()
-x <- getFDRs(x)
+x <- getScores(x, relAbundance = pi.rel)
 gc()
 ##FIXME call interactions
 
 #save output somewhere...
-save(x, f, file="results.Rda")
+save(x, f, file="~/CHiCAGOtest/results.Rda")
 
 ##All of the below was put in TestReport.Rmd
 
