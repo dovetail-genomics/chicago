@@ -730,7 +730,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
 
 getScores <- function(x, method="weightedRelative",
                     relAbundance=1E5, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
-                    outcol="log.FDR", includeBait2Bait=FALSE, plot=T, outfile=NULL)
+                    outcol="log.FDR", includeBait2Bait=TRUE, plot=T, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
   ## - Then, use Benjamini-Hochberg to calculate FDRs
@@ -1357,7 +1357,7 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
   baits
 }
 
-exportProximalResults = function(x, outfile, pcol, cutoff, format=c("seqMonk","interBed")[1], order=c("position", "score")[1],
+exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","interBed")[1], order=c("position", "score")[1],
                                  b2bcutoff=NULL, abscutoff=T, rmap=NULL, baitmap=NULL, #logp=T, 
                                  b2bcol = "isBait2bait"){
   
