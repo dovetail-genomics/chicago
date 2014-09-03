@@ -582,8 +582,6 @@ estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBai
                                   plot=TRUE, outfile=NULL){ 
 
 # Estimate technical noise based on mean counts per bin, with bins defined based on trans-counts for baits _and_ other ends 
-
-
   
 # NB: filterTopPercent, minProxOEPerBin, minProxB2BPerBin
 # are input parameters for .addTLB (the function for binning other ends) that is only called  
@@ -618,7 +616,7 @@ estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBai
   
   # Getting the observed numbers of trans-counts 
   setkeyv(x, c("tlb", "tblb"))
-  Ntrans = x[, { res=table(N[get(distcol)==transD]) 
+  Ntrans = x[, { res=table(N[is.na(get(distcol))]) 
                     list(as.numeric(names(res)), as.numeric(res)) 
   }, by=c("tlb", "tblb")]
   setnames(Ntrans, "V1", "N")
