@@ -582,10 +582,7 @@ estimateTechnicalNoise = function(x, Ncol="N", filterTopPercent=0.01, minBaitsPe
                                   plot=TRUE, outfile=NULL){ 
 
 # Estimate technical noise based on mean counts per bin, with bins defined based on trans-counts for baits _and_ other ends 
-<<<<<<< HEAD
-=======
 # Note we need raw read counts for this, as normalisation is done wrt Brownian noise. 
->>>>>>> speedUpTechnicalNoise
   
 # NB: filterTopPercent, minProxOEPerBin, minProxB2BPerBin
 # are input parameters for .addTLB (the function for binning other ends) that is only called  
