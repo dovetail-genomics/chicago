@@ -1384,24 +1384,24 @@ exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","i
   
   if (is.null(rmap)){
     cat("Reading the restriction map file...\n")
-    rmap = read.table(rmapfile, stringsAsFactors=F)
+    rmap = as.data.frame(read.table(rmapfile))
   }
   names(rmap) = c("rChr", "rStart", "rEnd", "otherEndID")
   
   if (is.null(baitmap)){
     cat("Reading the bait map file...\n")
-    baitmap = read.table(baitmapfile, stringsAsFactors=F)
+    baitmap = as.data.frame(fread(baitmapfile))
   }
   names(baitmap)[1:3] = c("bChr", "bStart", "bEnd") 
   names(baitmap)[baitmapGeneIDcol] = "bID"
   
-  if (baitIDformat=="chr_st_end"){
-    if (!"index" %in% names(baitmap)){
-      cat("Generating baitmap index...\n")
-      baitmap[,1] = as.character(baitmap[,1])
-      baitmap$index = paste(baitmap[,1], baitmap[,2], baitmap[,3], sep="_")  
-    }
-  }
+  #if (baitIDformat=="chr_st_end"){
+  #  if (!"index" %in% names(baitmap)){
+  #    cat("Generating baitmap index...\n")
+  #    baitmap[,1] = as.character(baitmap[,1])
+  #    baitmap$index = paste(baitmap[,1], baitmap[,2], baitmap[,3], sep="_")  
+  #  }
+  #}
   cat("Preparing the output table...\n")
   # just in case
   baitmap = baitmap[!duplicated(baitmap$V4),]
@@ -1425,16 +1425,16 @@ exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","i
   baitmap = data.table(baitmap)
   setkey(xa, baitID)
   
-  if (baitIDformat =="chr_st_end") { 
-    setnames(baitmap, "index", names(baitmap)[baitmapFragIDcol], "baitID")
-    setkey(baitmap, baitID)  
-    xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
-  }
-  else{
-    setnames(baitmap, names(baitmap)[baitmapFragIDcol], "baitID")
-    setkey(baitmap, baitID)  
-    xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
-  }
+  #if (baitIDformat =="chr_st_end") { 
+  #  setnames(baitmap, "index", names(baitmap)[baitmapFragIDcol], "baitID")
+  #  setkey(baitmap, baitID)  
+  #  xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
+  #}
+  #else{
+  setnames(baitmap, names(baitmap)[baitmapFragIDcol], "baitID")
+  setkey(baitmap, baitID)  
+  xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
+  #}
   
   out = as.data.frame(xb)
   
