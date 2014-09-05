@@ -720,7 +720,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
   ## - Calls p-values
 
   alpha = attributes(x)$dispersion
-  if(is.null(alpha)) {stop("getInteractionScores: 'dispersion' attribute of x not found.")}
+  if(is.null(alpha)) {stop("getPvals: 'dispersion' attribute of x not found.")}
   
   ##p-values:
   ##(gives P(X > x-1) = P(X >= x))
@@ -1370,7 +1370,7 @@ exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","i
                                  b2bcutoff=NULL, abscutoff=T, rmap=NULL, baitmap=NULL, #logp=T, 
                                  b2bcol = "isBait2bait"){
   
-  stop("Not yet supported")
+  #stop("Not yet supported")
   
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
