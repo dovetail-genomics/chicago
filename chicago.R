@@ -577,11 +577,15 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
 }
 
 
-estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBaitsPerBin=1000, 
-                                  minProxOEPerBin=1000, minProxB2BPerBin=minProxOEPerBin/10, 
+estimateTechnicalNoise = function(x, Ncol="N", filterTopPercent=0.01, minBaitsPerBin=1000, 
+                                  minProxOEPerBin=1000, minProxB2BPerBin=minProxOEPerBin/40, adjBait2bait=T,
                                   plot=TRUE, outfile=NULL){ 
 
 # Estimate technical noise based on mean counts per bin, with bins defined based on trans-counts for baits _and_ other ends 
+<<<<<<< HEAD
+=======
+# Note we need raw read counts for this, as normalisation is done wrt Brownian noise. 
+>>>>>>> speedUpTechnicalNoise
   
 # NB: filterTopPercent, minProxOEPerBin, minProxB2BPerBin
 # are input parameters for .addTLB (the function for binning other ends) that is only called  
@@ -612,7 +616,7 @@ estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBai
   setkeyv(x, baitIDcol)
   x = x[transBaitLen]
   
-  message("Defining interaction pools based and gathering the observed numbers of trans-counts per pool...")
+  message("Defining interaction pools and gathering the observed numbers of trans-counts per pool...")
   
   # Getting the observed numbers of trans-counts 
   setkeyv(x, c("tlb", "tblb"))
@@ -622,79 +626,89 @@ estimateTechnicalNoise = function(x, Ncol="NNboe", filterTopPercent=0.01, minBai
   setnames(Ntrans, "V1", "N")
   setnames(Ntrans, "V2", "nobs")
   
+  message("Computing the total number of possible interactions per pool...")
+  message("Preparing the data...", appendLF = F)
+  
   # Now adding the zeros based on how many trans-interactions are possible in each (tlb, tblb) bin
   baitmap = fread(baitmapfile)
   rmap = fread(rmapfile)
-  
+    
   setnames(rmap, "V1", "chr")
   setnames(baitmap, "V1", "chr")
   setnames(rmap, "V4", otherEndIDcol)
   setnames(baitmap, "V4", baitIDcol)
+  
+  message(".", appendLF=F)
   
   baitmap = baitmap[,c(baitIDcol, "chr"), with=FALSE]
   rmap = rmap[,c(otherEndIDcol, "chr"), with=FALSE]
   
   setkeyv(baitmap, baitIDcol)
   setkeyv(rmap, otherEndIDcol)
+
+  message(".", appendLF=F)
   
-  xA = x[, c(baitIDcol, otherEndIDcol, "tlb", "tblb") , with=FALSE]
+  setkeyv(x, baitIDcol)
+  x = baitmap[x]
+  setnames(x, "chr", "baitChr")
+  setkeyv(x, otherEndIDcol)
+  x = rmap[x]
+  setnames(x, "chr", "otherEndChr")
+  setkey(x, tlb, tblb)
+  
+  message(".", appendLF=F)
+      
+#   expand.grid.chr = function(seq1,seq2, chr1, chr2) { 
+#     # like expand.grid, expands the combinations of seq1 and seq2, 
+#     # but instead outputs the corresponding values of chr1 and chr2.
+#     data.table(as.data.frame(
+#       cbind(rep.int(chr1, length(seq2)),
+#           c(t(matrix(rep.int(chr2, length(seq1)), nrow=length(seq2))))),
+#       stringsAsFactors=F), key=c("V1", "V2"))    
+#   }
 
-  message("Computing the total number of possible interactions per pool...")
-  message("Processing pools: ", appendLF=FALSE)
+  message("\nProcessing fragment pools", appendLF=FALSE)
 
-  N0trans = x[, {  
+  res = x[, {
+#     message("(", tlb, ",", tblb, ")\t", appendLF=FALSE)
+    message(".", appendLF=FALSE)
+        
     baits = unique(get(baitIDcol))
     oes = unique(get(otherEndIDcol))
-    combs = expand.grid(baits, oes)
-    combs = data.table(combs)
-    setnames(combs, "Var1", baitIDcol)
-    setnames(combs, "Var2", otherEndIDcol)
-    setkeyv(combs, baitIDcol)
-    combs = baitmap[combs]
-    setnames(combs, "chr", "baitChr")
-    setkeyv(combs, otherEndIDcol)
-    combs = rmap[combs]
-    setnames(combs, "chr", "otherEndChr")
-    message("(", tlb, ",", tblb, ")\t", appendLF=FALSE)
-    nrow(combs[otherEndChr!=baitChr])
+    
+    whichBaitFirstOccur = (1:length(get(baitIDcol)))[!duplicated(get(baitIDcol))] 
+    bChr = baitChr[whichBaitFirstOccur]
+    
+    whichOEFirstOccur = (1:length(get(otherEndIDcol)))[!duplicated(get(otherEndIDcol))] 
+    oeChr = otherEndChr[whichOEFirstOccur]
+
+    numPairs=sum(sapply(unique(bChr), function(x)length(bChr[bChr==x])*length(oeChr[oeChr!=x])))-
+      length(baits[baits%in%oes]) # for bait2bait interactions, it's possible that some oe's will also be among the baits,  
+                                  # in which case each such interaction between pairs of such baits will be counted twice 
+    nTrans=sum(get(Ncol)[is.na(get(distcol))])
+    Tmean = nTrans/numPairs
+    
+    list(numPairs=numPairs, nTrans=nTrans, Tmean=Tmean)
+    
   }  , by=c("tlb", "tblb")]
   
-  message("\n", appendLF=FALSE)
-  
-  setnames(N0trans, "V1", "nobs") 
-  N0trans$N = 0
-  NtransAll = rbind(Ntrans, N0trans, use.names=T)
-  
-  setkeyv(NtransAll, c("tlb", "tblb"))
-  setnames(NtransAll, "nobs", "nobs_0unadj")
-  
-  # In N0trans, nobs is the total number of possible interactions
-  # to compute the number of zeros need to subtract the number of times interactions produced 
-  # at least one read 
-  NtransAll[, nobs:={ 
-    New_nobs=nobs_0unadj
-    New_nobs[N==0] = nobs_0unadj[N==0]-sum(nobs_0unadj[N!=0])   
-    New_nobs
-  }, by=c("tlb", "tblb") ]
-  
-  NtransAll$nobs_0unadj = NULL
-  
-  message("Computing the means...")
-  
-  ### If going for the posterior predictive Poisson-Gamma model, can simply adjust this value
-  ### by computing something like sum( (N*Freq+alpha)/sum(Freq)+beta)
-  ### just need to make sure alpha's and beta's make sense for any bin
-  ### So we may need to express them relative to sum(Freq)
-  poisMeans = NtransAll[ , sum(N*nobs/sum(nobs)), by=c("tlb", "tblb") ]
+
+  if(plot){ 
+    message("\nPlotting...")
+    if(!is.null(outfile)){ pdf(outfile)}
+    par(mfrow=c(2,1))
+    boxplot(Tmean~tblb, as.data.frame(res), main="Technical noise estimates per bait pool")
+    boxplot(Tmean~tlb, as.data.frame(res), main="Technical noise estimates per other end pool")
+    if(!is.null(outfile)){dev.off()}
+    par(mfrow=c(1,1))
+  }
   
   message("Post-processing the results...")
   
-  setnames(poisMeans, "V1", "Tmean")
-  
   x = data.table(x)
   setkeyv(x, c("tlb", "tblb"))
-  setkeyv(poisMeans, c("tlb", "tblb"))
-  x = poisMeans[x]
+  setkeyv(res, c("tlb", "tblb"))
+  x = res[x]
   
   setkeyv(x, c(baitIDcol, otherEndIDcol)) # re-sort this way
   x = as.data.frame(x)
@@ -1192,7 +1206,7 @@ getScores <- function(x, method="weightedRelative",
   }
 
 .addTLB = function(x, adjBait2bait=TRUE, filterTopPercent=0.01, minProxOEPerBin=1000, minProxB2BPerBin=100){
-  
+    
   message("Preprocessing input...")
   
   # Checking whether in the input, we had distances at trans-interactions labeled as NA 
