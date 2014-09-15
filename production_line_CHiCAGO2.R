@@ -156,9 +156,10 @@ system(paste0("mv ", outfolder, "/*.pdf ", outfolder, "/diag_plots"))
 
 cat("\n*** Running compareSeq...\n")
 
-CompareSeqTotal(x1=x, score=12, sample_number=100, no_bins=100, 
+CompareSeqTotal(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
 colname_score="score",folder=featureFolder, position_otherEnd=rmapfile, 
-list_frag=files, filterB2B=TRUE, ncores=4, 
+list_frag=files, filterB2B=TRUE, ncores=4,
+colname_dist="distSign", beyond_dist=0, before_dist=1000000,
 plot_overlaps=T, plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
 
 system(paste("mkdir -p", paste0(outfolder, "/overlap_plots")))     
