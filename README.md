@@ -2,11 +2,11 @@
 
 Currently CHiCAGO is still under development, so below are just some very rough instructions on how to install and run the pipeline in its current form.
 
-Preparing restriction enzyme-specific data files (if you are not using HindIII)
+Preparing restriction enzyme-specific resource files
 =======================
 
 **If you are using HindIII**, all the required files are available as a tarball archive at the following location:
-https://www.dropbox.com/s/4nws1b3yqkfvwjd/HindIII_files.tar.gz?dl=0 (it's 221Mb so probably a bit too large for bitbucket)
+https://www.dropbox.com/s/l15wy6srherfuvn/HindIII_files.tar.gz?dl=0 (it's 221Mb so probably a bit too large for bitbucket)
 
 **Otherwise**, you will need to generate the following files yourself (the corresponding files available for HindIII are in brackets):
 
@@ -36,7 +36,7 @@ $ python getProxOE.py [--minFragLen=<min-restriction-fragment-size>] [--maxFragL
 
 CHiCAGO will check whether they matched though and terminate with an error if not. The defaults for all optional parameters match those currently hard-coded into the production line script.
 
-Installing CHiCAGO
+Installing CHiCAGOv2
 ===============
 
 1. Check that you have a recent version of bedtools (ours is v2.17.0) installed and executable as $ bedtools.
@@ -102,7 +102,10 @@ Note that you don't need to create any folders beforehand in either step 1 or st
 
 **For <n> replicates**, use same syntax as above (but %<n> instead of %2), listing all sample files at the end of the command line.
 
-4) Inspect the results in ./<results-folder>/data and various diagnostic plots in the other subfolders of ./<results-folder>. 
+CHiCAGO output
+==========
+
+The results will be in the ./<results-folder>/data, and various plots in the other subfolders of ./<results-folder>. 
 
 **In the /data folder**, the .ibed and .txt files and are readable, respectively by WashU browser (epigenomegateway.wustl.edu) and Seqmonk (a 2-row format, where the first row corresponds to the bait and the second row to the respective other end). The score threshold of –log(adjusted p-value) of 11 is applied, but it is rather arbitrary.
 
