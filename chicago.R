@@ -445,6 +445,7 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
        x <- as.data.frame(x[J(sel.sub),])
     }
     else{
+       x <- as.data.frame(x)
        warning("subset > number of baits in data, so use the full dataset.\n")
     }
   }
