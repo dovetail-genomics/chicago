@@ -14,35 +14,35 @@ class Unbuffered(object):
 
 sys.stdout = Unbuffered(sys.stdout)
 
-maxL = 1.5e6
-bin = 20000
+maxLBrownEst = 1.5e6
+binsize = 20000
 rmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII.bed"
-bfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII_baits.bed"
+baitmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII_baits.bed"
 outfile = "/bi/home/spivakov/g/CHIC/NBaitsPerBin_out.txt"
 picklefile = "/bi/home/spivakov/g/CHIC/NBaitsPerBin_out.pickle"
 removeAdjacent = True
 
 def usage():
-  print "Usage: countNbaitsPerBin.py [--maxl=%d] [--binsize=%d] [--removeAdjacent]\n\t[--rmapfile=%s]\n\t[--baitmapfile=%s]\n\t[--outfile=%s]\n\t[--picklefile=%s]\n" \
-  % (maxL, bin, removeAdjacent, rmapfile, bfile, outfile, picklefile)
+  print "Usage: countNbaitsPerBin.py [--maxLBrownEst=%d] [--binsize=%d] [--removeAdjacent]\n\t[--rmapfile=%s]\n\t[--baitmapfile=%s]\n\t[--outfile=%s]\n\t[--picklefile=%s]\n" \
+  % (maxLBrownEst, binsize, removeAdjacent, rmapfile, baitmapfile, outfile, picklefile)
 
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'l:b:jr:b:o:p:', \
-['maxl=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'picklefile='])
+['maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'picklefile='])
 except getopt.GetoptError:
   usage()
   sys.exit(120)
    
 for opt, arg in opts: 
-  if opt in ('--maxl', '-l'):
-    maxL = long(arg)
+  if opt in ('--maxLBrownEst', '-l'):
+    maxLBrownEst = long(arg)
   elif opt in ('--binsize', '-b'):
-    bin = long(arg)
+    binsize = long(arg)
   elif opt in ('--rmapfile', '-f'):
     rmapfile = arg
   elif opt in ('--baitmapfile', '-t'):
-    bfile = arg
+    baitmapfile = arg
   elif opt in ('--outfile', '-o'):
     outfile = arg
   elif opt in ('--picklefile', '-p'):
@@ -53,8 +53,8 @@ for opt, arg in opts:
     removeAdjacent = True
 
 
-print "Using options:\nmaxl=%d, bin=%d removeAdjacent=%r\n\trmapfile=%s\n\tbfile=%s\n\toutfile=%s\n\tpicklefile=%s\n" \
-% (maxL, bin, removeAdjacent, rmapfile, bfile, outfile, picklefile)
+print "Using options:\nmaxLBrownEst=%d, binsize=%d removeAdjacent=%r\n\trmapfile=%s\n\tbaitmapfile=%s\n\toutfile=%s\n\tpicklefile=%s\n" \
+% (maxLBrownEst, binsize, removeAdjacent, rmapfile, baitmapfile, outfile, picklefile)
 
 a = open(rmapfile)
 print "Reading rmap...."
@@ -71,7 +71,7 @@ for line in a:
   id.append(int(l[3]))
 a.close()
 
-b = open(bfile)
+b = open(baitmapfile)
 print "Reading baitmap..."
 bid = []
 for line in b:
@@ -98,7 +98,7 @@ print "Looping through other ends..."
 n={}
 for i in range(len(st)):
     
-  n[id[i]] = [0]*int(maxL/bin)
+  n[id[i]] = [0]*int(maxLBrownEst/binsize)
   
   if removeAdjacent:
     iSt=i-2
@@ -109,10 +109,10 @@ for i in range(len(st)):
    if chr[j] != chr[i]:
     break
    d = st[i]+(end[i]-st[i])/2-(st[j]+(end[j]-st[j])/2)
-   if d>=maxL:
+   if d>=maxLBrownEst:
     break
    if id[j] in bid:
-    n[id[i]][d/bin] += 1
+    n[id[i]][d/binsize] += 1
   
   if removeAdjacent:
     iSt=i+2
@@ -123,10 +123,10 @@ for i in range(len(st)):
    if chr[j] != chr[i]:
     break
    d = st[j]+(end[j]-st[j])/2-(st[i]+(end[i]-st[i])/2)
-   if d>=maxL:
+   if d>=maxLBrownEst:
     break
    if id[j] in bid:
-    n[id[i]][d/bin] += 1
+    n[id[i]][d/binsize] += 1
    
   if int(random.uniform(0,1000))==1: 
    print "%d " % i,
@@ -134,7 +134,7 @@ for i in range(len(st)):
 print "\nWriting out text file..."
 
 of = open(outfile, "wt")
-of.write("#\tmaxl=%d\tbin=%d\trmapfile=%s\n" % (maxL, bin, rmapfile))
+of.write("#\tmaxLBrownEst=%d\tbinsize=%d\trmapfile=%s\n" % (maxLBrownEst, binsize, rmapfile))
 for k in sorted(n.keys()):
  of.write("%d\t" % k)
  for i in range(len(n[k])): 

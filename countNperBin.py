@@ -20,7 +20,7 @@ def str2bool(v):
 minFragLen=150
 maxFragLen=40000
 maxLBrownEst = 1.5e6
-bin = 20000
+binsize = 20000
 removeB2B=True
 removeAdjacent=True
 rmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII.bed"
@@ -29,13 +29,13 @@ outfile = "/bi/home/spivakov/g/CHIC/NperBin_Baits_out.txt"
 picklefile = "/bi/home/spivakov/g/CHIC/NperBin_Baits_out.pickle"
 
 def usage():
-  print "Usage: countNperBin.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEstBrownEst=%d] [--binsize=%d] [--remove2b=%r] [--removeAdjacent=%r]\n\t[--rmapfile=%s]\n\t[--baitmapfile=%s]\n\t[--outfile=%s]\n\t[--picklefile=%s]\n" \
-  % (minFragLen, maxFragLen, maxLBrownEst, bin, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile, picklefile)
+  print "Usage: countNperBin.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEst=%d] [--binsize=%d] [--remove2b=%r] [--removeAdjacent=%r]\n\t[--rmapfile=%s]\n\t[--baitmapfile=%s]\n\t[--outfile=%s]\n\t[--picklefile=%s]\n" \
+  % (minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile, picklefile)
 
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:rja:b:f:t:o:p:', \
-['minFragLen=', 'maxFragLen=', 'maxLBrownEstBrownEst=', 'binsize=', \
+['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', \
 'removeb2b=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'picklefile='])
 except getopt.GetoptError:
   usage()
@@ -46,10 +46,10 @@ for opt, arg in opts:
     minFragLen = long(arg)
   elif opt in ('--maxFragLen', '-x'):
     maxFragLen = long(arg)
-  elif opt in ('--maxLBrownEstBrownEst', '-l'):
+  elif opt in ('--maxLBrownEst', '-l'):
     maxLBrownEst = long(arg)
   elif opt in ('--binsize', '-b'):
-    bin = long(arg)
+    binsize = long(arg)
   elif opt == '--removeb2b':
     removeB2B = str2bool(arg)
   elif opt == '--removeAdjacent':
@@ -68,8 +68,8 @@ for opt, arg in opts:
     picklefile = arg
 
 
-print "Using options:\n\tminFragLen=%d, maxFragLen=%d, maxLBrownEstBrownEst=%d, binsize=%d, removeb2b=%r, removeAdjacent=%r\n\trmapfile=%s\n\tbaitmapfile=%s\n\toutfile=%s\n\tpicklefile=%s\n" \
-% (minFragLen, maxFragLen, maxLBrownEst, bin, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile, picklefile)
+print "Using options:\n\tminFragLen=%d, maxFragLen=%d, maxLBrownEst=%d, binsize=%d, removeb2b=%r, removeAdjacent=%r\n\trmapfile=%s\n\tbaitmapfile=%s\n\toutfile=%s\n\tpicklefile=%s\n" \
+% (minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile, picklefile)
 
 a = open(rmapfile)
 print "Reading rmap...."
@@ -115,7 +115,7 @@ for i in range(len(st)):
   if not id[i] in bid:
     continue
     
-  n[id[i]] = [0]*int(maxLBrownEst/bin)
+  n[id[i]] = [0]*int(maxLBrownEst/binsize)
   
   for j in range(i-1,0,-1):
    if chr[j] != chr[i]:
@@ -133,7 +133,7 @@ for i in range(len(st)):
    d = st[i]+(end[i]-st[i])/2-(st[j]+(end[j]-st[j])/2)
    if d>=maxLBrownEst:
     break
-   n[id[i]][d/bin] += 1
+   n[id[i]][d/binsize] += 1
   
   for j in range(i+1,len(st),1):
    if chr[j] != chr[i]:
@@ -152,7 +152,7 @@ for i in range(len(st)):
    d = st[j]+(end[j]-st[j])/2-(st[i]+(end[i]-st[i])/2)
    if d>=maxLBrownEst:
     break
-   n[id[i]][d/bin] += 1
+   n[id[i]][d/binsize] += 1
    
   if int(random.uniform(0,100))==1: 
    print "%d " % i,
@@ -160,8 +160,8 @@ for i in range(len(st)):
 print "\nWriting out text file..."
 
 of = open(outfile, "wt")
-of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEstBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
-(minFragLen, maxFragLen, maxLBrownEst, bin, removeB2B, removeAdjacent, rmapfile, baitmapfile))
+of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
+(minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile))
 for k in sorted(n.keys()):
  of.write("%d\t" % k)
  for i in range(len(n[k])): 

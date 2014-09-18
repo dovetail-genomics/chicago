@@ -17,39 +17,39 @@ sys.stdout = Unbuffered(sys.stdout)
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
-minSize=150
-maxSize=40000
-maxL = 1.5e6
-bin = 20000
+minFragLen=150
+maxFragLen=40000
+maxLBrownEst = 1.5e6
+binsize = 20000
 removeB2B=True
 removeAdjacent=True
 rmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII.bed"
-bfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII_baits.bed"
+baitmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII_baits.bed"
 outfile = "/bi/home/spivakov/g/CHIC/proxOE_out.txt"
 #picklefile = "/bi/home/spivakov/g/CHIC/proxOE_out.pickle"
 
 def usage():
-  print "Usage: getProxOE.py [--minsize=%d] [--maxsize=%d] [--maxl=%d] [--binsize=%d] [--removeb2b=%r] [--removeAdjacent=%r]\n\t[--rmapfile=%s]\n\t[--bfile=%s]\n\t[--outfile=%s]\n" \
-  % (minSize, maxSize, maxL, bin, removeB2B, removeAdjacent, rmapfile, bfile, outfile)
+  print "Usage: getProxOE.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEst=%d] [--binsize=%d] [--removeb2b=%r] [--removeAdjacent=%r]\n\t[--rmapfile=%s]\n\t[--baitmapfile=%s]\n\t[--outfile=%s]\n" \
+  % (minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile)
 
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:rja:b:f:t:o:', \
-['minsize=', 'maxsize=', 'maxl=', 'binsize=', \
+['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', \
 'removeb2b=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile='])
 except getopt.GetoptError:
   usage()
   sys.exit(120)
    
 for opt, arg in opts: 
-  if opt in ('--minsize', '-m'):
-    minSize = long(arg)
-  elif opt in ('--maxsize', '-x'):
-    maxSize = long(arg)
-  elif opt in ('--maxl', '-l'):
-    maxL = long(arg)
+  if opt in ('--minFragLen', '-m'):
+    minFragLen = long(arg)
+  elif opt in ('--maxFragLen', '-x'):
+    maxFragLen = long(arg)
+  elif opt in ('--maxLBrownEst', '-l'):
+    maxLBrownEst = long(arg)
   elif opt in ('--binsize', '-b'):
-    bin = long(arg)
+    binsize = long(arg)
   elif opt == '--removeb2b':
     removeB2B = str2bool(arg)
   elif opt == '--removeAdjacent':
@@ -61,12 +61,12 @@ for opt, arg in opts:
   elif opt in ('--rmapfile', '-f'):
     rmapfile = arg
   elif opt in ('--baitmapfile', '-t'):
-    bfile = arg
+    baitmapfile = arg
   elif opt in ('--outfile', '-o'):
     outfile = arg
 
-print "Using options:\n\tminsize=%d, maxsize=%d, maxl=%d, bin=%d, removeb2b=%r, removeAdjacent=%r\n\trmapfile=%s\n\tbfile=%s\n\toutfile=%s\n" \
-% (minSize, maxSize, maxL, bin, removeB2B, removeAdjacent, rmapfile, bfile, outfile)
+print "Using options:\n\tminFragLen=%d, maxFragLen=%d, maxLBrownEst=%d, binsize=%d, removeb2b=%r, removeAdjacent=%r\n\trmapfile=%s\n\tbaitmapfile=%s\n\toutfile=%s\n" \
+% (minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile)
 
 a = open(rmapfile)
 print "Reading rmap...."
@@ -83,7 +83,7 @@ for line in a:
   id.append(int(l[3]))
 a.close()
 
-b = open(bfile)
+b = open(baitmapfile)
 print "Reading baitmap..."
 bid = []
 for line in b:
@@ -106,8 +106,8 @@ del oldchr
 del oldst
 
 of = open(outfile, "wt")
-of.write("#\tminsize=%d\tmaxsize=%d\tmaxl=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
-(minSize, maxSize, maxL, bin, removeB2B, removeAdjacent, rmapfile, bfile))
+of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
+(minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile))
 
 print "Looping through baits..."
 
@@ -116,7 +116,7 @@ for i in range(len(st)):
   if not id[i] in bid:
     continue
     
-  #n[id[i]] = [0]*int(maxL/bin)
+  #n[id[i]] = [0]*int(maxLBrownEst/binsize)
   
   for j in range(i-1,0,-1):
    if chr[j] != chr[i]:
@@ -127,15 +127,15 @@ for i in range(len(st)):
    if removeAdjacent:
      if j==i-1:
        continue
-   if (end[j]-st[j])<minSize:
+   if (end[j]-st[j])<minFragLen:
        continue
-   if (end[j]-st[j])>maxSize:
+   if (end[j]-st[j])>maxFragLen:
        continue       
    d = st[i]+(end[i]-st[i])/2-(st[j]+(end[j]-st[j])/2)
-   if d>=maxL:
+   if d>=maxLBrownEst:
     break
    of.write("%d\t%d\t%d\n" % (id[i], id[j], d))
-   #n[id[i]][d/bin] += 1
+   #n[id[i]][d/binsize] += 1
   
   for j in range(i+1,len(st),1):
    if chr[j] != chr[i]:
@@ -146,16 +146,16 @@ for i in range(len(st)):
    if removeAdjacent:
      if j==i+1:
        continue 
-   if (end[j]-st[j])<minSize:
+   if (end[j]-st[j])<minFragLen:
        continue
-   if (end[j]-st[j])>maxSize:
+   if (end[j]-st[j])>maxFragLen:
        continue       
    
    d = st[j]+(end[j]-st[j])/2-(st[i]+(end[i]-st[i])/2)
-   if d>=maxL:
+   if d>=maxLBrownEst:
     break
    of.write("%d\t%d\t%d\n" % (id[i], id[j], d))
-   #n[id[i]][d/bin] += 1
+   #n[id[i]][d/binsize] += 1
    
   if int(random.uniform(0,100))==1: 
     print "%d " % i
@@ -163,8 +163,8 @@ for i in range(len(st)):
 #print "\nWriting out text file..."
 
 #of = open(outfile, "wt")
-#of.write("#\tminsize=%d\tmaxsize=%d\tmaxl=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
-#(minSize, maxSize, maxL, bin, removeB2B, removeAdjacent, rmapfile, bfile))
+#of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
+#(minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile))
 #for k in sorted(n.keys()):
 # of.write("%d\t" % k)
 # for i in range(len(n[k])): 
