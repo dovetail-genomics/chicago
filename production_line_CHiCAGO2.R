@@ -14,6 +14,14 @@ nbaitsperbinfile = file.path(fileDir, "Digest_Human_HindIII_NbaitsPerBin.txt")
 proxOEfile = file.path(fileDir, "proxOE_out.txt")
 ###############
 
+### Fragment filtering and other settings
+maxLBrownEst = 1.5e6 # maximum distance for Brownian noise estimation 
+minFragLen = 150 # minimum allowed length of restriction fragments (otherwise ignored)
+maxFragLen = 40000 # max allowed length of restriction fragments (otherwise ignored)
+minNPerBait = 250 # minimum number of reads per bait (otherwise ignored)
+binsize=20000 # bin size for parameter estimation 
+removeAdjacent = TRUE # should restriction fragments immediately adjacent to baits be removed? 
+
 ### Free parameter: our expectation for the relative enrichment of true interactions close to the bait vs in trans
 pi.rel = 1E5
 
