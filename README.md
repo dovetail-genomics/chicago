@@ -4,7 +4,12 @@ Currently CHiCAGO is still under development, so below are just some very rough 
 
 0. Prepare restriction enzyme-specific data files (if you are not using HindIII)
 
-You will need the following 
+If you are using HindIII, all the required files are available as a tarball archive at the following location:
+https://www.dropbox.com/s/4nws1b3yqkfvwjd/HindIII_files.tar.gz?dl=0 (it's 221Mb so probably a bit too large for bitbucket)
+
+You will need the following files:
+
+- A restriction fragment map (
 
 
 
