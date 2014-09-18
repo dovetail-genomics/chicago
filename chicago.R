@@ -440,7 +440,7 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
     ##much faster than in situ data.frame calculation
     x <- data.table(x)
     setkeyv(x, baitIDcol)
-    if( nrow(x[, baitID[1], by=baitIDcol])>subset){ 
+    if( nrow(x[, .I[1], by=baitIDcol])>subset){ 
        sel.sub <- sort(sample(unique(x[[baitIDcol]]), subset))
        x <- as.data.frame(x[J(sel.sub),])
     }
