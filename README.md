@@ -102,7 +102,10 @@ Note that you don't need to create any folders beforehand in either step 1 or st
 
 **For <n> replicates**, use same syntax as above (but %<n> instead of %2), listing all sample files at the end of the command line.
 
-4) Inspect the results in ./<results-folder>/data and various diagnostic plots in the other subfolders of ./<results-folder>. 
+CHiCAGO output
+==========
+
+The results will be in the ./<results-folder>/data, and various plots in the other subfolders of ./<results-folder>. 
 
 **In the /data folder**, the .ibed and .txt files and are readable, respectively by WashU browser (epigenomegateway.wustl.edu) and Seqmonk (a 2-row format, where the first row corresponds to the bait and the second row to the respective other end). The score threshold of –log(adjusted p-value) of 11 is applied, but it is rather arbitrary.
 
