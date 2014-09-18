@@ -6,7 +6,7 @@ Preparing restriction enzyme-specific data files (if you are not using HindIII)
 =======================
 
 **If you are using HindIII**, all the required files are available as a tarball archive at the following location:
-https://www.dropbox.com/s/4nws1b3yqkfvwjd/HindIII_files.tar.gz?dl=0 (it's 221Mb so probably a bit too large for bitbucket)
+https://www.dropbox.com/s/l15wy6srherfuvn/HindIII_files.tar.gz?dl=0 (it's 221Mb so probably a bit too large for bitbucket)
 
 **Otherwise**, you will need to generate the following files yourself (the corresponding files available for HindIII are in brackets):
 
