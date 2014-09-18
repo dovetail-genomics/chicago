@@ -2,7 +2,7 @@
 
 Currently CHiCAGO is still under development, so below are just some very rough instructions on how to install and run the pipeline in its current form.
 
-Preparing restriction enzyme-specific data files (if you are not using HindIII)
+Preparing restriction enzyme-specific resource files
 =======================
 
 **If you are using HindIII**, all the required files are available as a tarball archive at the following location:
