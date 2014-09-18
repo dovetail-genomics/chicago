@@ -1373,7 +1373,7 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
   baits
 }
 
-exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","interBed")[1], order=c("position", "score")[1],
+exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1],
                                  b2bcutoff=NULL, abscutoff=T, rmap=NULL, baitmap=NULL, #logp=T, 
                                  b2bcol = "isBait2bait"){
   
@@ -1382,8 +1382,8 @@ exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","i
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
-  if (! format %in% c("seqMonk","interBed")){
-    stop ("Format must be either seqMonk (default) or interBed\n")
+  if (! format %in% c("seqMonk","interBed", "washU")){
+    stop ("Format must be either seqMonk, interBed or washU (or a vector containing several of these)\n")
   }
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
@@ -1466,8 +1466,10 @@ exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","i
   if (order=="score"){
     out = out[order(out$score, decreasing=T), ]
   }
-  
-  if (format=="seqMonk"){
+  out0=out
+   
+  if ("seqMonk" %in% format){
+    cat("Writing out for seqMonk...\n")
     out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
     
     #out$star = "*"
@@ -1478,16 +1480,33 @@ exportResults = function(x, outfile, pcol="score", cutoff, format=c("seqMonk","i
     out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", 
                  "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
     cat("Writing out for seqMonk...\n")		
-    write.table(out, outfile, sep="\t", quote=F, row.names=F, col.names=F)
+    write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
     
   }	
-  if (format=="interBed"){
+  if ("interBed" %in% format){
     cat("Writing out interBed...\n")
-    out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
+    out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
                  "N_reads", "score")]
-    write.table(out, outfile, sep="\t", quote=F, row.names=F)	
+    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)	
   }
+  if("washU" %in% format){
+   cat("Writing out for washU browser...\n")
+   out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
+                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
+                 "N_reads", "score")]
+   out$i = seq(1,nrow(out)*2,2)
+   res = apply(out,1,function(x){
+         lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
+         if(x["otherEnd_name"]=="."){ # for bait2bait interactions the second line will be created anyway as the results are duplicated in the original dataframe
+            lines = paste0(lines,  "\n",
+                paste0(x["otherEnd_chr"], "\t", x["otherEnd_start"], "\t", x["otherEnd_end"], "\t", x["bait_chr"],":", x["bait_start"], "-", x["bait_end"], ",", x["score"],"\t", as.numeric(x["i"])+1, "\t", "."))
+         } 
+         lines
+    })
+    res = gsub(" ", "", res)
+    writeLines(res, con=paste0(outfileprefix,"_washU.txt"))
+   }
   
 }
 
