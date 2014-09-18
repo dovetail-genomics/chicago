@@ -81,12 +81,48 @@ The output folder will be ./sample_<name>.
 The file that that analysis pipeline will use is: 
     ./sample_<name>/<name>_bait_otherEnd_N_len_distSign.txt
 
+2. Prepare a feature folder for your cell type (or use a related cell type).
+-----------
+For example, download from Blueprint ftp://ftp.ebi.ac.uk/pub/databases/blueprint/data/homo_sapiens/ several ChIP-seq datasets in bed format. 
+In this folder, put a features.txt tab-delimited file of the format:
+<dataset name>	<ChIP-seq bed file name>
 
-Note for developers.
+3. From the folder where the HiCUP BAM file is located, run:
+------------
+
+**If have only one replicate:**
+
+$ <path-to-CHiCAGOv2>/run_chicago2.sh sample_<name>/<name>_bait_otherEnd_N_len_distSign.txt <results-folder> <sample-name> <feature-folder-path> <full-path-to-features.txt file>
+
+**If have two replicates:**
+
+$ ./run_fullchr_norep.sh %2 <results-folder>/ <sample-name> < feature-folder-path>/ <full-path-to-features.txt file> sample_<name1>/<name1>_bait_otherEnd_N_len_distSign.txt sample_<name2>/<name2>_bait_otherEnd_N_len_distSign.txt
+
+Note that you don't need to create any folders beforehand in either step 1 or step 3. 
+
+**For <n> replicates**, use same syntax as above (but %<n> instead of %2), listing all sample files at the end of the command line.
+
+4) Inspect the results in ./<results-folder>/data and various diagnostic plots in the other subfolders of ./<results-folder>. 
+
+**In the /data folder**, the .ibed and .txt files and are readable, respectively by WashU browser (epigenomegateway.wustl.edu) and Seqmonk (a 2-row format, where the first row corresponds to the bait and the second row to the respective other end). The score threshold of –log(adjusted p-value) of 11 is applied, but it is rather arbitrary.
+
+**The data frame x** used to produce these files (one row per interaction) is stored in the .RDa file in the same folder.
+
+The /examples folder contains PDFs with bait profiles for 25 random baits - for full chromosome length and zoomed in to 1Mb, respectively.
+
+**The /overlap_plots folder** contains barplots showing the numbers of “enhancers” overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the “enhancers”.
+
+**In the /diag_plots folder**, we currently store diagnostic plots for other end normalisation and technical noise estimation, but more will be added.
+
+Good luck!
+----------
+Just to repeat, this is a very early development version, so problems installing and running it are expected. Do not hesitate to contact Mikhail when this happens. 
+
+Developers
+-----------
+Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
+
+Note for developers
 ----------
 Eventual aim is for the structure to be as: http://nvie.com/posts/a-successful-git-branching-model/
 Currently, we are using the master branch & feature branches only. Upon the first release, a development branch will be added.
-
-Developers.
------------
-Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
