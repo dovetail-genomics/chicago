@@ -1,12 +1,12 @@
 **This is the repo for the second version of CHiCAGO capture-HiC peak calling pipeline** 
 
-Currently CHiCAGO is still under development, so below are just some very rough instructions on how to install and run the pipeline in its current form.
+Currently CHiCAGOv2 is still under development (the remaining issues are listed here: https://bitbucket.org/chic_snp/chicagov2/issues?status=new&status=open), so below are just some very rough instructions on how to install and run the pipeline in its current form.
 
 Preparing restriction enzyme-specific resource files
 =======================
 
 **If you are using HindIII**, all the required files are available as a tarball archive at the following location:
-https://www.dropbox.com/s/l15wy6srherfuvn/HindIII_files.tar.gz?dl=0 (it's 221Mb so probably a bit too large for bitbucket)
+https://www.dropbox.com/s/l15wy6srherfuvn/HindIII_files.tar.gz?dl=0 (it's 112Mb so probably a bit too large for bitbucket)
 
 **Otherwise**, you will need to generate the following files yourself (the corresponding files available for HindIII are in brackets):
 
@@ -19,8 +19,7 @@ https://www.dropbox.com/s/l15wy6srherfuvn/HindIII_files.tar.gz?dl=0 (it's 221Mb 
 - Number of other ends per distance bin within the proximal range (Digest_Human_HindIII_NperBin.txt)
 
 $ python countNperBin.py [--minFragLen=<min-restriction-fragment-size>] [--maxFragLen=<max-restriction-fragment-size] [--maxLBrownEst=<max-distance-for-estimating-brownian-noise>] 
-                         [--binsize=<bin-size-in-bps-for-Brownian-noise-parameter-estimation>] [--removeAdjacent==<t|f>] 
-						 --rmapfile=<restriction-fragment-map-filename> --baitmapfile=<bait-fragment-map-filename> --outfile=<output-filename> --picklefile=<output-python-pickle-file-name>
+                         [--binsize=<bin-size-in-bps-for-Brownian-noise-parameter-estimation>] [--removeAdjacent==<t|f>] --rmapfile=<restriction-fragment-map-filename> --baitmapfile=<bait-fragment-map-filename> --outfile=<output-filename> --picklefile=<output-python-pickle-file-name>
 
 - Number of baits per distance bin within the proximal range from the point of view of the other ends (Digest_Human_HindIII_NbaitsPerBin.txt)
 
