@@ -58,16 +58,31 @@ matrixStats
 Hmisc
 Delaporte
 
-If some of them aren't currently installed, do so via install.packages()
+If some of these packages aren't currently installed, do so via install.packages()
 
   - The feature enrichment script requires Bioconductor and the add-on package GenomicRanges.
-If not currently installed, do so: 
- source("http://bioconductor.org/biocLite.R"); biocLite("GenomicRanges") 
+If not currently installed, do so: source("http://bioconductor.org/biocLite.R"); biocLite("GenomicRanges") 
+
+Running CHiCAGOv2
+==========
+
+**CHiCAGO is run in two steps:** 
+-	process_chic_single_core.sh uses shell commands and bedtools to convert HiCUP BAM files into CHiCAGO input files.
+-	production_line_v2.R  (that can be executed via the shell script run_fullchr_norep.sh) runs CHiCAGO and checks for enrichment of CHiCAGO’s significant ‘other ends’ (i.e., putative enhancers) for genomic regions of interest, such as, for example, ENCODE or BLUEPRINT regions.
+The first step takes ~1.5h to run, the second one takes longer and requires ~20Gb RAM, so both are best run on a powerful machine (such as a cluster node).
+
+*Instructions below are given assuming the standard HindIII resource files. Change the filenames accordingly if using another enzyme and custom files.*
+
+1. From the folder where the HiCUP BAM file is located, run the shell script to convert BAM files to text files for R input:
+----------
+$ CHiCAGO/chic_tools/process_chic_single_core.sh <BAM file> <path>/Digest_Human_HindIII_baits.bed Digest_Human_HindIII.bed <name>
+**Attention**: Digest_Human_HindIII_baits.bed, not Digest_Human_HindIII_baits_ID.bed file should be provided as parameter.
+The output folder will be ./sample_<name>.
+The file that that analysis pipeline will use is: 
+    ./sample_<name>/<name>_bait_otherEnd_N_len_distSign.txt
 
 
-
-
-Note for developers: Eventual aim is for the structure to be as: http://nvie.com/posts/a-successful-git-branching-model/
+**Note for developers**: Eventual aim is for the structure to be as: http://nvie.com/posts/a-successful-git-branching-model/
 Currently, we are using the master branch & feature branches only. Upon the first release, a development branch will be added.
 
-Developers: Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett.
+**Developers**: Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
