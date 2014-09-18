@@ -440,8 +440,13 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
     ##much faster than in situ data.frame calculation
     x <- data.table(x)
     setkey(x, baitID)
-    sel.sub <- sort(sample(unique(x$baitID), subset))
-    x <- as.data.frame(x[J(sel.sub),])
+    if( nrow(x[, baitID[1], by="baitID"])>subset){ 
+       sel.sub <- sort(sample(unique(x$baitID), subset))
+       x <- as.data.frame(x[J(sel.sub),])
+    }
+    else{
+       warning("subset > number of baits in data, so use the full dataset.\n")
+    }
   }
   
   ##consider proximal region only...
