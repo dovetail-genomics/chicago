@@ -82,7 +82,11 @@ The file that that analysis pipeline will use is:
     ./sample_<name>/<name>_bait_otherEnd_N_len_distSign.txt
 
 
-**Note for developers**: Eventual aim is for the structure to be as: http://nvie.com/posts/a-successful-git-branching-model/
+Note for developers.
+----------
+Eventual aim is for the structure to be as: http://nvie.com/posts/a-successful-git-branching-model/
 Currently, we are using the master branch & feature branches only. Upon the first release, a development branch will be added.
 
-**Developers**: Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
+Developers.
+-----------
+Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
