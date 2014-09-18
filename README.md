@@ -43,20 +43,18 @@ Installing CHiCAGOv2
 
 2. Open process_chic_single_core.sh and locate the ## EDIT ME line close to the top of the file. Hardcode the full path to the folder, in which *process_hicup.sh* is located, into the ‘pipelinedir=’ command immediately below this line. 
 
-3. Open production_line_CHiCAGO2.R and edit the following:
+3. Open run_chicago2.sh and locate the ##EDIT ME line at the top. Hardcode the full path to folder, in which *production_line_CHiCAGO2.R* is located, into the 'chicagopath=' command immediately below this line.
+
+4. Open production_line_CHiCAGO2.R and edit the following:
  - Locate the ####EDIT ME#### line at the top of the file. Change the path to chicago.R and Functions_new_datatable.R, as will as the path to the resource file directory (fileDir variable).
  - Hard-code the full paths of the restriction enzyme-specific resource files under ### Resource file locations.
  - Check that parameter definitions under ### Fragment filtering and other settings match those used for generating restriction enzyme-specific resource files.
 
-4. R dependencies.
+5. R dependencies.
  - Make sure you're running a recent version of R (ours is v3.0.3) 
  - CHiCAGO core requires the following R packages:
 
-MASS
-data.table
-matrixStats
-Hmisc
-Delaporte
+MASS, data.table, matrixStats, Hmisc, Delaporte
 
 If some of these packages aren't currently installed, do so via install.packages()
 
