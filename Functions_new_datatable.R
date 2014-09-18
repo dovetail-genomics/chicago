@@ -1,9 +1,13 @@
 # Functions to be used in Mikhail's pipeline
 
 library(GenomicRanges)
-library(multicore)
+library(parallel)
 library(data.table)
-source('~/pipeline/write2.R')
+
+write2 = function (x, file, row.names=F, ...){
+  write.table(x, file, sep="\t", quote=F, row.names=row.names, ...)
+}
+
 
 # Functions to filter poor baits after 
 filterPoorBaits <- function(x,Nreads) {
