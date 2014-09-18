@@ -1055,19 +1055,19 @@ getScores <- function(x, method="weightedRelative",
   params = sapply(sapply(strsplit(header, "\t")[[1]],function(x)strsplit(x,"=")[[1]]), function(x)x[2])
   params = params[2:length(params)]
   names(params) = gsub("(\\S+)=.+", "\\1", names(params))
-  minsize = as.numeric(params[["minsize"]])
+  minsize = as.numeric(params[["minFragLen"]])
   if (minsize != minFragLen){
-    stop("The minsize in the NfragPerBin file is not equal to minFragLen defined here. 
+    stop("The minFragLen in the NfragPerBin file is not equal to minFragLen defined here. 
          Amend either parameter setting before running the analysis\n")
   }
-  maxsize = as.numeric(params[["maxsize"]])
+  maxsize = as.numeric(params[["maxFragLen"]])
   if (maxsize != maxFragLen){
-    stop("The maxsize in the NfragPerBin file is not equal to maxFragLen defined here. 
+    stop("The maxFragLen in the NfragPerBin file is not equal to maxFragLen defined here. 
          Amend either parameter setting before running the analysis\n")
   }
-  maxl = as.numeric(params[["maxl"]])
+  maxl = as.numeric(params[["maxLBrownEst"]])
   if (maxl != maxLBrownEst){
-    stop("The maxl in the NfragPerBin file is not equal to maxLBrownEst defined here. 
+    stop("The maxLBrownEst in the NfragPerBin file is not equal to maxLBrownEst defined here. 
          Amend either parameter setting before running the analysis\n")
   }
   binsz = as.numeric(params[["binsize"]]) 
@@ -1110,14 +1110,14 @@ getScores <- function(x, method="weightedRelative",
   params = params[2:length(params)]
   names(params) = gsub("(\\S+)=.+", "\\1", names(params))
 
-  maxl = as.numeric(params[["maxl"]])
+  maxl = as.numeric(params[["maxLBrownEst"]])
   if (maxl != maxLBrownEst){
-    stop("The maxl in the NfragPerBin file is not equal to maxLBrownEst defined here. 
+    stop("The maxLBrownEst in the NfragPerBin file is not equal to maxLBrownEst defined here. 
          Amend either parameter setting before running the analysis\n")
   }
 
   # Currently binsize is called bin, but should correct this
-  binsz = as.numeric(params[["bin"]]) 
+  binsz = as.numeric(params[["binsize"]]) 
   if (binsz != binsize){
     stop("The binsize in the NfragPerBin file is not equal to binsize defined here. 
          Amend either parameter setting before running the analysis\n")
@@ -1160,19 +1160,19 @@ getScores <- function(x, method="weightedRelative",
   params = sapply(sapply(strsplit(header, "\t")[[1]],function(x)strsplit(x,"=")[[1]]), function(x)x[2])
   params = params[2:length(params)]
   names(params) = gsub("(\\S+)=.+", "\\1", names(params))
-  minsize = as.numeric(params[["minsize"]])
+  minsize = as.numeric(params[["minFragLen"]])
   if (minsize != minFragLen){
-    stop("The minsize in the ProxOE file is not equal to minFragLen defined here. 
+    stop("The minFragLen in the ProxOE file is not equal to minFragLen defined here. 
          Amend either parameter setting before running the analysis\n")
   }
-  maxsize = as.numeric(params[["maxsize"]])
+  maxsize = as.numeric(params[["maxFragLen"]])
   if (maxsize != maxFragLen){
-    stop("The maxsize in the ProxOE file is not equal to maxFragLen defined here. 
+    stop("The maxFragLen in the ProxOE file is not equal to maxFragLen defined here. 
          Amend either parameter setting before running the analysis\n")
   }
-  maxl = as.numeric(params[["maxl"]])
+  maxl = as.numeric(params[["maxLBrownEst"]])
   if (maxl != maxLBrownEst){
-    stop("The maxl in the ProxOE file is not equal to maxLBrownEst defined here. 
+    stop("The maxLBrownEst in the ProxOE file is not equal to maxLBrownEst defined here. 
          Amend either parameter setting before running the analysis\n")
   }
   binsz = as.numeric(params[["binsize"]]) 
