@@ -36,7 +36,7 @@ $ python getProxOE.py [--minFragLen=<min-restriction-fragment-size>] [--maxFragL
 
 CHiCAGO will check whether they matched though and terminate with an error if not. The defaults for all optional parameters match those currently hard-coded into the production line script.
 
-Installing CHiCAGO
+Installing CHiCAGOv2
 ===============
 
 1. Check that you have a recent version of bedtools (ours is v2.17.0) installed and executable as $ bedtools.
