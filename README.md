@@ -110,7 +110,7 @@ Note that you don't need to create any folders beforehand in either step 1 or st
 
 The /examples folder contains PDFs with bait profiles for 25 random baits - for full chromosome length and zoomed in to 1Mb, respectively.
 
-**The /overlap_plots folder** contains barplots showing the numbers of “enhancers” overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the “enhancers”.
+**The /overlap_plots folder** contains barplots showing the numbers of “enhancers” overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the “enhancers”. Currently these overlaps are computed for interactions within 1 Mb from their respective baits only.
 
 **In the /diag_plots folder**, we currently store diagnostic plots for other end normalisation and technical noise estimation, but more will be added.
 
