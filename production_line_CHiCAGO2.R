@@ -123,8 +123,8 @@ save(x, file=paste0(outprefix,".RDa"))
 
 cat("\n*** Plotting examples...\n")
 
-plotBaits(x, outfile=paste0(outprefix, "_proxExamples.pdf"), xlim=c(-1e6,1e6))
-plotBaits(x, outfile=paste0(outprefix, "_examples.pdf"))
+baits=plotBaits(x, outfile=paste0(outprefix, "_proxExamples.pdf"), xlim=c(-1e6,1e6))
+plotBaits(x, baits=baits, outfile=paste0(outprefix, "_examples.pdf"))
 
 # 5. Exporting results
 
