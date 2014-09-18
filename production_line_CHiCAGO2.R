@@ -40,7 +40,7 @@ if(length(clArgs)<5){
 infname = clArgs[1]
 outfolder = clArgs[2]
 outprefix = paste0(outfolder, "/", clArgs[3])
-featureFolder = clArgs[4]
+featureFolder = paste0(clArgs[4],"/") # important as currently CompareSeqTotal requires featureFolder to end with a slash
 featureList = clArgs[5]
 
 features = read.table(featureList, stringsAsFactors=F)
