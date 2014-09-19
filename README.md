@@ -114,6 +114,12 @@ The /examples folder contains PDFs with bait profiles for 25 random baits - for 
 
 **In the /diag_plots folder**, we currently store diagnostic plots for other end normalisation and technical noise estimation, but more will be added.
 
+Sample dataset
+=============
+
+For test purposes, you can use the following sample dataset (two replicates): 
+https://www.dropbox.com/sh/hpss9s7535eu3uz/AAAxByk7MOuAqyiZBF079gZea?dl=0
+
 Good luck!
 ----------
 Just to repeat, this is a very early development version, so problems installing and running it are expected. Do not hesitate to contact Mikhail when this happens. 
