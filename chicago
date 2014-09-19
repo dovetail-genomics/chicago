@@ -10,6 +10,7 @@ use Data::Dumper;
 
 
 
+
 ##########################################################
 #Get user-supplied parameters
 #Option variables
@@ -83,8 +84,15 @@ my %prefixStep2Features;  # %{prefix2} = features file to process
 
 #Create the new data structures
 foreach my $array (@inputData){  
+	my $prefixStep1 = $$array[1];
 	my $prefixStep2 = $$array[2];
 	my $file = $$array[0];
+	
+	if(hasval($prefixStep1) ){
+		$file = calcStep1Outfile($prefixStep1);
+	}
+	
+	
 	my $features = $$array[3];
 	
 	push( @{ $prefixStep2Files{$prefixStep2} }, $file);
@@ -105,39 +113,49 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	my $numberFiles = scalar @files;
 	my $outdir = 'res_' . $prefixStep2 . '_chicago2/';
 	
-	print "$features\n";
+
 	$features =~ /(.+\/)/;
 	my $featuresFolder = $1;
-	print "$featuresFolder\n";
-	
-	
-	
-	if($numberFiles == 1){
-		my $command ="$Bin/run_chicago2.sh $files[0] $outdir $featuresFolder $features"; 
-		!system("$command") or die "Could not run '$command' : $!";		
-		my $clusterCommand;
-	}else{
 
+	my $command;
+	if($numberFiles == 1){
+		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features < $Bin/production_line_CHiCAGO2.R";		
+	
+	}else{
+		my $filenameString = join(' ', @files);
+		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString < $Bin/production_line_CHiCAGO2.R";		
+		
+		
 	}
+		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
+		my $clusterCommand = "echo \"$command\" | qsub -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $prefix2Rand $config{email}";
+		print "$command\n";
+		#!system("$command") or die "Could not run '$command' : $!";
+		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
+	
 	
 }
 	
 	
-	
-		
-	
-
-
-
-
-
-
-
 exit (0);
+
+
 
 ###########################################################################
 #Subroutines
 ############################################################################
+
+
+
+#Takes the prefix for Step 1 and calculates the path and name of the
+#file produced by CHiCAGO step1
+sub calcStep1Outfile{
+	my $prefix = $_[0];
+	my $outFile = 'sample_' . $prefix . '/' . $prefix . '_bait_otherEnd_N_len_distSign.txt';
+	return $outFile;
+}
+
+
 
 #Create a random letter string
 #Takes a number for the length of
@@ -380,6 +398,8 @@ SYNOPSIS
 CHiCAGO [OPTIONS]... [Configuration FILE]...
 
 FUNCTION
+
+
 
 
 
