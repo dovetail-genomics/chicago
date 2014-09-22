@@ -56,6 +56,15 @@ processInputfile();
   # /bi/group/sysgen/CHIC/Digest_Human_HindIII.bed sample1742"| 
   # qsub -V -cwd -l vf=10G -pe orte 4 -o sample1742.out -j y -N sample1742 -m eas -M paulafp@babraham.ac.uk
 
+  
+#Create a log file
+open(LOG, '>', 'chicagoLog.txt') or die "Could not write to 'chicagoLog.txt' : $!";
+	
+
+
+  
+  
+  
 #Launch pipeline step1
 foreach my $array (@inputData){
 	if( hasval($$array[1]) ){    #Prefix 1 is present
@@ -64,8 +73,9 @@ foreach my $array (@inputData){
 		my $prefixRand = "$prefix1." . generateRandomString(6);
 		my $command = "$Bin/process_chic_single_core.sh $inputFile $config{baits} $config{digest} $prefix1";
 		my $clusterCommand = "echo \"$command\" | qsub -V -cwd -l vf=10G -pe orte 4 -o $prefixRand.out -j y -N $prefixRand $config{email}";
-		print "CHiCAGO Step1: $inputFile\n";
+
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
+		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";
 		push( @$array, $prefixRand);
 	}	
 }
@@ -81,19 +91,23 @@ foreach my $array (@inputData){
 #Launch pipeline step2
 my %prefixStep2Files;    # %{prefix2} = array of filename(s) to process
 my %prefixStep2Features;  # %{prefix2} = features file to process
+my %jids4Step2;    # %{prefix2} = array of Step1 job ids   
 
 #Create the new data structures
 foreach my $array (@inputData){  
 	my $prefixStep1 = $$array[1];
 	my $prefixStep2 = $$array[2];
 	my $file = $$array[0];
+	my $jid = $$array[4];
 	
 	if(hasval($prefixStep1) ){
 		$file = calcStep1Outfile($prefixStep1);
+		push( @{ $jids4Step2{$prefixStep2} }, $jid); 
 	}
 	
 	
 	my $features = $$array[3];
+
 	
 	push( @{ $prefixStep2Files{$prefixStep2} }, $file);
 	$prefixStep2Features{$prefixStep2} = $features;
@@ -116,6 +130,17 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 
 	$features =~ /(.+\/)/;
 	my $featuresFolder = $1;
+	
+	#Calculate jids (if necessary)
+	my @jids;
+	my $jid_string;
+	if(exists $jids4Step2{$prefixStep2} ){
+		@jids = @{ $jids4Step2{$prefixStep2} };
+		$jid_string = join(',', @jids);
+		$jid_string = '-hold_jid ' . $jid_string;
+	}else{
+		$jid_string = '';
+	}
 
 	my $command;
 	if($numberFiles == 1){
@@ -128,14 +153,20 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
-		my $clusterCommand = "echo \"$command\" | qsub -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $prefix2Rand $config{email}";
-		print "$command\n";
+		my $clusterCommand = "echo \"$command\" | qsub -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $prefix2Rand $config{email} $jid_string";
+		#print "$command\n";
 		#!system("$command") or die "Could not run '$command' : $!";
+		
+		print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
 	
 	
 }
 	
+	
+close LOG or die "Could not close 'chicagoLog.txt' : $!";
+
+print "Processing complete.\n";	
 	
 exit (0);
 
