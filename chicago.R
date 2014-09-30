@@ -741,15 +741,22 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
   
   ##p-values:
   ##(gives P(X > x-1) = P(X >= x))
-  message("Calculating p-values...")
-  x[,outcol] <- pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
+  message("Calculating p-values...") 
   
-  ##pdelap can output NaNs when N large, mean small. Correct this: 
-  sel <- which(is.nan(x[,outcol]))
-  if(length(sel) > 0)
-  {
-    x[sel,outcol] <- -Inf
-  }
+  ##The "ifelse" is because pdelap cannot deal with beta=0.
+  ##TODO can probably optimize this:
+  x[,outcol] <- ifelse(
+    x$Bmean < .Machine$double.eps,
+    ppois(x[,Ncol] - 1L, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE),
+    pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
+  )
+  
+#   ##pdelap can output NaNs when N large, mean small. Correct this: 
+#   sel <- which(is.nan(x[,outcol]))
+#   if(length(sel) > 0)
+#   {
+#     x[sel,outcol] <- -Inf
+#   }
   
   invisible(x)
 }
