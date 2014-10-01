@@ -43,31 +43,3 @@ gc()
 
 #save output somewhere...
 save(x, f, file="~/CHiCAGOtest/results.Rda")
-
-##All of the below was put in TestReport.Rmd
-
-# ##a quick test (to make sure the table writes correctly)----------------
-# #testfribble <- x[1:10,]
-# #write.csv(, "")
-# 
-# ##compare against v1 output---------------------------------------------
-# load(peakfile)
-# 
-# #baitinfo <- fread(baitmapfile)
-# #fraginfo <- fread(rmapfile)
-# 
-# ##combine previous results into a nice(r) format
-# cols <- c("baitID", "otherEndID", "isBait2bait")
-# n1cat <- rbind(
-#   as.data.table(n1pr[,c(cols,"logwp")]),
-#   as.data.table(n1farpr[,c(cols,"logwp_bw")]),
-#   use.names=FALSE ##because the colnames differ
-#   )
-# setnames(n1cat, c(cols,"logwp"))
-# 
-# x.sel <- as.data.table(x[,c("baitID", "otherEndID", "log.q")])
-# 
-# setkey(n1cat, baitID, otherEndID)
-# setkey(x.sel, baitID, otherEndID)
-# 
-# venn(list(unique(x.sel$baitID), unique(n1cat$baitID)))

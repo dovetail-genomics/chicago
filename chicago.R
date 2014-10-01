@@ -239,6 +239,7 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
 
 normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL){
   message("Normalising baits...")
+  alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
   x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
                             viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
                             shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile)
@@ -249,12 +250,15 @@ normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, pl
   distbincol = which(names(x)=="distbin")
   othercols = which(names(x)!="distbin")
   x = x[, c(othercols, distbincol)]
+  attributes(x)$dispersion <- x ##return dispersion (if applicable)
   invisible(x) 
 }
 
 normaliseOtherEnds = function(x, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE, 
                               filterTopPercent=0.01, minProxOEPerBin=1000, minProxB2BPerBin=minProxOEPerBin/10,
                               plot=TRUE, outfile=NULL){
+
+  alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
   
   # NON-URGENT TODO: instead of looking at bins defined by trans-counts & isB2B, look at bins defined by 
   # fragment length, mappability, GC content and isB2B; 
@@ -329,6 +333,9 @@ normaliseOtherEnds = function(x, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE
   x = as.data.frame(xAll) # note - redefining x
   othercols = names(x)[(!names(x)%in%c(baitIDcol, otherEndIDcol))]
   x = x[, c(baitIDcol, otherEndIDcol, othercols)]  
+  
+  attributes(x)$dispersion <- x ##return dispersion (if applicable)
+  
   invisible(x)
 }
 
@@ -598,6 +605,7 @@ estimateTechnicalNoise = function(x, Ncol="N", filterTopPercent=0.01, minBaitsPe
     
   message("Estimating technical noise based on trans-counts...")
 
+  alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
   ##TODO: considering turning trans counts into "Inf"
 
   if (!"tlb" %in% names(x)){
@@ -720,6 +728,8 @@ estimateTechnicalNoise = function(x, Ncol="N", filterTopPercent=0.01, minBaitsPe
   othernames = names(x)[!names(x) %in% c("tlb", "tblb", "Tmean")]
   x = x[, c(othernames, "tlb", "tblb", "Tmean")] ##tlb, tblb are the classes of the other ends, based on trans counts
     
+  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
+
   invisible(x)
 }
 
@@ -731,15 +741,22 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
   
   ##p-values:
   ##(gives P(X > x-1) = P(X >= x))
-  message("Calculating p-values...")
-  x[,outcol] <- pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
+  message("Calculating p-values...") 
   
-  ##pdelap can output NaNs when N large, mean small. Correct this: 
-  sel <- which(is.nan(x[,outcol]))
-  if(length(sel) > 0)
-  {
-    x[sel,outcol] <- -Inf
-  }
+  ##The "ifelse" is because pdelap cannot deal with beta=0.
+  ##TODO can probably optimize this:
+  x[,outcol] <- ifelse(
+    x$Bmean < .Machine$double.eps,
+    ppois(x[,Ncol] - 1L, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE),
+    pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
+  )
+  
+#   ##pdelap can output NaNs when N large, mean small. Correct this: 
+#   sel <- which(is.nan(x[,outcol]))
+#   if(length(sel) > 0)
+#   {
+#     x[sel,outcol] <- -Inf
+#   }
   
   invisible(x)
 }
