@@ -1,8 +1,8 @@
 ### EDIT ME
 # CHiCAGOv2: calling interactions
-source("~/CHiCAGOv2/chicago.R")
+source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/chicago.R")
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
-source("~/CHiCAGOv2/Functions_new_datatable.R") 
+source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/Functions_new_datatable.R") 
 fileDir = "/bi/group/sysgen/CHIC"
 ###
 
@@ -39,6 +39,7 @@ if (!exists("clArgs")){
 # or clArgs = c(%<Nfiles>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>, <input-file-name-1>, ..., <input-file-name-N>)
 
 print (clArgs)
+print (length(clArgs))
 
 if(length(clArgs)<5){
   stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> as arguments\n
