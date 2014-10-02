@@ -750,14 +750,32 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
     ppois(x[,Ncol] - 1L, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE),
     pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
   )
+
+  # Large N approximation ---------------------------------------------------
   
-#   ##pdelap can output NaNs when N large, mean small. Correct this: 
-#   sel <- which(is.nan(x[,outcol]))
-#   if(length(sel) > 0)
-#   {
-#     x[sel,outcol] <- -Inf
-#   }
+  ##In rare cases where pdelap returns Infs, estimate the p-value magnitude
+  ##using an NB approximation, through method of moments argument
+  ##NaNs occur when pdelap() thinks the p-value is negative (since can have 1 - 1 != 0),
+  ##thus these are also approximated.
+  sel <- which(is.infinite(x[,outcol]) | is.nan(x[,outcol]))
+  if(length(sel) > 0)
+  {
+    message("Approximating ", length(sel), " very small p-values.")
+    x.inf <- x[sel,]
   
+    gamma <- with(x.inf, alpha*(1+Tmean/Bmean)^2)
+    ##in the case where Bmean << Tmean, gamma becomes Inf, so cap gamma above
+    ##(should make very little difference since we are basically Poisson in this case)
+    ##Case where Bmean >> Tmean causes no problem.
+    gamma <- pmin(gamma, 1e10)
+    x.inf[,outcol] <- with(x.inf,
+                           pnbinom(x.inf[,Ncol] - 1L, size=gamma, mu=Bmean+Tmean, lower.tail=FALSE, log.p=TRUE)
+    )
+    x[sel,outcol] <- x.inf[,outcol]
+    if(any(is.infinite(x.inf[,outcol]))) {warning("Some log-p-values were infinite.")}
+    if(any(is.nan(x.inf[,outcol]))) {warning("Some log-p-values were NaNs.")}
+  }
+  if(any(is.na(x[,outcol]))) {warning("Some log-p-values were NA.")}
   invisible(x)
 }
 
