@@ -807,8 +807,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
 }
 
 getScores <- function(x, method="weightedRelative",
-                    relAbundance=1E5, #Brange=c(5e4,1e5), Trange=c(5e7, Inf), ##for future use (relAbundance estimation)
-                    outcol="log.FDR", includeBait2Bait=TRUE, plot=T, outfile=NULL)
+                    relAbundance=1E5, includeBait2Bait=TRUE, plot=T, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
   ## - Then, use Benjamini-Hochberg to calculate FDRs
