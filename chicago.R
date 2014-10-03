@@ -31,6 +31,33 @@ minNPerBait = 250
 binsize=20000
 removeAdjacent = TRUE
 
+
+chicagoPipeline <- function(x, outprefix, pi.rel)
+{
+  message("\n*** Running normaliseBaits...\n")
+  x = normaliseBaits(x)
+  
+  message("\n*** Running normaliseOtherEnds...\n")
+  x = normaliseOtherEnds(x, outfile=paste0(outprefix, "_oeNorm.pdf"))
+  
+  message("\n*** Running estimateTechnicalNoise...\n")
+  x = estimateTechnicalNoise(x, outfile=paste0(outprefix, "_techNoise.pdf"))
+  
+  message("\n*** Running estimateDistFun...\n")
+  f = estimateDistFun(x)
+  
+  message("\n*** Running estimateBrownianNoise...\n")
+  x = estimateBrownianNoise(x, f, subset=1000)
+  
+  message("\n*** Running getPvals...\n")
+  x = getPvals(x)
+  
+  message("\n*** Running getScores...\n")
+  x = getScores(x, relAbundance = pi.rel)
+  
+  invisible(x)
+}
+
 readSample = function(file){
   
   x = fread(file)

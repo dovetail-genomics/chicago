@@ -88,31 +88,9 @@ if (length(grep("^%\\d+$", infname))){
 
 system(paste("mkdir -p", outfolder))
 
-# 2. Running interaction calling - note there eventually be a single wrapper function for this
+# 2. Running interaction calling
 
-cat("\n*** Running normaliseBaits...\n")
-x = normaliseBaits(x)
-
-cat("\n*** Running normaliseOtherEnds...\n")
-x = normaliseOtherEnds(x, outfile=paste0(outprefix, "_oeNorm.pdf"))
-
-cat("\n*** Running estimateTechnicalNoise...\n")
-x = estimateTechnicalNoise(x, outfile=paste0(outprefix, "_techNoise.pdf"))
-
-cat("\n*** Running estimateDistFun...\n")
-f = estimateDistFun(x)
-
-cat("\n*** Running estimateBrownianNoise...\n")
-
-# Currently Brownian noise has to be estimated right before getPvals is called otherwise the input data frame attribute "dispersion" will be lost
-# Logged an "issue" on bitbucket tracker to fix this. 
-x = estimateBrownianNoise(x, f, subset=1000)
-
-cat("\n*** Running getPvals...\n")
-x = getPvals(x)
-
-cat("\n*** Running getScores...\n")
-x = getScores(x, relAbundance = pi.rel)
+x <- chicagoPipeline(x, outprefix, pi.rel)
 
 # 3. Saving image
 
