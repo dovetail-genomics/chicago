@@ -110,7 +110,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd_folder
 }
 
 
-drawSamples <- function(x1_nonsign, sample_number, ncores=8, multicoreSampling=T, unique=T) {
+drawSamples <- function(x1_nonsign, sample_number, unique=T) {
   sample_NP <- list()
   x1_nonsign<-data.table(x1_nonsign)
   setkey(x1_nonsign,distbin3)
@@ -181,7 +181,7 @@ peakEnrichment4Features <- function(x1=NULL, filename=NULL, score, colname_score
                                     restriction_enz_file=NULL, folder_samples=NULL, generic_name, folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",
                                     position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag=NULL, sep="\t", header=TRUE, 
                                     plot_name=NULL, distal=FALSE, coldist=NULL, unique=TRUE, filterB2B=FALSE,
-                                    b2bcol="isBait2bait", ncores = 8, multicoreSampling=T, negFraction = 1) {
+                                    b2bcol="isBait2bait", negFraction = 1) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (any(c("V1", "V2", "V3", "V4") %in% names(x1))){
@@ -233,7 +233,7 @@ peakEnrichment4Features <- function(x1=NULL, filename=NULL, score, colname_score
   result_2 <- Binning(sign=result_1, no_bins=no_bins, x1_nonsign=result_2, distal=distal)
   # Draw random samples
   cat("Draw random samples...\n")
-  result_3 <- drawSamples(x1_nonsign=result_2, sample_number=sample_number, ncores=ncores, multicoreSampling=multicoreSampling)
+  result_3 <- drawSamples(x1_nonsign=result_2, sample_number=sample_number)
   cat("Sum number of overlaps with feature in our significant interactions and in our samples...\n")
   result_5<-plotNumberOL(x_sign = result_1, s=result_3, files = list_frag)
   return(result_5)
