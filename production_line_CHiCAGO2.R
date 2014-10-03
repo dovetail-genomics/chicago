@@ -2,7 +2,8 @@
 # CHiCAGOv2: calling interactions
 source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/chicago.R")
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
-source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/Functions_new_datatable.R") 
+source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/Functions_new_datatable.R")
+source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/run_peakEnrichment4Features.R")
 fileDir = "/bi/group/sysgen/CHIC"
 ###
 
@@ -143,11 +144,11 @@ system(paste0("mv ", outfolder, "/*.pdf ", outfolder, "/diag_plots"))
 
 cat("\n*** Running compareSeq...\n")
 
-CompareSeqTotal(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
-colname_score="score",folder=featureFolder, position_otherEnd=rmapfile, 
-list_frag=files, filterB2B=TRUE, ncores=4,
+peakEnrichment4Features(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
+colname_score="score",folder=featureFolder, position_otherEnd_folder=fileDir, 
+list_frag=files, filterB2B=TRUE,
 colname_dist="distSign", beyond_dist=0, before_dist=1000000,
-plot_overlaps=T, plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
+plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
 
 system(paste("mkdir -p", paste0(outfolder, "/overlap_plots")))     
 system(paste0("mv ", outfolder, "/*feature_overlaps_*.pdf ", outfolder, "/overlap_plots"))
