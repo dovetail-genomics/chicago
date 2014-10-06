@@ -1,9 +1,6 @@
 library(GenomicRanges)
 library(multicore)
 library(data.table)
-source('~/pipeline/write2.R')
-
-library("data.table")
 
 Extract <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL, significant=TRUE) {
   if (is.null(x1) & is.null(filename)) {

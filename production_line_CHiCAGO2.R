@@ -1,9 +1,10 @@
 ### EDIT ME
 # CHiCAGOv2: calling interactions
-source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/chicago.R")
+scriptDir <- "/bi/apps/chicago/0.1.0.dev"
+source(file.path(scriptDir, "chicago.R"))
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
-source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/Functions_new_datatable.R")
-source("/bi/scratch/wingetts/chicago_wrapper/chicagov2/run_peakEnrichment4Features.R")
+source(file.path(scriptDir, "Functions_new_datatable.R"))
+source(file.path(scriptDir, "run_peakEnrichment4Features"))
 fileDir = "/bi/group/sysgen/CHIC"
 ###
 
