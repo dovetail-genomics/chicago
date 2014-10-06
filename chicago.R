@@ -563,7 +563,7 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
   
   ##Calculate Bmeans
   ##----------------
-  x$Bmean <- .estimateBMean(x, f, reEstimateMean)
+  x$Bmean <- .estimateBMean(x, distFun, reEstimateMean)
   
   ##Fit model
   ##---------
@@ -581,7 +581,7 @@ estimateBrownianNoise <- function(x, distFun, Ncol="N", adjBait2bait=TRUE, subse
     stop("Not implemented yet")
     ##Basically you need to grab the means from the x object - reestimating means on xAll doesn't work due to 0 truncation.
   } else {
-    xAll$Bmean <- .estimateBMean(xAll, f, reEstimateMean=FALSE)
+    xAll$Bmean <- .estimateBMean(xAll, distFun, reEstimateMean=FALSE)
   }
   invisible(xAll)
 }
