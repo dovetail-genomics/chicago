@@ -147,3 +147,9 @@ Thereafter, you can change branch with an easier checkout command:
 $ git checkout master
 
 $ git checkout develop
+
+If you create a new release, please tag it with the version number. After committing, use e.g. 
+
+$ git tag 0.1.1
+
+$ git push --tags
