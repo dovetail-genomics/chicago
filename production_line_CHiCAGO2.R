@@ -145,13 +145,15 @@ system(paste0("mv ", outfolder, "/*.pdf ", outfolder, "/diag_plots"))
 
 cat("\n*** Running compareSeq...\n")
 
-peakEnrichment4Features(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
+resTable<-peakEnrichment4Features(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
 colname_score="score",folder=featureFolder, position_otherEnd_folder=fileDir, 
 list_frag=files, filterB2B=TRUE,
 colname_dist="distSign", beyond_dist=0, before_dist=1000000,
 plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
 
-system(paste("mkdir -p", paste0(outfolder, "/overlap_plots")))     
-system(paste0("mv ", outfolder, "/*feature_overlaps_*.pdf ", outfolder, "/overlap_plots"))
+system(paste("mkdir -p", paste0(outfolder, "/overlap_data")))
+write.table(resTable, quote=F, row.names= , col.names=T, file=   paste0(outprefix, "_feature_overlaps_upto1M.txt")) 
+system(paste0("mv ", outfolder, "/*feature_overlaps*.* ", outfolder, "/overlap_plots"))
 
 cat("\n*** All done  ***\n")
+
