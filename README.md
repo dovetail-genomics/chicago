@@ -130,5 +130,5 @@ Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freir
 
 Note for developers
 ----------
-Eventual aim is for the structure to be as: http://nvie.com/posts/a-successful-git-branching-model/
-Currently, we are using the master branch & feature branches only. Upon the first release, a development branch will be added.
+The branch structure we are using is: http://nvie.com/posts/a-successful-git-branching-model/
+Please use the "develop" branch for new features, and only use the "master" branch for new releases and serious bugfixes.
