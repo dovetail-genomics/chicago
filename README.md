@@ -130,5 +130,19 @@ Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freir
 
 Note for developers
 ----------
-The branch structure we are using is: http://nvie.com/posts/a-successful-git-branching-model
-Please use the "develop" branch for new features, and only use the "master" branch for new releases and serious bugfixes.
+
+The branch structure we are using is: http://nvie.com/posts/a-successful-git-branching-model/
+Please use the "develop" branch for new features, and only use the "master" branch for new releases and serious bugfixes. **Do not commit anything else to the "master" branch.**
+
+To check what branch you are on, use the command:
+
+git branch
+
+(The branch you are on is highlighted with an asterisk: *) To switch to the develop branch for the first time, use the command:
+
+git checkout --track origin/develop
+
+Thereafter, you can change branch with an easier checkout command:
+
+git checkout master
+git checkout develop
