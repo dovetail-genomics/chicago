@@ -4,7 +4,7 @@ scriptDir <- "/bi/apps/chicago/0.1.0.dev"
 source(file.path(scriptDir, "chicago.R"))
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
 source(file.path(scriptDir, "Functions_new_datatable.R"))
-source(file.path(scriptDir, "run_peakEnrichment4Features"))
+source(file.path(scriptDir, "run_peakEnrichment4Features.R"))
 fileDir = "/bi/group/sysgen/CHIC"
 ###
 
