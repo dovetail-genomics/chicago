@@ -136,13 +136,14 @@ Please use the "develop" branch for new features, and only use the "master" bran
 
 To check what branch you are on, use the command:
 
-git branch
+$ git branch
 
 (The branch you are on is highlighted with an asterisk: *) To switch to the develop branch for the first time, use the command:
 
-git checkout --track origin/develop
+$ git checkout --track origin/develop
 
 Thereafter, you can change branch with an easier checkout command:
 
-git checkout master
-git checkout develop
+$ git checkout master
+
+$ git checkout develop
