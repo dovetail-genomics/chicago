@@ -232,7 +232,7 @@ peakEnrichment4Features <- function(x1=NULL, filename=NULL, score, colname_score
   cat("Draw random samples...\n")
   result_3 <- drawSamples(x1_nonsign=result_2, sample_number=sample_number)
   cat("Sum number of overlaps with feature in our significant interactions and in our samples...\n")
-  result_5<-plotNumberOL(x_sign = result_1, s=result_3, files = list_frag)
+  result_5<-plotNumberOL(x_sign = result_1, s=result_3, files = list_frag,  plot_name=plot_name)
   return(result_5)
   
 }
