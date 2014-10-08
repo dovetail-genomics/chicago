@@ -75,6 +75,9 @@ readSample = function(file){
   message("minFragLen = ", minFragLen, " maxFragLen = ", maxFragLen)
   message("Filtered out ", xlen-nrow(x), " interactions involving other ends < minFragLen or > maxFragLen.")
 
+  # TODO - remove baits that have no observations within the proximal range
+  # maxLBrownEst
+  
   setkeyv(x, baitIDcol)
   baitlen = length(unique(x[[baitIDcol]])) 
   x = x[, nperbait:=sum(get(Ncol)), by=baitIDcol]
@@ -83,7 +86,17 @@ readSample = function(file){
   message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits with < minNPerBait reads.\n")  
   x$nperbait = NULL
 
-  # TODO - remove baits that have no observations within the proximal range (unlikely to be present anyway though)
+  baitlen = length(unique(x[[baitIDcol]])) 
+  x$isBait2bait = FALSE
+  x$isBait2bait[whichbait2bait(as.data.frame(x))] = TRUE
+  x[, isAllB2BProx:={
+    if(!length(.I[abs(distSign)<maxLBrownEst])){  TRUE  }
+    else{ all(isBait2bait[abs(distSign)<maxLBrownEst]) }
+  }, by=baitIDcol]
+  x = x[isAllB2BProx==FALSE]
+  x$isAllB2BProx = NULL
+  
+  message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits without proximal non-Bait2bait interactions\n")  
   
   if(removeAdjacent){
     x[, isAdjacent:=abs(get(baitIDcol)-get(otherEndIDcol))==1, by=baitIDcol]
