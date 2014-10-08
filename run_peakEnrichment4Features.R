@@ -1,5 +1,5 @@
 library(GenomicRanges)
-library(multicore)
+library(parallel)
 library(data.table)
 
 Extract <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL, significant=TRUE) {
@@ -51,7 +51,7 @@ convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TR
   result <- list()
   for (i in list_frag) {
     i <- paste0(folder,i)
-    Feature <- read.table(file=i,sep=sep, header=header,stringsAsFactors=F)
+    Feature <- read.table(file=i,sep=sep, header=header,stringsAsFactors=FALSE)
     if(length(grep("chr",Feature[1,1]))==0){
       Feature[,1]=paste0("chr",Feature[,1])
     }
@@ -86,7 +86,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd_folder
   #position_otherEnd <- read.table(position_otherEnd, header=FALSE)
   #colnames(position_otherEnd)<- c("chr","start","end","ID")
   
-  HindIII <- convertBedFormat2GR(folder=position_otherEnd_folder, list_frag = c(HindIII=position_otherEnd_file), sep=sep, header=F)[[1]]
+  HindIII <- convertBedFormat2GR(folder=position_otherEnd_folder, list_frag = c(HindIII=position_otherEnd_file), sep=sep, header=FALSE)[[1]]
   
   # Get Features to overlap
   features <- convertBedFormat2GR(folder=folder, list_frag=list_frag, sep=sep, header=header)
@@ -107,12 +107,12 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd_folder
 }
 
 
-drawSamples <- function(x1_nonsign, sample_number, unique=T) {
+drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
   sample_NP <- list()
   x1_nonsign<-data.table(x1_nonsign)
   setkey(x1_nonsign,distbin3)
   sample_NP <-  lapply(1:sample_number, function(j) {
-    b <- x1_nonsign[,.I[sample(1:length(.I),bin_reads[1],replace=T)],by="distbin3"]
+    b <- x1_nonsign[,.I[sample(1:length(.I),bin_reads[1],replace=TRUE)],by="distbin3"]
     s1<-as.data.frame(x1_nonsign)[b$V1,]
     if(unique){
       s1<-s1[!duplicated(s1$otherEndID),]
