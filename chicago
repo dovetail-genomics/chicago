@@ -72,7 +72,7 @@ foreach my $array (@inputData){
 		my $prefix1 = $$array[1];
 		my $prefixRand = "$prefix1." . generateRandomString(6);
 		my $command = "$Bin/process_chic_single_core.sh $inputFile $config{baits} $config{digest} $prefix1";
-		my $clusterCommand = "echo \"$command\" | qsub -V -cwd -l vf=10G -pe orte 4 -o $prefixRand.out -j y -N $prefixRand $config{email}";
+		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o $prefixRand.out -j y -N $prefixRand $config{email}";
 
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
 		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";
@@ -153,7 +153,7 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
-		my $clusterCommand = "echo \"$command\" | qsub -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $prefix2Rand $config{email} $jid_string";
+		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $prefix2Rand $config{email} $jid_string";
 		#print "$command\n";
 		#!system("$command") or die "Could not run '$command' : $!";
 		

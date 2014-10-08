@@ -130,6 +130,7 @@ Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freir
 
 Note for developers
 ----------
+
 The branch structure we are using is: http://nvie.com/posts/a-successful-git-branching-model/
 Please use the "develop" branch for new features, and only use the "master" branch for new releases and serious bugfixes. **Do not commit anything else to the "master" branch.**
 
@@ -146,3 +147,9 @@ Thereafter, you can change branch with an easier checkout command:
 $ git checkout master
 
 $ git checkout develop
+
+If you create a new release, please tag it with the version number. After committing, use e.g. 
+
+$ git tag 0.1.1
+
+$ git push --tags
