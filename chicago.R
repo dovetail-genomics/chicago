@@ -75,10 +75,9 @@ readSample = function(file){
   message("minFragLen = ", minFragLen, " maxFragLen = ", maxFragLen)
   message("Filtered out ", xlen-nrow(x), " interactions involving other ends < minFragLen or > maxFragLen.")
 
-  # TODO - remove baits that have no observations within the proximal range
-  # maxLBrownEst
-  
   setkeyv(x, baitIDcol)
+    
+  ## remove baits that have no observations within the proximal range
   baitlen = length(unique(x[[baitIDcol]])) 
   x = x[, nperbait:=sum(get(Ncol)), by=baitIDcol]
   x = x[nperbait>=minNPerBait]
@@ -86,24 +85,26 @@ readSample = function(file){
   message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits with < minNPerBait reads.\n")  
   x$nperbait = NULL
 
-  baitlen = length(unique(x[[baitIDcol]])) 
-  x$isBait2bait = FALSE
-  x$isBait2bait[whichbait2bait(as.data.frame(x))] = TRUE
-  x[, isAllB2BProx:={
-    if(!length(.I[abs(distSign)<maxLBrownEst])){  TRUE  }
-    else{ all(isBait2bait[abs(distSign)<maxLBrownEst]) }
-  }, by=baitIDcol]
-  x = x[isAllB2BProx==FALSE]
-  x$isAllB2BProx = NULL
-  
-  message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits without proximal non-Bait2bait interactions\n")  
-  
+  ## remove adjacent pairs
   if(removeAdjacent){
     x[, isAdjacent:=abs(get(baitIDcol)-get(otherEndIDcol))==1, by=baitIDcol]
     x = x[isAdjacent==FALSE]
     x$isAdjacent = NULL
     message("Removed interactions with fragments adjacent to baits.")
   }
+  
+  ##remove baits without proximal non-bait2bait interactions
+  baitlen = length(unique(x[[baitIDcol]])) 
+  x$isBait2bait = FALSE
+  x$isBait2bait[whichbait2bait(as.data.frame(x))] = TRUE
+  x[, isAllB2BProx:={
+    if(!length(.I[abs(distSign)<maxLBrownEst & !is.na(distSign)])){  TRUE  }
+    else{ all(isBait2bait[abs(distSign)<maxLBrownEst & !is.na(distSign)]) }
+  }, by=baitIDcol]
+  x = x[isAllB2BProx==FALSE]
+  x$isAllB2BProx = NULL
+  
+  message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits without proximal non-Bait2bait interactions\n")  
 
   invisible(as.data.frame(x))
 }
