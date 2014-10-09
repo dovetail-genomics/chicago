@@ -153,7 +153,7 @@ plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
 
 system(paste("mkdir -p", paste0(outfolder, "/overlap_data")))
 write.table(resTable, quote=F, row.names= , col.names=T, file=   paste0(outprefix, "_feature_overlaps_upto1M.txt")) 
-system(paste0("mv ", outfolder, "/*feature_overlaps*.* ", outfolder, "/overlap_plots"))
+system(paste0("mv ", outfolder, "/*feature_overlaps*.* ", outfolder, "/overlap_data"))
 
 cat("\n*** All done  ***\n")
 
