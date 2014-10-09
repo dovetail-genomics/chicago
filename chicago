@@ -72,11 +72,11 @@ foreach my $array (@inputData){
 		my $prefix1 = $$array[1];
 		my $prefixRand = "$prefix1." . generateRandomString(6);
 		my $command = "$Bin/process_chic_single_core.sh $inputFile $config{baits} $config{digest} $prefix1";
-		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o $prefixRand.out -j y -N $prefixRand $config{email}";
+		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o CHiCAGO1.$prefixRand.out -j y -N $prefixRand $config{email}";
 
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
 		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";
-		push( @$array, $prefixRand);
+		push( @$array, "CHiCAGO1.$prefixRand");
 	}	
 }
 
@@ -119,6 +119,8 @@ foreach my $array (@inputData){
 #print Dumper \%prefix2Features;
 
 #Send step2 jobs to the cluster
+my @submittedStep2Jobs;   #Stores the names of jobs submitted to the cluster in order. Even sent to node 0, odd to node 1
+
 foreach my $prefixStep2 (keys %prefixStep2Files){
 	my $features = $prefixStep2Features{$prefixStep2};
 	
@@ -148,22 +150,42 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	}else{
 		my $filenameString = join(' ', @files);
-		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString < $Bin/production_line_CHiCAGO2.R";		
-		
-		
+		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString < $Bin/production_line_CHiCAGO2.R";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
-		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $prefix2Rand $config{email} $jid_string";
+		
+		my $currentJobName = "CHiCAGO2.$prefix2Rand";
+		push (@submittedStep2Jobs, $currentJobName);
+		my $jobSent = scalar @submittedStep2Jobs;
+		my $clusterCommand;	
+		my $node;
+		
+		if($jobSent % 2){    #Odd number of jobs sent
+			$node = "all.q\@compute-0-1.local";
+		}else{
+			$node = "all.q\@compute-0-0.local";
+		}
+			
+		if($jobSent > 4){
+			my $jobToWaitFor = $submittedStep2Jobs[$jobSent - 5];
+			if($jid_string eq ''){
+				$jid_string = '-hold_jid '; 
+			}
+			$jid_string = $jid_string . ',' . $jobToWaitFor;
+			$jid_string =~ s/hold_jid ,/hold_jid /;
+		}	
+		$clusterCommand = "echo \"$command\" | qsub -q $node -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $currentJobName $config{email} $jid_string";	
+	
+		#print "$clusterCommand\n";
 		#print "$command\n";
+		
 		#!system("$command") or die "Could not run '$command' : $!";
 		
 		print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
-	
-	
+
 }
-	
-	
+		
 close LOG or die "Could not close 'chicagoLog.txt' : $!";
 
 print "Processing complete.\n";	
