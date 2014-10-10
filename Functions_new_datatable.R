@@ -437,6 +437,7 @@ Compare_seq2 <- function(folder_samples=NULL,no_samples, generic_name, position_
   }
   
   list_names <- names(list_frag)
+  browser()
   if(multicoreSampling){
     cat("First mclappy... \n")
     aux<- mclapply(samples, function(i) {
@@ -506,8 +507,8 @@ Compare_seq2 <- function(folder_samples=NULL,no_samples, generic_name, position_
   }
   if (Subset_FtoG==TRUE) {
     if (length(list_frag)==1) {
-        Mean <- mean(aux2)
-        SD <- sd(aux2)
+        Mean <- mean(aux3)
+        SD <- sd(aux3)
     }
     else {
         Mean <- as.vector(tapply(aux3, row(aux3), mean))
