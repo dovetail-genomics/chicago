@@ -1413,16 +1413,23 @@ getScores <- function(x, method="weightedRelative",
   invisible(x)
 }
 
-plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,       
-                              plevel1 = 12, plevel2 =10, outfile=NULL, 
-                              width=20, height=20, ...){
+plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,      
+                              plevel1 = 12, plevel2 =10, outfile=NULL, removeBait2bait=TRUE, 
+                              width=20, height=20, maxD=NULL, ...){
+  if(plotBaitNames){
+    baitmap = fread(baitmapfile)
+  }
   if (is.null(baits)){
     baits = sample(unique(x[,baitIDcol]),n)
   }
   else{
     n = length(baits)
   }
-  
+ 
+  if(plotBprof){
+    disp = attributes(x)$dispersion 
+  }
+ 
   if (!is.null(outfile)){ 
     pdf(outfile, width=width, height=height)
   }
@@ -1432,9 +1439,25 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
   else{
     par(mfrow=c(1, n))
   }
+
+  x = data.table(x)
+  setkeyv(x, baitIDcol)
+
   for(i in 1:n){
-    this = x[x[,baitIDcol]==baits[i],]
-    
+
+    this = x[get(baitIDcol)==baits[i]]
+    this = this[is.na(distSign)==FALSE]
+
+    if (!is.null(maxD)){
+       this = this[abs(distSign)<=maxD]
+    }
+     
+    if (removeBait2bait){
+       this = this[isBait2bait==FALSE]
+    }
+    this = as.data.frame(this)
+    this = this[order(this[,distcol]),]
+
     cols <- rep("Black", nrow(this))
     pchs <- rep(1, nrow(this))
     sel1 <- this[,pcol] >=plevel1
@@ -1443,17 +1466,18 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
     cols[sel1] <- "Red"
     pchs[sel1 | sel2] <- 20
     
-    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=paste("baitID=", baits[i], sep=""), col=cols, pch=pchs, ...)
-#     if (any(this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter)) {
-#       points(this[this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter ,distcol], 
-#              this[this[,pcol]>=plevel1  & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter ,Ncol], col="red", pch=20)
-#     }         
-#     if (any(this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter)) {
-#       points(this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter,distcol], 
-#              this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter,Ncol], 
-#              col="blue", pch=20)
-#     }
+    title = paste("baitID=", baits[i], sep="")
+    if(plotBaitNames){
+         title = paste(title, baitmap$V5[baitmap$V4==baits[i]])
+    }    
+
+    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
+
+    if(plotBprof){
+	lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
+        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), lwd=1, lty=2, col="darkgrey")
+    }
   }
   if (!is.null(outfile)){ 
     dev.off()
