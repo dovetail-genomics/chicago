@@ -1466,9 +1466,14 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TR
     cols[sel1] <- "Red"
     pchs[sel1 | sel2] <- 20
     
-    title = paste("baitID=", baits[i], sep="")
+    title = paste(baits[i], sep="")
     if(plotBaitNames){
-         title = paste(title, baitmap$V5[baitmap$V4==baits[i]])
+         baitName = baitmap$V5[baitmap$V4==baits[i]]
+         if (length(grep(",",baitName))){
+             baitName = gsub("(\\S+,).+","\\1", baitName)
+             baitName = paste0(baitName, "...")
+         }
+         title = paste(title, baitName, sep=" - ")
     }    
 
     plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
