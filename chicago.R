@@ -222,7 +222,7 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
   ns = as.numeric(gsub(paste0(Ncol, "\\.(\\d+)"), "\\1", Ncols))
   n = max(ns)
 
-  # cat("n =", n, "\n")
+  # message("n = ", n)
   
   xs = data.table(xs)
   
@@ -1507,13 +1507,13 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
   }
   
   if (is.null(rmap)){
-    cat("Reading the restriction map file...\n")
+    message("Reading the restriction map file...")
     rmap = as.data.frame(read.table(rmapfile))
   }
   names(rmap) = c("rChr", "rStart", "rEnd", "otherEndID")
   
   if (is.null(baitmap)){
-    cat("Reading the bait map file...\n")
+    message("Reading the bait map file...")
     baitmap = as.data.frame(fread(baitmapfile))
   }
   names(baitmap)[1:3] = c("bChr", "bStart", "bEnd") 
@@ -1526,7 +1526,7 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
   #    baitmap$index = paste(baitmap[,1], baitmap[,2], baitmap[,3], sep="_")  
   #  }
   #}
-  cat("Preparing the output table...\n")
+  message("Preparing the output table...")
   # just in case
   baitmap = baitmap[!duplicated(baitmap$V4),]
   rmap = rmap[!duplicated(rmap$otherEndID),]
@@ -1586,7 +1586,7 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
   out0=out
    
   if ("seqMonk" %in% format){
-    cat("Writing out for seqMonk...\n")
+    message("Writing out for seqMonk...")
     out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
     
     #out$star = "*"
@@ -1596,19 +1596,19 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
     
     out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", 
                  "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
-    cat("Writing out for seqMonk...\n")		
+    message("Writing out for seqMonk...")		
     write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
     
   }	
   if ("interBed" %in% format){
-    cat("Writing out interBed...\n")
+    message("Writing out interBed...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
                  "N_reads", "score")]
     write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)	
   }
   if("washU" %in% format){
-   cat("Writing out for washU browser...\n")
+   message("Writing out for washU browser...")
    out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
                  "N_reads", "score")]
