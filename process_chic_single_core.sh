@@ -6,7 +6,8 @@ if [ $# -lt 4 ]
     exit
 fi
 
-pipelinedir="/bi/group/sysgen/mikhail/my_chic/pipeline"
+SCRIPT=$(readlink -f $0)
+pipelinedir=`dirname $SCRIPT`
 
 processhicup="${pipelinedir}/process_hicup.sh"
 chicnosplit="${pipelinedir}/chic_no_split.sh"
