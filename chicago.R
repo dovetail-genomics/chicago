@@ -1437,7 +1437,7 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TR
     par(mfrow=c(4, ceiling(n/4)))
   }
   else{
-    par(mfrow=c(1, n))
+    par(mfrow=c(n, 1))
   }
 
   x = data.table(x)
