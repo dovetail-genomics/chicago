@@ -278,12 +278,13 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
   invisible(xs0)
 }
 
-normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL){
+normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
   x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
                             viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
-                            shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile)
+                            shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
+  if(debug){return(x)} ##returns sbbm
   # sort by baitID, otherEndID and move distbin column to the end of the table 
   x[, normNcol] = round(x[,Ncol]/x$s_j)
   x[x[,normNcol]==0, normNcol] = 1 # do not completely "cancel" interactions that have one read 
@@ -972,7 +973,7 @@ getScores <- function(x, method="weightedRelative",
 }
 
 .normaliseFragmentSets = function(x, npb, viewpoint, idcol, Ncol, adjBait2bait=TRUE, shrink=TRUE, 
-                          refExcludeSuffix=NULL, plot=TRUE, outfile=NULL){   #minPosBins = 5, 
+                          refExcludeSuffix=NULL, plot=TRUE, outfile=NULL, debug=FALSE){   #minPosBins = 5, 
   
   # The normalisation engine used for normaliseBaits and normaliseOtherEnds
   # "Viewpoint" will be used in the comments for either baits or sets of other ends,
@@ -1099,7 +1100,8 @@ getScores <- function(x, method="weightedRelative",
     sbbm2$s_ivfilt[sbbm2$p<0.05] = NA
     s_v = sbbm2[, median(s_ivfilt[!is.na(s_ivfilt)]), by=idcol]
     sbbm = sbbm2
-  }    
+  }
+  if(debug) {return(sbbm)}
   
   setnames(s_v, "V1", scol)  
   
