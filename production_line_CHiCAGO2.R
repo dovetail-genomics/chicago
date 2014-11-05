@@ -1,19 +1,54 @@
 ### EDIT ME
+
+### If running from RStudio interactively
+# if(Sys.getenv("RSTUDIO_USER_IDENTITY")==""){
+### or, simply, if clArgs is not defined:
+if (!exists("clArgs")){
+  clArgs = commandArgs(trailingOnly=T)
+}
+# else - expect to have clArgs defined explicitly in the local environment,
+# such as clArgs = c(<input-file-name>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>)
+# or clArgs = c(%<Nfiles>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>, <input-file-name-1>, ..., <input-file-name-N> <fileDirDigest> <headerDigest>)
+
+print (clArgs)
+print (length(clArgs))
+
+if(length(clArgs)<5){
+  stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> as arguments\n
+        for multiple samples, supply %<Nfiles> <output-folder> <output-prefix> <feature-folder> <feature-list> <input-file-1> ... <input-file-N> <fileDirDigest> <headerDigest>\n")
+}
+
+infname = clArgs[1]
+outfolder = clArgs[2]
+outprefix = paste0(outfolder, "/", clArgs[3])
+featureFolder = paste0(clArgs[4],"/") # important as currently CompareSeqTotal requires featureFolder to end with a slash
+featureList = clArgs[5]
+
+features = read.table(featureList, stringsAsFactors=F)
+files = features[,2]
+names(files) = features[,1]
+
+
+
+
 # CHiCAGOv2: calling interactions
 scriptDir <- "/bi/apps/chicago/0.1.0.dev"
 source(file.path(scriptDir, "chicago.R"))
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
 source(file.path(scriptDir, "Functions_new_datatable.R"))
 source(file.path(scriptDir, "run_peakEnrichment4Features.R"))
-fileDir = "/bi/group/sysgen/CHIC"
+fileDir =  clArgs[length(clArgs)-1]
+header= clArgs[length(clArgs)]
+#fileDir = "/bi/group/sysgen/CHIC"
 ###
 
 ### Resource file locations
-rmapfile= file.path(fileDir, "Digest_Human_HindIII.bed")
-baitmapfile= file.path(fileDir, "Digest_Human_HindIII_baits_ID.bed")
-nperbinfile = file.path(fileDir, "Digest_Human_HindIII_NperBin.txt")
-nbaitsperbinfile = file.path(fileDir, "Digest_Human_HindIII_NbaitsPerBin.txt")
-proxOEfile = file.path(fileDir, "proxOE_out.txt")
+rmapfile= file.path(fileDir, paste0(header,".bed"))
+baitmapfile= file.path(fileDir,  paste0(header,"_baits_ID.bed"))
+
+nperbinfile = file.path(fileDir,  paste0(header,"_NperBin.txt"))
+nbaitsperbinfile = file.path(fileDir, paste0(header,"_NbaitsPerBin.txt"))
+proxOEfile = file.path(fileDir, paste0(header,"_proxOEout.txt"))
 ###############
 
 ### Fragment filtering and other settings
@@ -30,33 +65,7 @@ pi.rel = 1E5
 ### Score cutoff for writing out interaction files
 outputCutoff=12
 
-### If running from RStudio interactively
-# if(Sys.getenv("RSTUDIO_USER_IDENTITY")==""){
-### or, simply, if clArgs is not defined:
-if (!exists("clArgs")){
-  clArgs = commandArgs(trailingOnly=T)
-}
-# else - expect to have clArgs defined explicitly in the local environment,
-# such as clArgs = c(<input-file-name>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>)
-# or clArgs = c(%<Nfiles>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>, <input-file-name-1>, ..., <input-file-name-N>)
 
-print (clArgs)
-print (length(clArgs))
-
-if(length(clArgs)<5){
-  stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> as arguments\n
-        for multiple samples, supply %<Nfiles> <output-folder> <output-prefix> <feature-folder> <feature-list> <input-file-1> ... <input-file-N>\n")
-}
-
-infname = clArgs[1]
-outfolder = clArgs[2]
-outprefix = paste0(outfolder, "/", clArgs[3])
-featureFolder = paste0(clArgs[4],"/") # important as currently CompareSeqTotal requires featureFolder to end with a slash
-featureList = clArgs[5]
-
-features = read.table(featureList, stringsAsFactors=F)
-files = features[,2]
-names(files) = features[,1]
 
 # 1. Read the input file(s)
 # Note that for all downstream functions,
