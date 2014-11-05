@@ -182,9 +182,9 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		$clusterCommand = "echo \"$command\" | qsub -q $node -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $currentJobName $config{email} $jid_string";	
 	
 		#print "$clusterCommand\n";
-		#print "$command\n";
+	#	print "$command\n";
 		
-		#!system("$command") or die "Could not run '$command' : $!";
+	#	!system("$command") or die "Could not run '$command' : $!";
 		
 		print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	

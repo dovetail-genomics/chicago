@@ -37,15 +37,16 @@ source(file.path(scriptDir, "chicago.R"))
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
 source(file.path(scriptDir, "Functions_new_datatable.R"))
 source(file.path(scriptDir, "run_peakEnrichment4Features.R"))
-fileDir =  clArgs[length(c1Args)-1]
-header= clArgs[length(c1Args)]
+fileDir =  clArgs[length(clArgs)-1]
+header= clArgs[length(clArgs)]
 #fileDir = "/bi/group/sysgen/CHIC"
 ###
 
 ### Resource file locations
 rmapfile= file.path(fileDir, paste0(header,".bed"))
-baitmapfile= file.path(fileDir,  paste0(header,"_baits_ID.bed")
-nperbinfile = file.path(fileDir,  paste0(header,"_NperBin.txt")
+baitmapfile= file.path(fileDir,  paste0(header,"_baits_ID.bed"))
+
+nperbinfile = file.path(fileDir,  paste0(header,"_NperBin.txt"))
 nbaitsperbinfile = file.path(fileDir, paste0(header,"_NbaitsPerBin.txt"))
 proxOEfile = file.path(fileDir, paste0(header,"_proxOEout.txt"))
 ###############
