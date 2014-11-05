@@ -291,7 +291,7 @@ normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, pl
   distbincol = which(names(x)=="distbin")
   othercols = which(names(x)!="distbin")
   x = x[, c(othercols, distbincol)]
-  attributes(x)$dispersion <- x ##return dispersion (if applicable)
+  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
   invisible(x) 
 }
 
@@ -375,7 +375,7 @@ normaliseOtherEnds = function(x, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE
   othercols = names(x)[(!names(x)%in%c(baitIDcol, otherEndIDcol))]
   x = x[, c(baitIDcol, otherEndIDcol, othercols)]  
   
-  attributes(x)$dispersion <- x ##return dispersion (if applicable)
+  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
   
   invisible(x)
 }
