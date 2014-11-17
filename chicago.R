@@ -281,10 +281,29 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
 normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
-  x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
-                            viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
-                            shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
-  if(debug){return(x)} ##returns sbbm
+  
+  ##FIXME: to ease memory issues when rerunning this function later, if x is large, we reduce x to only the important columns
+  requiredCols <- c(baitIDcol,otherEndIDcol,Ncol,otherEndLencol,distcol,"isBait2bait")
+  #if(identical(sort(requiredCols), sort(colnames(x)))) 
+  if(ncol(x) < length(requiredCols) + 6) ##attempt optimization if too many columns are present
+  {
+    x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
+                               viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
+                               shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
+    if(debug){return(x)} ##returns sbbm
+  } else {
+    temp = .normaliseFragmentSets(x=x[,requiredCols], npb=.readNPBfile(), 
+                               viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
+                               shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
+    if(debug) return(temp) ##returns sbbm
+    ##merge new columns back into x
+    x <- as.data.table(x)
+    temp <- as.data.table(temp[, colnames(temp)[!colnames(temp) %in% requiredCols[-(1:2)]], with=FALSE]) ##delete all columns already present in x, except those required for merging
+    setkeyv(x, c(baitIDcol, otherEndIDcol))
+    setkeyv(temp, c(baitIDcol, otherEndIDcol))
+    x <- merge(x, temp)
+  }
+  
   # sort by baitID, otherEndID and move distbin column to the end of the table 
   x[, normNcol] = round(x[,Ncol]/x$s_j)
   x[x[,normNcol]==0, normNcol] = 1 # do not completely "cancel" interactions that have one read 
@@ -1101,6 +1120,7 @@ getScores <- function(x, method="weightedRelative",
     s_v = sbbm2[, median(s_ivfilt[!is.na(s_ivfilt)]), by=idcol]
     sbbm = sbbm2
   }
+
   if(debug) {return(sbbm)}
   
   setnames(s_v, "V1", scol)  
