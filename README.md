@@ -108,7 +108,7 @@ The results will be in the ./<results-folder>/data, and various plots in the oth
 
 Summary of output files:
 
-ibed format (ends with .txt.ibed):
+ibed format (ends with ...ibed):
 
 - each row represents an interaction
 - first four columns give information about the chromosome, start, end and name of the bait fragment
@@ -116,12 +116,12 @@ ibed format (ends with .txt.ibed):
 - N_reads is the number of reads
 - score is how strong the interaction is: formally, it is -log(adjusted P-value)
 
-.txt_seqmonk.txt
+seqmonk format (ends with ...seqmonk.txt)
 
 - an interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
 - Columns are: chromosome, start, end, name, number of reads, interaction score (see definition of ibed format)
 
-.txt_washU.txt
+washU format (ends with ...washU.txt)
 
 - (currently broken)
 - an interaction is represented by two rows - however, these rows need not be adjacent.
