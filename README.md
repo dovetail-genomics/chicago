@@ -106,6 +106,28 @@ The results will be in the ./<results-folder>/data, and various plots in the oth
 
 **In the /data folder**, the .ibed and .txt files and are readable, respectively by WashU browser (epigenomegateway.wustl.edu) and Seqmonk (a 2-row format, where the first row corresponds to the bait and the second row to the respective other end). The score threshold of –log(adjusted p-value) of 11 is applied, but it is rather arbitrary.
 
+Summary of output files:
+
+ibed format (ends with .txt.ibed):
+
+- each row represents an interaction
+- first four columns give information about the chromosome, start, end and name of the bait fragment
+- next four columns give information about the chromosome, start, end and name of the other end that interacts with the bait fragment
+- N_reads is the number of reads
+- score is how strong the interaction is: formally, it is -log(adjusted P-value)
+
+.txt_seqmonk.txt
+
+- an interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
+- Columns are: chromosome, start, end, name, number of reads, interaction score (see definition of ibed format)
+
+.txt_washU.txt
+
+- (currently broken)
+- an interaction is represented by two rows - however, these rows need not be adjacent.
+- First three columns are: chromosome, start, end. Column four is of form [Chr
+:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see definition of ibed format). The remaining columns can be ignored.
+
 **The data frame x** used to produce these files (one row per interaction) is stored in the .RDa file in the same folder.
 
 The /examples folder contains PDFs with bait profiles for 25 random baits - for full chromosome length and zoomed in to 1Mb, respectively.
