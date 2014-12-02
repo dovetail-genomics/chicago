@@ -114,7 +114,7 @@ ibed format (ends with ...ibed):
 - first four columns give information about the chromosome, start, end and name of the bait fragment
 - next four columns give information about the chromosome, start, end and name of the other end that interacts with the bait fragment
 - N_reads is the number of reads
-- score is how strong the interaction is: formally, it is -log(adjusted P-value)
+- score is how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction.
 
 seqmonk format (ends with ...seqmonk.txt)
 
@@ -125,8 +125,7 @@ washU format (ends with ...washU.txt)
 
 - (currently broken)
 - an interaction is represented by two rows - however, these rows need not be adjacent.
-- First three columns are: chromosome, start, end. Column four is of form [Chr
-:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see definition of ibed format). The remaining columns can be ignored.
+- First three columns are: chromosome, start, end. Column four is of form [Chr]:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see definition of ibed format, above). The remaining columns can be ignored.
 
 **The data frame x** used to produce these files (one row per interaction) is stored in the .RDa file in the same folder.
 
