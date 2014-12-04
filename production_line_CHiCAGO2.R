@@ -14,8 +14,8 @@ print (clArgs)
 print (length(clArgs))
 
 if(length(clArgs)<5){
-  stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> as arguments\n
-        for multiple samples, supply %<Nfiles> <output-folder> <output-prefix> <feature-folder> <feature-list> <input-file-1> ... <input-file-N> <fileDirDigest> <headerDigest>\n")
+  stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> <fileDirDigest> <headerDigest> [<seed>|NULL] as arguments\n
+        for multiple samples, supply %<Nfiles> <output-folder> <output-prefix> <feature-folder> <feature-list> <input-file-1> ... <input-file-N> <fileDirDigest> <headerDigest> [<seed>|NULL]\n")
 }
 
 infname = clArgs[1]
@@ -37,19 +37,6 @@ source(file.path(scriptDir, "chicago.R"))
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
 source(file.path(scriptDir, "Functions_new_datatable.R"))
 source(file.path(scriptDir, "run_peakEnrichment4Features.R"))
-fileDir =  clArgs[length(clArgs)-1]
-header= clArgs[length(clArgs)]
-#fileDir = "/bi/group/sysgen/CHIC"
-###
-
-### Resource file locations
-rmapfile= file.path(fileDir, paste0(header,".bed"))
-baitmapfile= file.path(fileDir,  paste0(header,"_baits_ID.bed"))
-
-nperbinfile = file.path(fileDir,  paste0(header,"_NperBin.txt"))
-nbaitsperbinfile = file.path(fileDir, paste0(header,"_NbaitsPerBin.txt"))
-proxOEfile = file.path(fileDir, paste0(header,"_proxOEout.txt"))
-###############
 
 ### Fragment filtering and other settings
 maxLBrownEst = 1.5e6 # maximum distance for Brownian noise estimation 
@@ -74,13 +61,52 @@ outputCutoff=12
 
 cat("Reading data...\n")
 
+nfiles = 0 # Sic! This means that there's just one replicate provided as an argument instead of %<Nfiles> 
 if (length(grep("^%\\d+$", infname))){
   nfiles = as.numeric(gsub("%","", infname))
-  cat ("Number of input files:" , nfiles, ".\n")
-  if (length(clArgs)<3+nfiles){
-    stop("Fewer files supplied than %<Nfiles>\n")
+}
+
+# Setting the seed for drawing a random samples for NB variance estimation 
+set.seed(123)
+nopts = 0 # no of optional args
+if ((length(clArgs)>7+nfiles)){ # i.e., if we have optional arguments - currently just one possible
+  nopts = length(clArgs)-(7+nfiles)
+  seed = clArgs[length(clArgs)] # this will need to change if more optional args are added - but currently it's just the seed
+  if(seed == "NULL"){
+    set.seed(NULL)
+    message("Seed reset to NULL.")
   }
-  #infnames = clArgs[4:(3+nfiles)]
+  else{
+    set.seed(as.integer(seed))
+    message("Seed set to ", seed, ".")
+  }
+}else{
+  message("Default seed used.")
+}  
+
+# fetch the digest file location and prefix, here for some reason referred to as "header" - sorry...
+fileDir =  clArgs[length(clArgs)-nopts-1]
+header= clArgs[length(clArgs)-nopts]
+#fileDir = "/bi/group/sysgen/CHIC"
+###
+
+### Resource file locations
+rmapfile= file.path(fileDir, paste0(header,".bed"))
+baitmapfile= file.path(fileDir,  paste0(header,"_baits_ID.bed"))
+
+nperbinfile = file.path(fileDir,  paste0(header,"_NperBin.txt"))
+nbaitsperbinfile = file.path(fileDir, paste0(header,"_NbaitsPerBin.txt"))
+proxOEfile = file.path(fileDir, paste0(header,"_proxOEout.txt"))
+
+message("FileDir=",fileDir, " prefix=",header, " NperBinFile=", nperbinfile, " NbaitsPerBinFile=", nbaitsperbinfile, " proxOEfile=", proxOEfile)
+###############
+
+  
+if (nfiles){
+  cat ("Number of input files:" , nfiles, ".\n")
+  if (length(clArgs)<7+nfiles+nopts){
+    stop("Fewer files supplied than %<Nfiles> or some mandatory arguments are missing.\n")
+  }
   infnames = clArgs[6:(5+nfiles)]
   cat ("Input files:\n")
   print (infnames)
@@ -92,9 +118,16 @@ if (length(grep("^%\\d+$", infname))){
   cat("\n*** Running mergeSamples...\n")
   x = mergeSamples(x1)
 }else{
+  if (length(clArgs)<7+1+nopts){
+    stop("Some mandatory arguments are missing.\n")
+  }
   cat("Input file:", infname, "\n")
   cat("\n*** Reading the input file... ***\n")
   x = readSample(infname)
+}
+
+if(!nfiles){
+  nfiles = 1 # now it can be used to actually know how many replicates we have
 }
 
 system(paste("mkdir -p", outfolder))
