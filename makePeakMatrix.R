@@ -1,7 +1,7 @@
 args = commandArgs(trailingOnly=T)
 if(!length(args)){
   stop("Usage: Rscript makePeakMatrix.R <data-root-folder> <image-file-pattern> <output-file-prefix>\n
-Example:\n\tRscript DataRelease_1/EachReplicate .+(Macro|Mega|CD4_Naive|Erythro|Mono)\\S+RDa$\n")
+Example:\n\tRscript makePeakMatrix.R DataRelease_1/EachReplicate .+(Macro|Mega|CD4_Naive|Erythro|Mono)\\S+RDa$\n")
   
 }
 
