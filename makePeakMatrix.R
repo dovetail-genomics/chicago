@@ -1,14 +1,13 @@
 args = commandArgs(trailingOnly=T)
 if(!length(args)){
-  stop("Usage: Rscript pullData.R <data-root-folder> <image-file-pattern>\nSee the code of this script for an example.\n")
+  stop("Usage: Rscript makePeakMatrix.R <data-root-folder> <image-file-pattern> <output-file-prefix>\n
+Example:\n\tRscript DataRelease_1/EachReplicate .+(Macro|Mega|CD4_Naive|Erythro|Mono)\\S+RDa$\n")
   
 }
 
-#setwd("~/g/SNP_Project//CHiCAGOv2//DataRelease_141014//EachReplicate_141014/")
-#files = list.files("~/g/SNP_Project//CHiCAGOv2//DataRelease_141014//EachReplicate_141014/", ".+(Macro|Mega|CD4_Naive|Erythro|Mono)\\S+RDa$", recursive=T)
-
 setwd(args[1])
 files = list.files(args[1], args[2], recursive=T)
+prefix = args[3]
 
 cat("Input files to be used:\n")
 print(files)
@@ -46,23 +45,29 @@ z = Reduce(function(x,y) merge(x,y,all=TRUE), data)
 cat("Filtering...\n")
 z = as.data.frame(z)[rowMaxs(as.data.frame(z)[,3:ncol(z)], na.rm = T)>=12 ,]
 
-cat("Replacing NAs with zeros...\n")
+cat("Replacing NAs and negative scores with zeros...\n")
 for (i in 3:ncol(z)){
-   z[is.na(z[,i]), i] = 0
+   z[is.na(z[,i]) | z[,i]<0, i] = 0
 }
-cat("Saving the result as scoreMatrix.Rda...\n")
-save(z, file="scoreMatrix.Rda")
 
-cat("Writing out the result as scoreMatrix.txt")
-write.table(z, "scoreMatrix.txt", quote = F, sep = "\t", col.names = T, row.names=F)
+rdaname = paste0(prefix, ".Rda")
+cat(paste0("Saving the result image as ", rdaname, "...\n")
+save(z, file=rdaname)
 
-cat("Clustering samples...\n")
+txtname = paste0(prefix, ".txt")
+cat(paste0("Writing out the result as ", txtname, "...\n")
+write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
+
+cat("Clustering samples based on 10000 random interactions...\n")
 
 zsamp = z[sample(1:nrow(z), 10000),]
 d = dist(t(zsamp[,3:ncol(zsamp)]))
 h = hclust(d)
 
-pdf("samplesClustered.pdf")
+pdfname = paste0(prefix, "_tree.pdf")
+cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n")
+
+pdf(pdfname)
 plot(h)
 dev.off()
 
