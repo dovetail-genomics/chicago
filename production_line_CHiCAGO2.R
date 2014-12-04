@@ -1,4 +1,8 @@
-### EDIT ME
+### EDIT ME - NEEDS TO POINT TO THE MOST RECENT VERSION
+### WILL BE RENDERED OBSOLETE ONCE CHICAGO IS AN R PACKAGE
+scriptDir <- "/bi/apps/chicago/0.1.9"
+###############
+
 
 ### If running from RStudio interactively
 # if(Sys.getenv("RSTUDIO_USER_IDENTITY")==""){
@@ -28,11 +32,7 @@ features = read.table(featureList, stringsAsFactors=F)
 files = features[,2]
 names(files) = features[,1]
 
-
-
-
 # CHiCAGOv2: calling interactions
-scriptDir <- "/bi/apps/chicago/0.1.0.dev"
 source(file.path(scriptDir, "chicago.R"))
 # Testing enrichment of CHiCAGO peaks for genomic features of interest
 source(file.path(scriptDir, "Functions_new_datatable.R"))
@@ -51,8 +51,6 @@ pi.rel = 1E5
 
 ### Score cutoff for writing out interaction files
 outputCutoff=12
-
-
 
 # 1. Read the input file(s)
 # Note that for all downstream functions,
