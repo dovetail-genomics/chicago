@@ -1,7 +1,7 @@
 args = commandArgs(trailingOnly=T)
-if(!length(args)){
+if(length(args)<3){
   stop("Usage: Rscript makePeakMatrix.R <data-root-folder> <image-file-pattern> <output-file-prefix>\n
-Example:\n\tRscript makePeakMatrix.R DataRelease_1/EachReplicate .+(Macro|Mega|CD4_Naive|Erythro|Mono)\\S+RDa$\n")
+Example:\n\tRscript makePeakMatrix.R DataRelease_1/EachReplicate .+(Macro|Mega|CD4_Naive|Erythro|Mono)\\S+RDa$ peakMatrixEachReplicate\n")
   
 }
 
@@ -51,11 +51,11 @@ for (i in 3:ncol(z)){
 }
 
 rdaname = paste0(prefix, ".Rda")
-cat(paste0("Saving the result image as ", rdaname, "...\n")
+cat(paste0("Saving the result image as ", rdaname, "...\n"))
 save(z, file=rdaname)
 
 txtname = paste0(prefix, ".txt")
-cat(paste0("Writing out the result as ", txtname, "...\n")
+cat(paste0("Writing out the result as ", txtname, "...\n"))
 write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 cat("Clustering samples based on 10000 random interactions...\n")
@@ -65,7 +65,7 @@ d = dist(t(zsamp[,3:ncol(zsamp)]))
 h = hclust(d)
 
 pdfname = paste0(prefix, "_tree.pdf")
-cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n")
+cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
 
 pdf(pdfname)
 plot(h)
