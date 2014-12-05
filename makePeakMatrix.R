@@ -5,6 +5,7 @@ Example:\n\tRscript makePeakMatrix.R DataRelease_1/EachReplicate .+(Macro|Mega|C
   
 }
 
+currdir = getwd()
 setwd(args[1])
 files = list.files(args[1], args[2], recursive=T)
 prefix = args[3]
@@ -24,6 +25,8 @@ for (f in files){
      data[[t2]] = x[, c("baitID", "otherEndID", "score")]
      cat("done\n")    
 }
+
+setwd(currdir)
 
 #save(data, file="data.Rda")
 
