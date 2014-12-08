@@ -19,7 +19,7 @@ opts = parse.args(p, args)
 namesfile = opts[["<names-file>"]]
 prefix = opts[["<output-prefix>"]]
 cutoff = opts[["cutoff"]]
-sampsize = opts[["sample"]]
+sampsize = opts[["subset"]]
 rmapfile = opts[["<digest-map>"]]
 baitmapfile = opts[["<bait-map>"]]
 
@@ -119,7 +119,7 @@ write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 cat("Clustering samples based on", sampsize,  "random interactions...\n")
 
 zsamp = z[sample(1:nrow(z), sampsize),]
-d = dist(t(zsamp[,3:ncol(zsamp)]))
+d = dist(t(zsamp[,11:ncol(zsamp)]))
 h = hclust(d)
 
 pdfname = paste0(prefix, "_tree.pdf")
