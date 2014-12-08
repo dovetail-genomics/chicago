@@ -101,10 +101,13 @@ z$otherEndName[is.na(z$otherEndName)] = "."
 
 cat("Reordering and sorting...\n")
 
+z$dist = NA_real_
+z[baitChr==oeChr]$dist = with(z[baitChr==oeChr], ceiling(oeStart+(oeEnd-oeStart)/2-(baitStart+(baitEnd-baitStart)/2))) 
+
 setnames(z, "otherEndID", "oeID")
 setnames(z, "otherEndName", "oeName")
 z = as.data.frame(z)
-z = z[, c("baitChr", "baitStart", "baitEnd", "baitID", "baitName", "oeChr", "oeStart", "oeEnd", "oeID", "oeName", input[,"name"])]
+z = z[, c("baitChr", "baitStart", "baitEnd", "baitID", "baitName", "oeChr", "oeStart", "oeEnd", "oeID", "oeName", "dist", input[,"name"])]
 
 z = z[order(z$baitChr, z$baitStart, z$oeChr, z$oeStart), ]
 
@@ -116,19 +119,23 @@ txtname = paste0(prefix, ".txt")
 cat(paste0("Writing out the result as ", txtname, "...\n"))
 write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
-cat("Clustering samples based on", sampsize,  "random interactions...\n")
-
-zsamp = z[sample(1:nrow(z), sampsize),]
-d = dist(t(zsamp[,11:ncol(zsamp)]))
-h = hclust(d)
-
-pdfname = paste0(prefix, "_tree.pdf")
-cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
-
-pdf(pdfname)
-plot(h)
-dev.off()
-
+if (nrow(input)>2){
+  cat("Clustering samples based on", sampsize,  "random interactions...\n")
+  
+  zsamp = z[sample(1:nrow(z), sampsize),]
+  d = dist(t(zsamp[,12:ncol(zsamp)]))
+  h = hclust(d)
+  
+  pdfname = paste0(prefix, "_tree.pdf")
+  cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
+  
+  pdf(pdfname)
+  plot(h)
+  dev.off()
+}
+else{
+  cat("Clustering not performed as n<=2\n")
+}
 cat("Done!\n")
 
 
