@@ -15,8 +15,8 @@ use Data::Dumper;
 #Get user-supplied parameters
 #Option variables
 my %config = (
-	baits => '',
-    digest  => '',
+	basename => '',
+	digestfolder => '',
 	input => '',
 	email => '',
 	help => '',
@@ -25,8 +25,8 @@ my %config = (
 );
 
 my $config_result = GetOptions(    #Stores parameters
-    "baits=s"  => \$config{baits},
-    "digest=s"  => \$config{digest},
+    "basename=s"  => \$config{basename},
+	"digestfolder=s" => \$config{digestfolder},
     "input=s"   => \$config{input},
 	"email=s"   => \$config{email},
 	"help"   => \$config{help},
@@ -34,6 +34,9 @@ my $config_result = GetOptions(    #Stores parameters
 	);
 
 die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
+
+my $baits;
+my $digest;
 
 my @inputData;    #Array of arrays storing the data from the input file
 
@@ -46,6 +49,8 @@ if ( $config{help} ) {
 if( hasval($config{config}) ) {
 	process_config($config{config}, \%config)
 }
+
+#print Dumper \%config;
 
 check_parameters();
 processInputfile();
@@ -71,8 +76,8 @@ foreach my $array (@inputData){
 		my $inputFile = $$array[0];
 		my $prefix1 = $$array[1];
 		my $prefixRand = "$prefix1." . generateRandomString(6);
-		my $command = "$Bin/process_chic_single_core.sh $inputFile $config{baits} $config{digest} $prefix1";
-		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o CHiCAGO1.$prefixRand.out -j y -N $prefixRand $config{email}";
+		my $command = "$Bin/process_chic_single_core.sh $inputFile $baits $digest $prefix1";
+		my $clusterCommand = "echo \"$command\" | qsub -q all.q\@compute-0-0.local,all.q\@compute-0-1.local -V -cwd -l vf=10G -pe orte 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email}";
 
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
 		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";
@@ -146,11 +151,11 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 
 	my $command;
 	if($numberFiles == 1){
-		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features < $Bin/production_line_CHiCAGO2.R";		
+		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features  $config{digestfolder} $config{basename} < $Bin/production_line_CHiCAGO2.R";		
 	
 	}else{
 		my $filenameString = join(' ', @files);
-		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString < $Bin/production_line_CHiCAGO2.R";			
+		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString $config{digestfolder} $config{basename} < $Bin/production_line_CHiCAGO2.R";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
 		
@@ -177,9 +182,9 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		$clusterCommand = "echo \"$command\" | qsub -q $node -V -cwd -l vf=10G -pe orte 4 -o $prefix2Rand.out -j y -N $currentJobName $config{email} $jid_string";	
 	
 		#print "$clusterCommand\n";
-		#print "$command\n";
+	#	print "$command\n";
 		
-		#!system("$command") or die "Could not run '$command' : $!";
+	#	!system("$command") or die "Could not run '$command' : $!";
 		
 		print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
@@ -189,6 +194,8 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 close LOG or die "Could not close 'chicagoLog.txt' : $!";
 
 print "Processing complete.\n";	
+
+#print Dumper \%config;
 	
 exit (0);
 
@@ -233,30 +240,37 @@ sub generateRandomString{
 sub check_parameters{
 	my $parameters_ok = 1;
 	
-	#Check baits specified
-	unless( hasval($config{baits}) ){
-		warn "Please specify a --baits file\n";
+	#Determine digest and bait filenames
+	if( hasval($config{basename}) ){
+		$baits = $config{basename} . '_baits_ID.bed';
+		$digest = $config{basename} . '.bed';
+	}else{
+		warn "Please specify a --basename of digest files\n";
 		$parameters_ok = 0;
 	}
 	
-	#Check digest specified
-	unless( hasval($config{digest}) ){
-		warn "Please specify a --digest file\n";
-		$parameters_ok = 0;
+	#Add path to digest and bait filenames
+	if( hasval ($config{digestfolder}) ){	
+		$config{digestfolder} = $config{digestfolder} . '/' unless $config{digestfolder} =~ /\/$/;	
+		$baits = $config{digestfolder} .$baits;
+		$digest = $config{digestfolder} .$digest;
+	}else{
+		$config{digestfolder} = './';
+		warn "Using current working directory as digest folder\n";
 	}
 	
 	#Check baits exist
-	if(hasval($config{baits}) ){
-		unless(-e $config{baits}){
-			warn "Baits file '$config{baits}' does not exist\n";
+	if(hasval($baits) ){
+		unless(-e $baits){
+			warn "Baits file '$baits' does not exist\n";
 			$parameters_ok = 0;
 		}
 	}
 
 	#Check digest exists
-	if(hasval($config{digest}) ){
-		unless(-e $config{digest}){
-			warn "Digest file '$config{digest}' does not exist\n";
+	if(hasval($digest) ){
+		unless(-e $digest){
+			warn "Digest file '$digest' does not exist\n";
 			$parameters_ok = 0;
 		}
 	}
@@ -409,6 +423,8 @@ sub process_config {
 		$setting =~ s/^\s+// if defined ($setting);
         $setting =~ s/\s+$// if defined ($setting); 
 
+		print "$parameter\t$setting\t\n";
+		
         if ( exists $$config_hash_ref{$parameter} ) {
             if ( $$config_hash_ref{$parameter} eq '' ) {    #Check parameter not assigned value in command line
                 $$config_hash_ref{$parameter} = $setting;    #Edit the configuration hash
