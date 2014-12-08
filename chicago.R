@@ -1,5 +1,7 @@
 # (c) Mikhail Spivakov, Paula Freire-Pritchett, Jonathan Cairns
 
+# Note: when converting into an R package, please also include the package argparser 
+# as "suggested" since it's needed for the standalone scripts
 library(data.table)
 library(matrixStats)
 library(MASS)
