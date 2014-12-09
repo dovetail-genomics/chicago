@@ -132,8 +132,7 @@ if (nrow(input)>2){
   pdf(pdfname)
   plot(h)
   dev.off()
-}
-else{
+}else{
   cat("Clustering not performed as n<=2\n")
 }
 cat("Done!\n")
