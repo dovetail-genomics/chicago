@@ -127,7 +127,7 @@ drawSamples <- function(x1_nonsign, sample_number, unique=T) {
 
 plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
   x_sign$dist<-NULL
-  x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign)])
+  x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign)],na.rm = T)
   sample_number<- length(s)
   featureSumsMatrix <- matrix(rep(0),length(files)*sample_number,nrow=sample_number,ncol=length(files))
   for (i in 1:sample_number){
@@ -135,7 +135,7 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
     x$dist <- NULL
     x$bin_reads <- NULL
     x$i <- NULL
-    featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x)])
+    featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x)],na.rm = T)
     featureSumsMatrix[i,]<-featureSums
   }
   colnames(featureSumsMatrix)<-names(files)
@@ -175,7 +175,7 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 
 
 peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL,no_bins, sample_number, 
-                                    folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",
+                                    folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",filename=NULL,
                                     position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag=NULL, sep="\t", header=TRUE, 
                                     plot_name=NULL, distal=FALSE, coldist=NULL, unique=TRUE, filterB2B=FALSE,
                                     b2bcol="isBait2bait", negFraction = 1) {
