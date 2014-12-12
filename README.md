@@ -104,7 +104,30 @@ CHiCAGO output
 
 The results will be in the ./<results-folder>/data, and various plots in the other subfolders of ./<results-folder>. 
 
-**In the /data folder**, the .ibed and .txt files and are readable, respectively by WashU browser (epigenomegateway.wustl.edu) and Seqmonk (a 2-row format, where the first row corresponds to the bait and the second row to the respective other end). The score threshold of –log(adjusted p-value) of 11 is applied, but it is rather arbitrary.
+**The /data folder** contains the raw output, in various formats. Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of –log(adjusted p-value) of 11 is applied, but it is rather arbitrary.
+
+Summary of output files:
+
+ibed format (ends with ...ibed):
+
+- each row represents an interaction
+- first four columns give information about the chromosome, start, end and name of the bait fragment
+- next four columns give information about the chromosome, start, end and name of the other end that interacts with the bait fragment
+- N_reads is the number of reads
+- score is as defined above
+
+seqmonk format (ends with ...seqmonk.txt)
+
+- Can be read by seqmonk (http://www.bioinformatics.babraham.ac.uk/projects/seqmonk/)
+- An interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
+- Columns are: chromosome, start, end, name, number of reads, interaction score (see above)
+
+washU format (ends with ...washU.txt)
+
+- (We are aware of some issues relating to this output.)
+- Can be read by WashU browser (epigenomegateway.wustl.edu)
+- An interaction is represented by two rows, with each representing one of the fragments involved in the interaction. However, the two rows need not be adjacent.
+- First three columns are: chromosome, start, end. Column four is of form [Chr]:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see above). The remaining columns can be ignored.
 
 **The data frame x** used to produce these files (one row per interaction) is stored in the .RDa file in the same folder.
 

@@ -44,7 +44,7 @@ chicagoPipeline <- function(x, outprefix, pi.rel)
   x = estimateTechnicalNoise(x, outfile=paste0(outprefix, "_techNoise.pdf"))
   
   message("\n*** Running estimateDistFun...\n")
-  f = estimateDistFun(x)
+  f = estimateDistFun(x, outfile=paste0(outprefix, "_distFun.pdf"))
   
   message("\n*** Running estimateBrownianNoise...\n")
   x = estimateBrownianNoise(x, f, subset=1000)
@@ -291,7 +291,7 @@ normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, pl
   distbincol = which(names(x)=="distbin")
   othercols = which(names(x)!="distbin")
   x = x[, c(othercols, distbincol)]
-  attributes(x)$dispersion <- x ##return dispersion (if applicable)
+  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
   invisible(x) 
 }
 
@@ -375,12 +375,12 @@ normaliseOtherEnds = function(x, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE
   othercols = names(x)[(!names(x)%in%c(baitIDcol, otherEndIDcol))]
   x = x[, c(baitIDcol, otherEndIDcol, othercols)]  
   
-  attributes(x)$dispersion <- x ##return dispersion (if applicable)
+  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
   
   invisible(x)
 }
 
-estimateDistFun <- function (x, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE) {
+estimateDistFun <- function (x, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, outfile=NULL) {
   
   # Take the "refBinMean" column of the data x as f(d_b)
   # then interpolate & extrapolate to get f(d).
@@ -457,6 +457,19 @@ estimateDistFun <- function (x, method="cubic", n.obs.head=10, n.obs.tail=25, lo
   } else {
     f <- function(x) exp(log.f(log(x)))
   }
+
+  if (!is.null(outfile)){ 
+    pdf(outfile)
+  }
+    curve(log.f.obs, obs.min, obs.max,
+          main = paste0("Distance function (points = obs, line = ", method, " fit)"),
+          xlab = "log(distance)",
+          ylab = "log(f(d))")
+    with(f.d, points(log(midpoint), log(refBinMean)))
+  if (!is.null(outfile)){ 
+    dev.off()
+  }
+  
   f
 }
 
