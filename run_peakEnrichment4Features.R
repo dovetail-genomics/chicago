@@ -174,8 +174,8 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 }
 
 
-peakEnrichment4Features <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL,no_bins, sample_number, 
-                                    restriction_enz_file=NULL, folder_samples=NULL, generic_name, folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",
+peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL,no_bins, sample_number, 
+                                    folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",
                                     position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag=NULL, sep="\t", header=TRUE, 
                                     plot_name=NULL, distal=FALSE, coldist=NULL, unique=TRUE, filterB2B=FALSE,
                                     b2bcol="isBait2bait", negFraction = 1) {
@@ -191,6 +191,9 @@ peakEnrichment4Features <- function(x1=NULL, filename=NULL, score, colname_score
     cat("Filtering out bait2bait interactions...\n")
     x1 <- x1[! x1[,b2bcol], ]
   }
+  
+  #### This part of the code is deprecated ###
+  
   if (negFraction<1){
     cat("Taking a fraction of the negative set...\n")
     x1pos <- x1[x1[,colname_score]>=score,]
@@ -211,6 +214,8 @@ peakEnrichment4Features <- function(x1=NULL, filename=NULL, score, colname_score
     }
     x1 = rbind(x1pos, x1neg)
   }
+  
+  ######
   
   cat("Overlap our reads with Features")
   x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",
