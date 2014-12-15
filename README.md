@@ -151,7 +151,7 @@ Just to repeat, this is a very early development version, so problems installing
 
 Developers
 -----------
-Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
+Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett, Steven Wingett.
 
 Note for developers
 ----------
