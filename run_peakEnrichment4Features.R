@@ -133,6 +133,7 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
   for (i in 1:sample_number){
     x<-s[[i]]
     x$dist <- NULL
+    x$distbin3<-NULL
     x$bin_reads <- NULL
     x$i <- NULL
     featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x)],na.rm = T)
