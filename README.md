@@ -63,6 +63,8 @@ If not currently installed, do so: source("http://bioconductor.org/biocLite.R");
 Running CHiCAGOv2
 ==========
 
+**Note that a much user-friendlier interface has been put in place by Paula and Steven Wingett and will be documented in the near future** 
+
 **CHiCAGO is run in two steps:** 
 -	process_chic_single_core.sh uses shell commands and bedtools to convert HiCUP BAM files into CHiCAGO input files.
 -	production_line_v2.R  (that can be executed via the shell script run_fullchr_norep.sh) runs CHiCAGO and checks for enrichment of CHiCAGO’s significant ‘other ends’ (i.e., putative enhancers) for genomic regions of interest, such as, for example, ENCODE or BLUEPRINT regions.
@@ -149,7 +151,7 @@ Just to repeat, this is a very early development version, so problems installing
 
 Developers
 -----------
-Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett.
+Mikhail Spivakov (mikhail.spivakov@babraham.ac.uk), Jonathan Cairns, Paula Freire Pritchett, Steven Wingett.
 
 Note for developers
 ----------
