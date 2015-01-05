@@ -116,7 +116,7 @@ if (nfiles){
   cat("\n*** Running mergeSamples...\n")
   x = mergeSamples(x1)
 }else{
-  if (length(clArgs)<7+1+nopts){
+  if (length(clArgs)<7+nopts){
     stop("Some mandatory arguments are missing.\n")
   }
   cat("Input file:", infname, "\n")
