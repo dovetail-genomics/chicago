@@ -1,5 +1,7 @@
 # (c) Mikhail Spivakov, Paula Freire-Pritchett, Jonathan Cairns
 
+# Note: when converting into an R package, please also include the package argparser 
+# as "suggested" since it's needed for the standalone scripts
 library(data.table)
 library(matrixStats)
 library(MASS)
@@ -222,7 +224,7 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
   ns = as.numeric(gsub(paste0(Ncol, "\\.(\\d+)"), "\\1", Ncols))
   n = max(ns)
 
-  # cat("n =", n, "\n")
+  # message("n = ", n)
   
   xs = data.table(xs)
   
@@ -278,12 +280,32 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
   invisible(xs0)
 }
 
-normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL){
+normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
-  x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
-                            viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
-                            shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile)
+  
+  ##FIXME: to ease memory issues when rerunning this function later, if x is large, we reduce x to only the important columns
+  requiredCols <- c(baitIDcol,otherEndIDcol,Ncol,otherEndLencol,distcol,"isBait2bait")
+  #if(identical(sort(requiredCols), sort(colnames(x)))) 
+  if(ncol(x) < length(requiredCols) + 6) ##attempt optimization if too many columns are present
+  {
+    x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
+                               viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
+                               shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
+    if(debug){return(x)} ##returns sbbm
+  } else {
+    temp = .normaliseFragmentSets(x=x[,requiredCols], npb=.readNPBfile(), 
+                               viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
+                               shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
+    if(debug) return(temp) ##returns sbbm
+    ##merge new columns back into x
+    x <- as.data.table(x)
+    temp <- as.data.table(temp[, colnames(temp)[!colnames(temp) %in% requiredCols[-(1:2)]], with=FALSE]) ##delete all columns already present in x, except those required for merging
+    setkeyv(x, c(baitIDcol, otherEndIDcol))
+    setkeyv(temp, c(baitIDcol, otherEndIDcol))
+    x <- merge(x, temp)
+  }
+  
   # sort by baitID, otherEndID and move distbin column to the end of the table 
   x[, normNcol] = round(x[,Ncol]/x$s_j)
   x[x[,normNcol]==0, normNcol] = 1 # do not completely "cancel" interactions that have one read 
@@ -972,7 +994,7 @@ getScores <- function(x, method="weightedRelative",
 }
 
 .normaliseFragmentSets = function(x, npb, viewpoint, idcol, Ncol, adjBait2bait=TRUE, shrink=TRUE, 
-                          refExcludeSuffix=NULL, plot=TRUE, outfile=NULL){   #minPosBins = 5, 
+                          refExcludeSuffix=NULL, plot=TRUE, outfile=NULL, debug=FALSE){   #minPosBins = 5, 
   
   # The normalisation engine used for normaliseBaits and normaliseOtherEnds
   # "Viewpoint" will be used in the comments for either baits or sets of other ends,
@@ -1099,7 +1121,9 @@ getScores <- function(x, method="weightedRelative",
     sbbm2$s_ivfilt[sbbm2$p<0.05] = NA
     s_v = sbbm2[, median(s_ivfilt[!is.na(s_ivfilt)]), by=idcol]
     sbbm = sbbm2
-  }    
+  }
+
+  if(debug) {return(sbbm)}
   
   setnames(s_v, "V1", scol)  
   
@@ -1413,16 +1437,23 @@ getScores <- function(x, method="weightedRelative",
   invisible(x)
 }
 
-plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,       
-                              plevel1 = 12, plevel2 =10, outfile=NULL, 
-                              width=20, height=20, ...){
+plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,      
+                              plevel1 = 12, plevel2 =10, outfile=NULL, removeBait2bait=TRUE, 
+                              width=20, height=20, maxD=NULL, ...){
+  if(plotBaitNames){
+    baitmap = fread(baitmapfile)
+  }
   if (is.null(baits)){
     baits = sample(unique(x[,baitIDcol]),n)
   }
   else{
     n = length(baits)
   }
-  
+ 
+  if(plotBprof){
+    disp = attributes(x)$dispersion 
+  }
+ 
   if (!is.null(outfile)){ 
     pdf(outfile, width=width, height=height)
   }
@@ -1430,11 +1461,27 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
     par(mfrow=c(4, ceiling(n/4)))
   }
   else{
-    par(mfrow=c(1, n))
+    par(mfrow=c(n, 1))
   }
+
+  x = data.table(x)
+  setkeyv(x, baitIDcol)
+
   for(i in 1:n){
-    this = x[x[,baitIDcol]==baits[i],]
-    
+
+    this = x[get(baitIDcol)==baits[i]]
+    this = this[is.na(distSign)==FALSE]
+
+    if (!is.null(maxD)){
+       this = this[abs(distSign)<=maxD]
+    }
+     
+    if (removeBait2bait){
+       this = this[isBait2bait==FALSE]
+    }
+    this = as.data.frame(this)
+    this = this[order(this[,distcol]),]
+
     cols <- rep("Black", nrow(this))
     pchs <- rep(1, nrow(this))
     sel1 <- this[,pcol] >=plevel1
@@ -1443,17 +1490,23 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL,
     cols[sel1] <- "Red"
     pchs[sel1 | sel2] <- 20
     
-    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=paste("baitID=", baits[i], sep=""), col=cols, pch=pchs, ...)
-#     if (any(this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter)) {
-#       points(this[this[,pcol]>=plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter ,distcol], 
-#              this[this[,pcol]>=plevel1  & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter ,Ncol], col="red", pch=20)
-#     }         
-#     if (any(this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter)) {
-#       points(this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter & abs(this[,distcol])>minDistFilter,distcol], 
-#              this[this[,pcol]>=plevel2 & this[,pcol]<plevel1 & this[,Ncol]>Nfilter  & abs(this[,distcol])>minDistFilter,Ncol], 
-#              col="blue", pch=20)
-#     }
+    title = paste(baits[i], sep="")
+    if(plotBaitNames){
+         baitName = baitmap$V5[baitmap$V4==baits[i]]
+         if (length(grep(",",baitName))){
+             baitName = gsub("(\\S+,).+","\\1", baitName)
+             baitName = paste0(baitName, "...")
+         }
+         title = paste(title, baitName, sep=" - ")
+    }    
+
+    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
+
+    if(plotBprof){
+	lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
+        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), lwd=1, lty=2, col="darkgrey")
+    }
   }
   if (!is.null(outfile)){ 
     dev.off()
@@ -1478,13 +1531,13 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
   }
   
   if (is.null(rmap)){
-    cat("Reading the restriction map file...\n")
+    message("Reading the restriction map file...")
     rmap = as.data.frame(read.table(rmapfile))
   }
   names(rmap) = c("rChr", "rStart", "rEnd", "otherEndID")
   
   if (is.null(baitmap)){
-    cat("Reading the bait map file...\n")
+    message("Reading the bait map file...")
     baitmap = as.data.frame(fread(baitmapfile))
   }
   names(baitmap)[1:3] = c("bChr", "bStart", "bEnd") 
@@ -1497,7 +1550,7 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
   #    baitmap$index = paste(baitmap[,1], baitmap[,2], baitmap[,3], sep="_")  
   #  }
   #}
-  cat("Preparing the output table...\n")
+  message("Preparing the output table...")
   # just in case
   baitmap = baitmap[!duplicated(baitmap$V4),]
   rmap = rmap[!duplicated(rmap$otherEndID),]
@@ -1557,7 +1610,7 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
   out0=out
    
   if ("seqMonk" %in% format){
-    cat("Writing out for seqMonk...\n")
+    message("Writing out for seqMonk...")
     out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
     
     #out$star = "*"
@@ -1567,19 +1620,19 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
     
     out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", 
                  "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
-    cat("Writing out for seqMonk...\n")		
+    message("Writing out for seqMonk...")		
     write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
     
   }	
   if ("interBed" %in% format){
-    cat("Writing out interBed...\n")
+    message("Writing out interBed...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
                  "N_reads", "score")]
     write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)	
   }
   if("washU" %in% format){
-   cat("Writing out for washU browser...\n")
+   message("Writing out for washU browser...")
    out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
                  "N_reads", "score")]
