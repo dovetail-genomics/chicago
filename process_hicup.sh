@@ -26,8 +26,11 @@ baitcolno=`awk '{print NF; exit}' ${baitfendsid}`
 
 if [ $baitcolno -gt 4 ]
   then
-    echo "Baitfendsid file contains >4 columns. Probably means that full bait restriction fragment map was provided instead of valid fends, but it's ok for HiCUP output at least. Trimming the extra columns and saving the result in ${baitfendsid}_4col.txt..."
-    awk '{print $1"\t"$2"\t"$3"\t"$4}' ${baitfendsid} > ${baitfendsid}_4col.txt
+	echo "Baitfendsid file contains >4 columns. Probably means that full bait restriction fragment map was provided instead of valid fends, but it's ok for HiCUP output at least. Trimming the extra columns and saving the result in ${baitfendsid}_4col.txt..."
+    if ! [ -e ${baitfendsid}_4col.txt ] 
+		then 
+			awk '{print $1"\t"$2"\t"$3"\t"$4}' ${baitfendsid} > ${baitfendsid}_4col.txt
+	fi
     baitfendsid=`echo ${baitfendsid}_4col.txt`
 fi
 
