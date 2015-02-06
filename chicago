@@ -175,7 +175,7 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		
 		my $memory_allocation;
 		if($numberFiles == 1){
-			$memory_allocation = 'h_vmem=150G';
+			$memory_allocation = 'h_vmem=200G';
 		}else{
 			$memory_allocation = 'h_vmem=300G';
 		}
