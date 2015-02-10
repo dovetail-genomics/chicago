@@ -1,6 +1,6 @@
 ### EDIT ME - NEEDS TO POINT TO THE MOST RECENT VERSION
 ### WILL BE RENDERED OBSOLETE ONCE CHICAGO IS AN R PACKAGE
-scriptDir <- "/bi/apps/chicago/0.1.9"
+# scriptDir <- "/bi/apps/chicago/0.1.9"
 ###############
 
 
@@ -14,12 +14,17 @@ if (!exists("clArgs")){
 # such as clArgs = c(<input-file-name>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>)
 # or clArgs = c(%<Nfiles>, <output-folder>, <output-prefix>, <feature-folder>, <feature-list>, <input-file-name-1>, ..., <input-file-name-N> <fileDirDigest> <headerDigest>)
 
+
+# Note that chicago.R directory is read at this stage and "popped" from argv (aka clArgs) 
+scriptDir <- c1Args[length[c1Args]]
+c1Args <- c1Args[1:(length(c1Args)-1)]
+
 print (clArgs)
 print (length(clArgs))
 
 if(length(clArgs)<5){
-  stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> <fileDirDigest> <headerDigest> [<seed>|NULL] as arguments\n
-        for multiple samples, supply %<Nfiles> <output-folder> <output-prefix> <feature-folder> <feature-list> <input-file-1> ... <input-file-N> <fileDirDigest> <headerDigest> [<seed>|NULL]\n")
+  stop ("For one sample, supply <input-file-name> <output-folder> <output-prefix> <feature-folder> <feature-list> <fileDirDigest> <headerDigest> [<seed>|NULL] <chicago.R-dir> as arguments\n
+        for multiple samples, supply %<Nfiles> <output-folder> <output-prefix> <feature-folder> <feature-list> <input-file-1> ... <input-file-N> <fileDirDigest> <headerDigest> [<seed>|NULL] <chicago.R-dir>\n")
 }
 
 infname = clArgs[1]

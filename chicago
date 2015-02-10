@@ -151,11 +151,11 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 
 	my $command;
 	if($numberFiles == 1){
-		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features  $config{digestfolder} $config{basename} < $Bin/production_line_CHiCAGO2.R";		
+		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features  $config{digestfolder} $config{basename} $Bin < $Bin/production_line_CHiCAGO2.R";		
 	
 	}else{
 		my $filenameString = join(' ', @files);
-		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString $config{digestfolder} $config{basename} < $Bin/production_line_CHiCAGO2.R";			
+		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString $config{digestfolder} $config{basename} $Bin < $Bin/production_line_CHiCAGO2.R";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
 		
