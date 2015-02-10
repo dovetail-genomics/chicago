@@ -38,25 +38,39 @@ chicagoPipeline <- function(x, outprefix, pi.rel)
 {
   message("\n*** Running normaliseBaits...\n")
   x = normaliseBaits(x)
+
+  print(gc())
   
   message("\n*** Running normaliseOtherEnds...\n")
   x = normaliseOtherEnds(x, outfile=paste0(outprefix, "_oeNorm.pdf"))
   
+  print(gc())
+
   message("\n*** Running estimateTechnicalNoise...\n")
   x = estimateTechnicalNoise(x, outfile=paste0(outprefix, "_techNoise.pdf"))
   
+  print(gc())
+
   message("\n*** Running estimateDistFun...\n")
   f = estimateDistFun(x, outfile=paste0(outprefix, "_distFun.pdf"))
   
+  print(gc())
+  
   message("\n*** Running estimateBrownianNoise...\n")
   x = estimateBrownianNoise(x, f, subset=1000)
-  
+
+  print(gc())  
+
   message("\n*** Running getPvals...\n")
   x = getPvals(x)
   
+  print(gc())
+
   message("\n*** Running getScores...\n")
   x = getScores(x, relAbundance = pi.rel)
   
+  print(gc())
+
   invisible(x)
 }
 
