@@ -77,7 +77,7 @@ foreach my $array (@inputData){
 		my $prefix1 = $$array[1];
 		my $prefixRand = "$prefix1." . generateRandomString(6);
 		my $command = "$Bin/process_chic_single_core.sh $inputFile $baits $digest $prefix1";
-		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=100G -pe cores 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email}";
+		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -pe cores 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email}";
 		
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
 		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";

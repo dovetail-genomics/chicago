@@ -16,8 +16,8 @@ if (!exists("clArgs")){
 
 
 # Note that chicago.R directory is read at this stage and "popped" from argv (aka clArgs) 
-scriptDir <- c1Args[length[c1Args]]
-c1Args <- c1Args[1:(length(c1Args)-1)]
+scriptDir <- clArgs[length(clArgs)]
+length(clArgs) <- (length(clArgs))-1
 
 print (clArgs)
 print (length(clArgs))
