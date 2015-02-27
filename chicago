@@ -9,8 +9,6 @@ use lib $Bin;
 use Data::Dumper;
 
 
-
-
 ##########################################################
 #Get user-supplied parameters
 #Option variables
@@ -20,8 +18,8 @@ my %config = (
 	input => '',
 	email => '',
 	help => '',
+	hold_jid => '',
 	config => '',
-	
 );
 
 my $config_result = GetOptions(    #Stores parameters
@@ -30,6 +28,7 @@ my $config_result = GetOptions(    #Stores parameters
     "input=s"   => \$config{input},
 	"email=s"   => \$config{email},
 	"help"   => \$config{help},
+	"hold_jid=s" => \$config{hold_jid},
 	"config=s"   => \$config{config}
 	);
 
@@ -39,7 +38,6 @@ my $baits;
 my $digest;
 
 my @inputData;    #Array of arrays storing the data from the input file
-
 
 if ( $config{help} ) {
     print while (<DATA>);
@@ -65,26 +63,25 @@ processInputfile();
 #Create a log file
 open(LOG, '>', 'chicagoLog.txt') or die "Could not write to 'chicagoLog.txt' : $!";
 	
-
-
-  
-  
-  
+	
 #Launch pipeline step1
 foreach my $array (@inputData){
 	if( hasval($$array[1]) ){    #Prefix 1 is present
 		my $inputFile = $$array[0];
 		my $prefix1 = $$array[1];
 		my $prefixRand = "$prefix1." . generateRandomString(6);
+		my $step1_jid_string = '';
+		if(hasval ($config{hold_jid}) ){
+			$step1_jid_string = "-hold_jid $config{hold_jid}";
+		}		
 		my $command = "$Bin/process_chic_single_core.sh $inputFile $baits $digest $prefix1";
-		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -pe cores 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email}";
+		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -pe cores 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email} $step1_jid_string";
 		
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
 		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";
 		push( @$array, "CHiCAGO1.$prefixRand");
 	}	
 }
-
 
 
 # echo "./run_chicago.sh %2 res_hESC12_CHiCAGO2/ hESC12_CHiCAGO2
@@ -110,15 +107,10 @@ foreach my $array (@inputData){
 		push( @{ $jids4Step2{$prefixStep2} }, $jid); 
 	}
 	
-	
 	my $features = $$array[3];
-
-	
 	push( @{ $prefixStep2Files{$prefixStep2} }, $file);
 	$prefixStep2Features{$prefixStep2} = $features;
 }
-
-
 
 #print Dumper \%prefix2Files;
 #print Dumper \%prefix2Features;
@@ -140,18 +132,22 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	#Calculate jids (if necessary)
 	my @jids;
-	my $jid_string;
+	my $step2_jid_string = '';    #Jobs to wait for as defined by the user
 	if(exists $jids4Step2{$prefixStep2} ){
 		@jids = @{ $jids4Step2{$prefixStep2} };
-		$jid_string = join(',', @jids);
-		$jid_string = '-hold_jid ' . $jid_string;
-	}else{
-		$jid_string = '';
+		$step2_jid_string = join(',', @jids);
 	}
-
+	if(hasval ($config{hold_jid}) ){
+		$step2_jid_string = $step2_jid_string . ',' . $config{hold_jid};
+	}	
+	if(hasval ($step2_jid_string) ){
+		$step2_jid_string = "-hold_jid $step2_jid_string";
+	}
+	
+	
 	my $command;
 	if($numberFiles == 1){
-		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features  $config{digestfolder} $config{basename} $Bin < $Bin/production_line_CHiCAGO2.R";		
+		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features $config{digestfolder} $config{basename} $Bin < $Bin/production_line_CHiCAGO2.R";		
 	
 	}else{
 		my $filenameString = join(' ', @files);
@@ -175,12 +171,12 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		
 		my $memory_allocation;
 		if($numberFiles == 1){
-			$memory_allocation = 'h_vmem=200G';
-		}else{
 			$memory_allocation = 'h_vmem=300G';
+		}else{
+			$memory_allocation = 'h_vmem=500G';
 		}
 		
-		$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l $memory_allocation -pe cores 4 -o $prefix2Rand.out -j y -N $currentJobName $config{email} $jid_string";	
+		$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l $memory_allocation -pe cores 4 -o $prefix2Rand.out -j y -N $currentJobName $config{email} $step2_jid_string";	
 	
 		#print "$clusterCommand\n";
 	#	print "$command\n";
@@ -206,8 +202,6 @@ exit (0);
 #Subroutines
 ############################################################################
 
-
-
 #Takes the prefix for Step 1 and calculates the path and name of the
 #file produced by CHiCAGO step1
 sub calcStep1Outfile{
@@ -230,9 +224,6 @@ sub generateRandomString{
 	
 	return $string;
 }
-
-
-
 
 
 
@@ -290,7 +281,16 @@ sub check_parameters{
 		$config{email} = '-m eas -M ' . $config{email};
 	}
 	
-
+	if( hasval($config{hold_jid}) ){
+		my @hold_jid = split(/,/, $config{hold_jid});
+		foreach my $jid (@hold_jid){
+			unless($jid =~ /^\d+$/){
+				warn "The --hold_jid parameter '$jid' needs to be an integer\n";
+				$parameters_ok = 0;
+			}	
+		}
+		$config{hold_jid} = join(',', @hold_jid);    #Better to use this than original (may contain ',,' etc.)
+	}
 	die "Please adjust configuration.\n" unless($parameters_ok);
 }
 
@@ -377,15 +377,7 @@ sub processInputfile{
 	
 	die "Please adjust configuration.\n" unless($parameters_ok);
 
-
 }
-
-
-
-
-
-
-
 
 
 
@@ -413,9 +405,7 @@ sub process_config {
 
         next if $line =~ /^\s*\#/;    #Ignore comments
         next if $line =~ /^\s*$/;     #Ignore whitespace
-
-
-		
+	
         #Check if this is a parameter
         my ( $parameter, $setting ) = split( /:/, $line );
         $parameter =~ s/^\s+//;
@@ -440,6 +430,7 @@ sub process_config {
 }
 
 
+
 ###############################################################
 #Sub: hasval
 #Takes a string and returns true (i.e. '1') if the string has a value
@@ -457,8 +448,6 @@ sub hasval {
 
 
 
-
-
 __DATA__
 
 The chicago Perl script controls the other programs in the CHiCAGO pipeline
@@ -469,14 +458,13 @@ CHiCAGO [OPTIONS]... [Configuration FILE]...
 
 FUNCTION
 
-
-
-
+TODO
 
 COMMAND LINE OPTIONS
 
 --config         Specify the configuration file
 --help	         Print program help and exit
+--hold_jid       Place jobs on hold until specified cluster jobs have completed
 --version        Print the program version and exit
 
 
