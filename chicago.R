@@ -33,6 +33,9 @@ minNPerBait = 250
 binsize=20000
 removeAdjacent = TRUE
 
+weightPars <- structure(c(34.1362651553208, -2.58820875591708, -17.0305232766409, 
+            -6.97647339452814), .Names = c("alpha", "beta", "gamma", "delta"
+            )) ##these parameters were obtained from human macrophage data
 
 chicagoPipeline <- function(x, outprefix, pi.rel)
 {
