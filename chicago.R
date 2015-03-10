@@ -36,6 +36,23 @@ removeAdjacent = TRUE
 weightPars <- structure(c(34.1362651553208, -2.58820875591708, -17.0305232766409, 
             -6.97647339452814), .Names = c("alpha", "beta", "gamma", "delta"
             )) ##these parameters were obtained from human macrophage data
+##FIXME Need to accept this paras as input, rather than prescribing them
+##Need function to find parameters from data
+
+.getAvgFragLength <- function(excludeMT=TRUE)
+{
+  rmap = fread(rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  if(excludeMT) {rmap <- rmap[rmap$chr != "MT",]}
+  
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  sum(as.numeric(chrMax$V1))/nrow(rmap)
+}
+
+avgFragLen <- .getAvgFragLength() ##average fragment length
+
+##-------------------------------------------------------------------------------------------
 
 chicagoPipeline <- function(x, outprefix, pi.rel)
 {
@@ -70,7 +87,7 @@ chicagoPipeline <- function(x, outprefix, pi.rel)
   print(gc())
 
   message("\n*** Running getScores...\n")
-  x = getScores(x, relAbundance = pi.rel)
+  x = getScores(x, weightPars = weightPars)
   
   print(gc())
 
@@ -873,7 +890,7 @@ getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
 }
 
 getScores <- function(x, method="weightedRelative",
-                    relAbundance=1E5, includeBait2Bait=TRUE, plot=T, outfile=NULL)
+                      weightPars, includeTrans=TRUE, includeBait2Bait=TRUE, plot=T, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
   ## - Then, use Benjamini-Hochberg to calculate FDRs
@@ -897,102 +914,117 @@ getScores <- function(x, method="weightedRelative",
     }
   }
   
-  if(method == "weightedRelative")
+  if(!includeTrans)
   {
-    message("Calculating q-values...")
-    if(is.null(relAbundance))
-    {
-      stop("relAbundance estimation not supported yet.")
-      ##Tech: look at p-values with distance in range Tdom ---------------------------------------------------------------
-      sel.T <- abs(x[,distcol]) > Trange[1] & abs(x[,distcol]) < Trange[2]
-      sel.T[is.na(sel.T)] <- FALSE ##could be changed to allow trans counts
-      log.p.T <- x$log.p[sel.T]
-      
-      ##FIXME reinstate zeros?
-      #extraZeros.T <- 0; warning("Technical estimate needs fixing")
-      
-      ##Brownian: look at p-values with distance in range Bdom, but ONLY for baits with "large enough" s_j. --------------
-      Tbar = mean(x$Tmean, na.rm=TRUE)
-      x.sel <- x[!is.na(x[,distcol]),] ##kill NA distances (i.e. trans pairs)
-      x.sel <- x.sel[abs(x.sel[,distcol]) > Brange[1] & abs(x.sel[,distcol]) < Brange[2],] ##restrict to range of interest
-      x.sel <- as.data.table(x.sel)
-      setkeyv(x.sel, baitIDcol)
-      
-      ##collect list of baits for which Brownian noise still dominates at large distance
-      baits <- x.sel[,c(baitIDcol, "s_j"), with=FALSE]
-      baits <- baits[!duplicated(baits$baitID),]
-      sel.baits <- baits$baitID[baits$s_j > Tbar/distfun(Brange[2])]
-      ProxOE <- .readProxOEfile() ##we'll need this later to reinstate zeros
-      
-      if(length(sel.baits) < nrow(baits)) ##if any baits fail to pass our criterion...
-      {
-        ##cut them out
-        x.sel <- x.sel[J(sel.baits),] ##observed
-        setkeyv(ProxOE, baitIDcol) ##possible
-        ProxOE <- ProxOE[J(sel.baits),]
-      }
-      if(length(sel.baits) == 0) {stop("relAbundance estimation failed. Either f(d) is too low, or all s_j are too low.")}
-      
-      log.p.B <- x.sel$log.p
-      
-      ##Calculate the number of zeros to reinstate
-      ##(total no of possible observed pairs minus no of obs pairs)
-      #extraZeros.B <- sum(ProxOE$dist > Brange[1] & ProxOE$dist < Brange[2]) - nrow(x.sel)
-      
-      ##Plot histograms -------------------------------------------------------------------------------------------------
-      if(plot)
-      {
-        if (!is.null(outfile)){ pdf(outfile) }
-        hist(log.p.B, 1000, main="log(p-values), Brownian zone (except zeros)")
-        hist(log.p.T, 1000, main="log(p-values), Technical zone (except zeros)")
-        hist(exp(log.p.B), 1000, main="p-values, Brownian zone (except zeros)")
-        hist(exp(log.p.T), 1000, main="p-values, Technical zone (except zeros)")
-        if (!is.null(outfile)){ dev.off() }        
-      }
-      
-      ##Get abundances --------------------------------------------------------------------------------------------------
-      #return(list(B=log.p.B, T=log.p.T)) #debug
-      
-      relAbundance <- estimateRelAbundance(log.p.T, log.p.B, extraZeros.T, extraZeros.B, cutoff=10000)
-      message("Calculated relAbundance=", relAbundance)
-    }
-    
-    ##Calculate eta based on logistic regression approach
-    B <- logit(0.99) ##eta(d=0)
-    d.B <- maxLBrownEst ##distance where eta=0.5. default: d.b=1.5E6
-    A <- B/d.B
-    eta <- expit(B - A*abs(x[,distcol]))
-    
-    eta[is.na(x[,distcol])] <- 0
-    
-    ##calculate eta.bar:
-    ##get genome size
-    rmap = fread(rmapfile)
-    setkey(rmap, V1)
-    temp <- rmap[, max(V3), by="V1"]
-    G <- sum(as.numeric(temp[[2]]))
-    
-    eta.sigma <- 2*sum(1/(1+exp(4000*A*(1:10000) - B))) ##accurate to 4dp ##FIXME hardcoded 6-cutter here!
-    eta.bar <- eta.sigma*4000/G
-    
-    ##Get weights, weight p-values
-    x$log.w <- log(1 + eta*(relAbundance - 1)) - log(1 + eta.bar*(relAbundance - 1)) ##weight
-    x$log.q <- x$log.p - x$log.w ##weighted p-val
-    x$score <- -x$log.q ##final score (may omit log.q in final release)
+    x <- x[!is.na(x$distSign),]
   }
   
+  if(method == "weightedRelative")
+  {
+    ##Get weights, weight p-values
+    message("Calculating p-value weights...")
+    x$log.w <- .getWeights(abs(x$distSign), pars=weightPars, includeTrans=includeTrans)
+    x$log.q <- x$log.p - x$log.w ##weighted p-val
+    message("Calculating scores...")
+    x$score <- -x$log.q ##final score (may omit log.q in final release)
+    
+    #x$fdr <- getFDRs(x, includeBait2Bait=includeBait2Bait, includeTrans=includeTrans)
+  } else {
+    stop("Only method='weightedRelative' available currently.")
+  }
+  x
+}
+
+.getNoOfHypotheses <- function(includeTrans=TRUE, includeBait2Bait=TRUE)
+{
+  ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
+  rmap = fread(rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  
+  baitmap = fread(baitmapfile)
+  nBaits <- table(baitmap$V1) ##number of baits on each chr
+  
+  chr <- chrMax$chr
+  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria please!
+  
+  ##count # of hypotheses
+  if(includeTrans)
+  {
+    Nhyp <- sum(nBaits)*(2*nrow(rmap) - sum(nBaits) - 1)/2L ##number of hypotheses being tested
+  } else {
+    temp <- chrMax[chrMax$chr != "MT",]
+    temp$nBaits <- nBaits[as.character(temp$chr)]
+    temp$nFrag <- as.integer(temp$V1/avgFragLen)
+    temp$Nhyp <- with(temp, nBaits*(2*nFrag - nBaits - 1))
+    Nhyp <- sum(temp$Nhyp) ##see p257 of JMC lab book
+  }
+  Nhyp
+}
+
+.getWeights <- function(dist, pars, includeTrans=TRUE, includeBait2Bait=TRUE)
+{
+  ##1. Collect parameters
+  alpha = pars[1]
+  beta = pars[2]
+  gamma = pars[3]
+  delta = pars[4]
+  
+  ##2. Get genomic/fragment map information
+  rmap = fread(rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  
+  baitmap = fread(baitmapfile)
+  nBaits <- table(baitmap$V1) ##number of baits on each chr
+  
+  chr <- chrMax$chr
+  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
+  
+  ##count # of hypotheses
+  Nhyp <- .getNoOfHypotheses(includeTrans, includeBait2Bait)
+  
+  ##3. Calculate eta.bar
+  ##Loop, summing contributions of eta
+  
+  eta.sigma <- 0 
+  for(c in chr)
+  {
+    ##length of chromosome
+    d.c <- as.numeric(chrMax$V1[chrMax$chr == c])
+    ##no of baits on chromosome
+    n.c <- nBaits[c]
+    
+    #eta <- rep(0, n.c) ##diagnostic
+    for(i in 1:n.c) ##FIXME nested for loop can be replaced with lapply & function
+    {
+      d = d.c*i/n.c
+      d.near = min(d, d.c-d) ##dist to nearest chromosome end
+      d.other <- seq(from=avgFragLen, to=max(avgFragLen,d.near), by = avgFragLen) ##locations of fragments
+      d.other2 <- seq(from=d.near, to=d.c-d.near, by = avgFragLen)
+      eta.sigma <- eta.sigma + 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+      #eta[i] <- 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+    }
+  }
+  
+  eta.bar <- eta.sigma/Nhyp
+  
+  ##4. Calculate weights
+  eta <- expit(alpha + beta*log(naToInf(dist)))
+  log.w <- log((expit(delta) - expit(gamma))*eta + expit(gamma)) -
+    log((expit(delta) - expit(gamma))*eta.bar + expit(gamma))
+  
+  log.w
+}
+
+# getFDRs <- function(x, col="log.q", includeTrans=TRUE, includeBait2Bait=TRUE)
+# {
 #   ##calculate FDR
-#   ##How many hypotheses are we testing? Depends how many fragments we are considering. (algebra on p129 of JMC's lab notebook)
-#   N.frag <- nrow(fread(rmapfile))
+#   ##How many hypotheses are we testing?
+#   N.hyp <- .getNoOfHypotheses(includeTrans, includeBait2Bait)
 #   
-#   if(includeBait2Bait)
-#   {
-#     N.hyp <- (N.frag^2 - N.frag)/2
-#   }else{
-#     N.bait <- nrow(fread(baitmapfile))
-#     N.hyp <- (N.frag^2 - N.frag + N.bait - N.bait^2)/2
-#   }
-# 
 #   ##sort pvals and derive threshold
 #   pvals <- x[,col]
 #   if(any(is.na(pvals)))
@@ -1001,14 +1033,14 @@ getScores <- function(x, method="weightedRelative",
 #     pvals[is.na(pvals)] <- (-Inf)
 #   }
 #   #message("Correcting ", col," values for FDR...")
-#  
+#   
 #   temp.FDR <- pvals + log(N.hyp) - log(rank(pvals, ties.method="max"))
 #   sel <- order(pvals, na.last=FALSE) ##"NA" means -Inf, thus these should be first
-#   x$log.FDR[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
-
-  
-  x
-}
+#   out <- rep(0, length(sel))
+#   out[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
+#   
+#   -out
+# }
 
 .normaliseFragmentSets = function(x, npb, viewpoint, idcol, Ncol, adjBait2bait=TRUE, shrink=TRUE, 
                           refExcludeSuffix=NULL, plot=TRUE, outfile=NULL, debug=FALSE){   #minPosBins = 5, 
@@ -1694,3 +1726,8 @@ logit <- function(p){log(p/(1-p))}
 expit <- function(x){1/(1+exp(-x))}
 
 removeNAs <- function(x) {x[!is.na(x)]}
+
+naToInf <- function(x)
+{
+  ifelse(is.na(x), Inf, x) ##Convert NAs to infs.
+}
