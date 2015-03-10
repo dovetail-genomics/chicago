@@ -52,7 +52,7 @@ weightPars <- structure(c(34.1362651553208, -2.58820875591708, -17.0305232766409
 
 avgFragLen <- .getAvgFragLength() ##average fragment length
 
-##-------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------
 
 chicagoPipeline <- function(x, outprefix, pi.rel)
 {
@@ -926,7 +926,10 @@ getScores <- function(x, method="weightedRelative",
     x$log.w <- .getWeights(abs(x$distSign), pars=weightPars, includeTrans=includeTrans)
     x$log.q <- x$log.p - x$log.w ##weighted p-val
     message("Calculating scores...")
-    x$score <- -x$log.q ##final score (may omit log.q in final release)
+
+    ##get score (more interpretable than log.q)
+    minval <- .getWeights(0, pars=weightPars, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
+    x$score <- pmax(- minval - x$log.q, 0)
     
     #x$fdr <- getFDRs(x, includeBait2Bait=includeBait2Bait, includeTrans=includeTrans)
   } else {
