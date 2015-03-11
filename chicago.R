@@ -202,22 +202,18 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   whichN = which(names(xmerge) %in% paste("N", 1:length(x), sep=".") )
   
   if (normalise){
-    xmerge = normaliseSamples(xmerge, computeNNorm=(mergeMethod=="normMean"), 
-                              NcolNormPrefix=NcolNormPrefix) 
   
     if(mergeMethod=="weightedMean"){
-      names_sk = paste0("s_k",1:length(x))
-      s_ks = sapply(attributes(xmerge)[names_sk], function(x)x[[1]])
-      for (k in 1:length(x)){
-        xmerge[, paste0("Nsk.",k)] = xmerge[, whichN[k], with=F] * s_ks[k]
-      }
-      whichNsk = which(names(xmerge) %in% paste("Nsk",1:length(x), sep=".") )
-      xmerge[, NcolOut] = round( rowSums(xmerge[, whichNsk, with=F]) / sum(s_ks) )   
-      for (k in 1:length(x)){
-        set(xmerge, NULL, paste0("Nsk.",k), NULL)
-      }
+      s_ks = normaliseSamples(xmerge, computeNNorm=F, NcolNormPrefix=F) # in this mode, normaliseSamples will just return the s_ks
+      attributes(xmerge)$s_k = s_ks
+      
+      ## FIXME: THIS IS QUITE SLOW AND MEMORY INEFFICIENT. CHECK WHY
+      wmns = round( rowSums(xmerge[, whichN, with=F] * s_ks ) / sum(s_ks) )
+      set(xmerge, NULL, NcolOut, wmns)
     }
     else{
+      xmerge = normaliseSamples(xmerge, computeNNorm=(mergeMethod=="normMean"), 
+                                NcolNormPrefix=NcolNormPrefix) 
       for (i in 1:length(x)){
         normNcol = paste(NcolNormPrefix,i, sep=".")    
         set(xmerge, which(is.na(xmerge[[normNcol]])), normNcol, 0)
@@ -236,7 +232,9 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   xmerge
 }
 
-normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
+normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm", returnSKonly=(!computeNNorm)){
+  
+  # UPDATE: in computeNNorm=F (returnSKonly=T), will just return the s_k vector !!
   
   # Compute normalisation factors s_k based on the median number of reads per bait
   # within the distance range (0; maxLBrownEst)  
@@ -258,7 +256,7 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
   
   # Only using the distance range  (0; maxLBrownEst) for normalisation
   # Saving the full table for output
-  xs0 = xs
+  if (computeNNorm) { xs0 = xs }
   xs = xs[abs(get(distcol))<maxLBrownEst]
   
   setkeyv(xs, baitIDcol)  
@@ -288,12 +286,12 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
     s_k [ k ] = median(baitMeans[[ s_kjcols[k] ]] / baitMeans [[  "geo_mean" ]], na.rm=T)
   }
 
-  s_kcols = paste0("s_k", 1:n)
-  for (k in 1:n){
-    attributes(xs0)[s_kcols[k]] = s_k[k]
-  }
-    
   if (computeNNorm){
+    s_kcols = paste0("s_k", 1:n)
+    for (k in 1:n){
+      attributes(xs0)[s_kcols[k]] = s_k[k]
+    }
+    
     for (k in 1:n){
       incol = paste(Ncol, k, sep=".")
       outcol = paste(NcolNormPrefix, k, sep=".")
@@ -302,9 +300,12 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
       # do not "cancel" an interaction even if its normalised value rounds down to zero 
       set(xs0, i=which(!xs0[[outcol]] & xs0[[incol]]), j=outcol, value=1)      
     } 
+    xs0
+  }
+  else{
+    s_k
   }
   
-  xs0
 }
 
 normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
