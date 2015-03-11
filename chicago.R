@@ -129,11 +129,13 @@ readSample = function(file){
   
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits without proximal non-Bait2bait interactions\n")  
 
-  invisible(x)
+  x
 }
 
 mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm",
                         mergeMethod=c("weightedMean", "normMean")[1]){
+  
+  # Now takes a list of data.tables as input!
   
   # If mergeMethod == "weightedMean", NcolOut is the weighted mean of the sample-wise counts
   # adjusted by the samples' respective scaling factors s_k
@@ -158,39 +160,46 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   # of the primary keys, and then populate it with the counts for each sample.
   
   # Rename read count columns in each sample so they are uniquely identifiable 
-  for (i in 1:length(x)){  
-    names(x[[i]])[which(names(x[[i]])==Ncol)] = paste(Ncol, i, sep=".")
-    
-    x[[i]] = data.table(x[[i]])
-    
+  for (i in 1:length(x)){
+    Ncol = grep("^N$", names(x[[i]]), value=T)
+    if (!length(Ncol)){ 
+      #In case names have already been changed to N.<k> - this being data.table
+      Ncol = grep("^N\\.", names(x[[i]]), value=T) 
+      if (length(Ncol)==1){
+        warning("Could not find column name \"N\" in element ", i, " of the input list. Using \"", Ncol, "\" instead\n")
+      }
+      else {
+        stop(paste("Could not find column name \"N\" in element ", i, " of the input list.\n"))
+      }
+    }
+    setnames(x[[i]], Ncol, paste0("N.", i))
+        
     attr[[i]] = x[[i]]
-    # remove the read counts from the "backbone" - the only thing we expect to be different across the samples.  
-    attr[[i]][[paste(Ncol, i, sep=".")]] = NULL
     
-    x[[i]] = x[[i]][, c(baitIDcol, otherEndIDcol, paste(Ncol, i, sep=".")), with=F]
-    setkeyv(x[[i]], c(baitIDcol, otherEndIDcol))
+    x[[i]] = x[[i]][, c("baitID", "otherEndID", paste0("N.", i)), with=F]
+    setkey(x[[i]], baitID, otherEndID)
     
   }
   
-  attr = rbindlist(attr)
-  setkeyv(attr, c(baitIDcol, otherEndIDcol))
+  attr = rbindlist(attr, use.names=F) # all count columns will be merged and called N.1
+  set(attr, NULL, "N.1", NULL) # remove this column
+  
+  setkey(attr, baitID, otherEndID)
   # remove duplicates by key
   attr = unique(attr)
   
   message("Merging samples...")
-  xmerge = Reduce(function(...) merge(..., by=c(baitIDcol, otherEndIDcol), all=T), x)
+  xmerge = Reduce(function(...) merge(..., by=c("baitID", "otherEndID"), all=T), x)
   
-  setkeyv(xmerge, c(baitIDcol, otherEndIDcol))
+  setkey(xmerge, baitID, otherEndID)
   xmerge = attr[xmerge]
-  
-  xmerge = as.data.frame(xmerge)    
-  
+    
   for (i in 1:length(x)){
-    iNcol = paste(Ncol,i, sep=".")    
-    xmerge[is.na(xmerge[,iNcol]), iNcol] = 0
+    iNcol = paste0("N.", i)    
+    set(xmerge, which(is.na(xmerge[[iNcol]])), iNcol, 0) # an ugly but the most efficient way to replace NA's with zeros...
   }
 
-  whichN = which(names(xmerge) %in% paste(Ncol,1:length(x), sep=".") )
+  whichN = which(names(xmerge) %in% paste("N", 1:length(x), sep=".") )
   
   if (normalise){
     xmerge = normaliseSamples(xmerge, computeNNorm=(mergeMethod=="normMean"), 
@@ -200,31 +209,31 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
       names_sk = paste0("s_k",1:length(x))
       s_ks = sapply(attributes(xmerge)[names_sk], function(x)x[[1]])
       for (k in 1:length(x)){
-        xmerge[, paste0("Nsk.",k)] = xmerge[, whichN[k]] * s_ks[k]
+        xmerge[, paste0("Nsk.",k)] = xmerge[, whichN[k], with=F] * s_ks[k]
       }
       whichNsk = which(names(xmerge) %in% paste("Nsk",1:length(x), sep=".") )
-      xmerge[, NcolOut] = round(rowSums(xmerge[,whichNsk])/sum(s_ks))   
+      xmerge[, NcolOut] = round( rowSums(xmerge[, whichNsk, with=F]) / sum(s_ks) )   
       for (k in 1:length(x)){
-        xmerge[, paste0("Nsk.",k)] = NULL
+        set(xmerge, NULL, paste0("Nsk.",k), NULL)
       }
     }
     else{
       for (i in 1:length(x)){
         normNcol = paste(NcolNormPrefix,i, sep=".")    
-        xmerge[is.na(xmerge[,normNcol]), normNcol] = 0
+        set(xmerge, which(is.na(xmerge[[normNcol]])), normNcol, 0)
       }
       whichNNorm =  which( names(xmerge) %in% paste(NcolNormPrefix,1:length(x), sep=".") )  
-      xmerge[,NcolOut] = round(rowMeans(xmerge[,whichNNorm]))      
+      xmerge[, NcolOut] = round(rowMeans(xmerge[, whichNNorm, with=F]))      
     }
   }
   else{
-    xmerge[,NcolOut] = round(rowMeans(xmerge[,whichN]))
+    xmerge[,NcolOut] = round(rowMeans(xmerge[, whichN, with=F]))
   }
   
   # Don't completely "cancel" interactions for which we have observed at least one read somewhere
-  xmerge[!xmerge[,NcolOut],NcolOut] = 1
+  set(xmerge, which(!xmerge[[NcolOut]]), NcolOut, 1)
   
-  invisible(xmerge)
+  xmerge
 }
 
 normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
@@ -247,9 +256,7 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
 
   # message("n = ", n)
   
-  xs = data.table(xs)
-  
-  # Only using the distance range the distance range (0; maxLBrownEst) for normalisation
+  # Only using the distance range  (0; maxLBrownEst) for normalisation
   # Saving the full table for output
   xs0 = xs
   xs = xs[abs(get(distcol))<maxLBrownEst]
@@ -293,12 +300,11 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm"){
       # note these normalised values won't be used if merge method = "weightedMean"
       xs0[, outcol] = round(xs0[[incol]]/s_k[k])
       # do not "cancel" an interaction even if its normalised value rounds down to zero 
-      set(xs0, j=outcol, i=which(!xs0[[outcol]] & xs0[[incol]]), value=1)      
+      set(xs0, i=which(!xs0[[outcol]] & xs0[[incol]]), j=outcol, value=1)      
     } 
   }
   
-  xs0 = as.data.frame(xs0)
-  invisible(xs0)
+  xs0
 }
 
 normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
