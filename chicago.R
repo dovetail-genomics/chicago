@@ -86,43 +86,50 @@ readSample = function(file){
          " must be present in the input file. Change these global parameters if names do not macth\n")
   }
   
+  setnames(x, baitIDcol, "baitID")
+  setnames(x, otherEndIDcol, "otherEndID")
+  setnames(x, Ncol, "N")
+  setnames(x, distcol, "distSign")
+  setnames(x, otherEndLencol, "otherEndLen")
+    
   xlen = nrow(x)
-  x = x[get(otherEndLencol)>=minFragLen & get(otherEndLencol)<=maxFragLen]
+  x = x[otherEndLen %between% c(minFragLen,maxFragLen)]
   message("minFragLen = ", minFragLen, " maxFragLen = ", maxFragLen)
   message("Filtered out ", xlen-nrow(x), " interactions involving other ends < minFragLen or > maxFragLen.")
 
-  setkeyv(x, baitIDcol)
+  setkey(x, baitID)
     
   ## remove baits that have no observations within the proximal range
-  baitlen = length(unique(x[[baitIDcol]])) 
-  x = x[, nperbait:=sum(get(Ncol)), by=baitIDcol]
+  baitlen = length(unique(x$baitID)) 
+  x = x[, nperbait:=sum(N), by="baitID"]
   x = x[nperbait>=minNPerBait]
   message("minNPerBait = ", minNPerBait)
-  message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits with < minNPerBait reads.\n")  
-  x$nperbait = NULL
+  message("Filtered out ", baitlen-length(unique(x$baitID)), " baits with < minNPerBait reads.\n")  
+  set(x, NULL , "nperbait", NULL) # fast remove data.table column  
 
   ## remove adjacent pairs
   if(removeAdjacent){
-    x[, isAdjacent:=abs(get(baitIDcol)-get(otherEndIDcol))==1, by=baitIDcol]
+    x[, isAdjacent:=abs(baitID-otherEndID)==1, by="baitID"]
     x = x[isAdjacent==FALSE]
-    x$isAdjacent = NULL
+    set(x, NULL, "isAdjacent", NULL)
     message("Removed interactions with fragments adjacent to baits.")
   }
   
   ##remove baits without proximal non-bait2bait interactions
-  baitlen = length(unique(x[[baitIDcol]])) 
+  baitlen = length(unique(x$baitID)) 
   x$isBait2bait = FALSE
-  x$isBait2bait[whichbait2bait(as.data.frame(x))] = TRUE
+  x[wb2b(otherEndID), isBait2bait:= TRUE] 
   x[, isAllB2BProx:={
-    if(!length(.I[abs(distSign)<maxLBrownEst & !is.na(distSign)])){  TRUE  }
-    else{ all(isBait2bait[abs(distSign)<maxLBrownEst & !is.na(distSign)]) }
-  }, by=baitIDcol]
+    prox = abs(distSign)<maxLBrownEst & !is.na(distSign)
+    if(!length(prox)){  TRUE  }
+    else{ all(isBait2bait[prox]) }
+  }, by="baitID"]
   x = x[isAllB2BProx==FALSE]
-  x$isAllB2BProx = NULL
+  set(x, NULL, "isAllB2BProx", NULL)
   
-  message("Filtered out ", baitlen-length(unique(x[[baitIDcol]])), " baits without proximal non-Bait2bait interactions\n")  
+  message("Filtered out ", baitlen-length(unique(x$baitID)), " baits without proximal non-Bait2bait interactions\n")  
 
-  invisible(as.data.frame(x))
+  invisible(x)
 }
 
 mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm",
@@ -1672,6 +1679,15 @@ whichbait2bait = function(x, baitmap=NULL){
   }
   which(x[,otherEndIDcol] %in% baitmap[,baitmapFragIDcol])
 }
+
+# A quicker version of the above function, taking just one column as input
+wb2b = function(oeID, baitmap=NULL){
+  if (is.null(baitmap)){
+    baitmap = fread(baitmapfile)
+  }
+  which(oeID %in% baitmap[[baitmapFragIDcol]])
+}
+
 
 distbinToDist = function(db, abs=TRUE){
   distSt = gsub("^\\(", "", db)
