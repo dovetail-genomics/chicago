@@ -33,8 +33,9 @@ minNPerBait = 250
 binsize=20000
 removeAdjacent = TRUE
 
-weightPars <- structure(c(34.1157346557331, -2.58688050486759, -17.1347845819659, -7.07609245521541)
-  ##these parameters were obtained from human macrophage data
+weightPars <- c(34.1157346557331, -2.58688050486759, -17.1347845819659, -7.07609245521541)
+
+##these parameters were obtained from human macrophage data
 ##FIXME Need to accept these paras as input, rather than prescribing them
 ##Need function to find parameters from data
 
