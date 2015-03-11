@@ -33,10 +33,9 @@ minNPerBait = 250
 binsize=20000
 removeAdjacent = TRUE
 
-weightPars <- structure(c(34.1362651553208, -2.58820875591708, -17.0305232766409, 
-            -6.97647339452814), .Names = c("alpha", "beta", "gamma", "delta"
-            )) ##these parameters were obtained from human macrophage data
-##FIXME Need to accept this paras as input, rather than prescribing them
+weightPars <- structure(c(34.1157346557331, -2.58688050486759, -17.1347845819659, -7.07609245521541)
+  ##these parameters were obtained from human macrophage data
+##FIXME Need to accept these paras as input, rather than prescribing them
 ##Need function to find parameters from data
 
 .getAvgFragLength <- function(excludeMT=TRUE)
@@ -54,7 +53,7 @@ avgFragLen <- .getAvgFragLength() ##average fragment length
 
 ## -------------------------------------------------------------------------------------------
 
-chicagoPipeline <- function(x, outprefix, pi.rel)
+chicagoPipeline <- function(x, outprefix, weightPars)
 {
   message("\n*** Running normaliseBaits...\n")
   x = normaliseBaits(x)
