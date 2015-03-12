@@ -101,7 +101,7 @@ readSample = function(file){
     
   ## remove baits that have no observations within the proximal range
   baitlen = length(unique(x$baitID)) 
-  x = x[, nperbait:=sum(N), by="baitID"]
+  x = x[, nperbait:=sum(N), by=baitID]
   x = x[nperbait>=minNPerBait]
   message("minNPerBait = ", minNPerBait)
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits with < minNPerBait reads.\n")  
@@ -109,7 +109,7 @@ readSample = function(file){
 
   ## remove adjacent pairs
   if(removeAdjacent){
-    x[, isAdjacent:=abs(baitID-otherEndID)==1, by="baitID"]
+    x[, isAdjacent:=abs(baitID-otherEndID)==1, by=baitID]
     x = x[isAdjacent==FALSE]
     set(x, NULL, "isAdjacent", NULL)
     message("Removed interactions with fragments adjacent to baits.")
@@ -174,15 +174,19 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
     }
     setnames(x[[i]], Ncol, paste0("N.", i))
         
-    attr[[i]] = x[[i]]
+    attr[[i]] = copy(x[[i]]) # So far I see no better way of doing this
+    set(attr[[i]], NULL, paste0("N.", i), NULL) # remove the scores column
     
-    x[[i]] = x[[i]][, c("baitID", "otherEndID", paste0("N.", i)), with=F]
+    remCols = names(x[[i]])[!names(x[[i]]) %in% c("baitID", "otherEndID", paste0("N.", i))]
+    
+    for (rc in remCols){
+      set(x[[i]], NULL, rc, NULL)      
+    }
     setkey(x[[i]], baitID, otherEndID)
     
   }
   
-  attr = rbindlist(attr, use.names=F) # all count columns will be merged and called N.1
-  set(attr, NULL, "N.1", NULL) # remove this column
+  attr = rbindlist(attr) 
   
   setkey(attr, baitID, otherEndID)
   # remove duplicates by key
@@ -199,40 +203,40 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
     set(xmerge, which(is.na(xmerge[[iNcol]])), iNcol, 0) # an ugly but the most efficient way to replace NA's with zeros...
   }
 
-  whichN = which(names(xmerge) %in% paste("N", 1:length(x), sep=".") )
-  
+
   if (normalise){
-  
+
+    #   whichN = which(names(xmerge) %in% paste0("N.", 1:length(x))
+    Nnames = names(xmerge) [ names(xmerge) %in% paste0("N.", 1:length(x))]
+    
+    s_ks = .getSampleScalingFactors(xmerge) 
+    
+    message("Computing merged scores...\n")
+        
     if(mergeMethod=="weightedMean"){
-      s_ks = normaliseSamples(xmerge, computeNNorm=F, NcolNormPrefix=F) # in this mode, normaliseSamples will just return the s_ks
-      attributes(xmerge)$s_k = s_ks
-      
-      ## FIXME: THIS IS QUITE SLOW AND MEMORY INEFFICIENT. CHECK WHY
-      wmns = round( rowSums(xmerge[, whichN, with=F] * s_ks ) / sum(s_ks) )
-      set(xmerge, NULL, NcolOut, wmns)
+      # Sorry about this - but that's the only way to make it efficient...
+      # Essentially, it's generating this (for the case of two replicates),
+      # assuming NcolOut = "N"
+      # N:=round((N.1*s_ks["N.1"]+N.2*s_ks["N.2"]+N.3*s_ks["N.3"])/sum(s_ks))
+      xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "*s_ks[\"", Nnames, "\"]", collapse="+"), ")/sum(s_ks))")))]
     }
     else{
-      xmerge = normaliseSamples(xmerge, computeNNorm=(mergeMethod=="normMean"), 
-                                NcolNormPrefix=NcolNormPrefix) 
-      for (i in 1:length(x)){
-        normNcol = paste(NcolNormPrefix,i, sep=".")    
-        set(xmerge, which(is.na(xmerge[[normNcol]])), normNcol, 0)
-      }
-      whichNNorm =  which( names(xmerge) %in% paste(NcolNormPrefix,1:length(x), sep=".") )  
-      xmerge[, NcolOut] = round(rowMeans(xmerge[, whichNNorm, with=F]))      
+      # N:=round((N.1/s_ks["N.1"]+N.2/s_ks["N.2"]+N.3/s_ks["N.3"])/length(Nnames)
+      xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "/s_ks[\"", Nnames, "\"]", collapse="+"), ")/length(Nnames))")))]
     }
   }
   else{
-    xmerge[,NcolOut] = round(rowMeans(xmerge[, whichN, with=F]))
+    # N:=round((N.1+N.2+N.3)/length(Nnames))
+    xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, collapse="+"), ")/length(Nnames))")))]
   }
   
   # Don't completely "cancel" interactions for which we have observed at least one read somewhere
   set(xmerge, which(!xmerge[[NcolOut]]), NcolOut, 1)
   
-  xmerge
+  list(xmerge, s_ks)  # Sic! Now returns a list, not a single table with attributes!
 }
 
-normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm", returnSKonly=(!computeNNorm)){
+.getSampleScalingFactors = function(xs){
   
   # UPDATE: in computeNNorm=F (returnSKonly=T), will just return the s_k vector !!
   
@@ -242,25 +246,25 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm", return
   # If compute NNorm==T, normalise sample-wise counts by dividing by 
   # the respective s_k, writing the results into NcolNormPrefix.<#sample> column. 
   
-  message("Normalising samples...")
+  message("Computing sample scaling factors...\n")
   
   if (!is.data.frame(xs)){ 
     stop("xs must be a data frame. If starting from a list of separate samples, use mergeSamples instead\n")
   }
   
-  Ncols = grep(paste0("^", Ncol, "\\.(\\d+)"), names(xs), value=T)
-  ns = as.numeric(gsub(paste0(Ncol, "\\.(\\d+)"), "\\1", Ncols))
+  Ncols = grep("^N\\.(\\d+)", names(xs), value=T)
+  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols))
   n = max(ns)
 
   # message("n = ", n)
   
   # Only using the distance range  (0; maxLBrownEst) for normalisation
   # Saving the full table for output
-  if (computeNNorm) { xs0 = xs }
+
   xs = xs[abs(get(distcol))<maxLBrownEst]
   
   setkeyv(xs, baitIDcol)  
-  Ncols = paste(Ncol, 1:n, sep=".")
+  Ncols = paste0("N.", 1:n)
 
   # Get the total number of other ends within the distance range (0; maxLBrownEst) for each bait 
   npb = .readNPBfile()   
@@ -286,25 +290,8 @@ normaliseSamples = function(xs, computeNNorm = T, NcolNormPrefix="NNorm", return
     s_k [ k ] = median(baitMeans[[ s_kjcols[k] ]] / baitMeans [[  "geo_mean" ]], na.rm=T)
   }
 
-  if (computeNNorm){
-    s_kcols = paste0("s_k", 1:n)
-    for (k in 1:n){
-      attributes(xs0)[s_kcols[k]] = s_k[k]
-    }
-    
-    for (k in 1:n){
-      incol = paste(Ncol, k, sep=".")
-      outcol = paste(NcolNormPrefix, k, sep=".")
-      # note these normalised values won't be used if merge method = "weightedMean"
-      xs0[, outcol] = round(xs0[[incol]]/s_k[k])
-      # do not "cancel" an interaction even if its normalised value rounds down to zero 
-      set(xs0, i=which(!xs0[[outcol]] & xs0[[incol]]), j=outcol, value=1)      
-    } 
-    xs0
-  }
-  else{
-    s_k
-  }
+  names(s_k) = Ncols
+  s_k
   
 }
 
