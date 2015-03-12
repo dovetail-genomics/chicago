@@ -33,6 +33,15 @@ minNPerBait = 250
 binsize=20000
 removeAdjacent = TRUE
 
+chicagoData <- setClass("chicagoData", slots=c(x="data.table", params="list"))
+
+as.chicagoData = function(x, params=list()){
+  chicagoData(x=x, params=params) 
+}
+
+as.dataTableList = function(cd){
+  lapply(cd, function(cdi)cdi@x)
+}
 
 chicagoPipeline <- function(x, outprefix, pi.rel)
 {
@@ -76,7 +85,11 @@ chicagoPipeline <- function(x, outprefix, pi.rel)
 
 readSample = function(file){
   
+  message(paste("Reading", file))
+  
   x = fread(file)
+  
+  message("Processing input...")
   
   if ( (! baitIDcol %in% names(x)) |   (! otherEndIDcol %in% names(x))  
        |  (! Ncol %in% names(x)) |  (! otherEndLencol %in% names(x))  | 
@@ -117,32 +130,36 @@ readSample = function(file){
   
   ##remove baits without proximal non-bait2bait interactions
   baitlen = length(unique(x$baitID)) 
-  x$isBait2bait = FALSE
+  x[, isBait2bait := FALSE]
   x[wb2b(otherEndID), isBait2bait:= TRUE] 
   x[, isAllB2BProx:={
     prox = abs(distSign)<maxLBrownEst & !is.na(distSign)
     if(!length(prox)){  TRUE  }
     else{ all(isBait2bait[prox]) }
-  }, by="baitID"]
+  }, by=baitID]
   x = x[isAllB2BProx==FALSE]
   set(x, NULL, "isAllB2BProx", NULL)
   
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits without proximal non-Bait2bait interactions\n")  
 
-  x
+  chicagoData(x=x, params=list())
 }
 
-mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm",
-                        mergeMethod=c("weightedMean", "normMean")[1]){
+readAndMerge = function(files, ...){
+  mergeSamples(lapply(files, readSample), ...)
+}
+
+mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm", 
+                        mergeMethod=c("weightedMean", "mean")[1]){
   
-  # Now takes a list of data.tables as input!
+  # Now takes a list of data tables as input and returns a chicagoData class!
   
   # If mergeMethod == "weightedMean", NcolOut is the weighted mean of the sample-wise counts
   # adjusted by the samples' respective scaling factors s_k
   # If mergeMethod == "normMean", sample-specific counts are first normalised by dividing by s_k
   # and NcolOut is computed as the mean of these normalised counts.
   
-  if (! mergeMethod %in% c("weightedMean", "normMean")){
+  if (! mergeMethod %in% c("weightedMean", "mean")){
     stop ("Unknown mergeMethod.\n")
   }
   
@@ -160,7 +177,11 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   # of the primary keys, and then populate it with the counts for each sample.
   
   # Rename read count columns in each sample so they are uniquely identifiable 
+    
+  x = as.dataTableList(cdl)
+  
   for (i in 1:length(x)){
+        
     Ncol = grep("^N$", names(x[[i]]), value=T)
     if (!length(Ncol)){ 
       #In case names have already been changed to N.<k> - this being data.table
@@ -193,6 +214,7 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   attr = unique(attr)
   
   message("Merging samples...")
+  
   xmerge = Reduce(function(...) merge(..., by=c("baitID", "otherEndID"), all=T), x)
   
   setkey(xmerge, baitID, otherEndID)
@@ -203,16 +225,15 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
     set(xmerge, which(is.na(xmerge[[iNcol]])), iNcol, 0) # an ugly but the most efficient way to replace NA's with zeros...
   }
 
-
+  message("Computing merged scores...\n")
+  
   if (normalise){
 
     #   whichN = which(names(xmerge) %in% paste0("N.", 1:length(x))
     Nnames = names(xmerge) [ names(xmerge) %in% paste0("N.", 1:length(x))]
     
     s_ks = .getSampleScalingFactors(xmerge) 
-    
-    message("Computing merged scores...\n")
-        
+            
     if(mergeMethod=="weightedMean"){
       # Sorry about this - but that's the only way to make it efficient...
       # Essentially, it's generating this (for the case of two replicates),
@@ -220,9 +241,16 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
       # N:=round((N.1*s_ks["N.1"]+N.2*s_ks["N.2"]+N.3*s_ks["N.3"])/sum(s_ks))
       xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "*s_ks[\"", Nnames, "\"]", collapse="+"), ")/sum(s_ks))")))]
     }
-    else{
+    else{ # arithmetic mean
       # N:=round((N.1/s_ks["N.1"]+N.2/s_ks["N.2"]+N.3/s_ks["N.3"])/length(Nnames)
       xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "/s_ks[\"", Nnames, "\"]", collapse="+"), ")/length(Nnames))")))]
+
+      # compute scaled per-sample quantities
+      for (i in 1:length(x)){
+        # e.g., NNorm.1:=round(N.1/s_ks["N.1"])
+        xmerge[, eval(parse(text=paste0(NcolNormPrefix, ".", i,":=round(", Nnames[i], "/s_ks[\"", Nnames[i], "\"])")))]
+      }
+      
     }
   }
   else{
@@ -233,7 +261,7 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   # Don't completely "cancel" interactions for which we have observed at least one read somewhere
   set(xmerge, which(!xmerge[[NcolOut]]), NcolOut, 1)
   
-  list(xmerge, s_ks)  # Sic! Now returns a list, not a single table with attributes!
+  chicagoData(x=xmerge, params = list(s_k=s_ks))  # Sic! Now returns a chicagoData object, not a single table with attributes!
 }
 
 .getSampleScalingFactors = function(xs){
@@ -249,7 +277,7 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   message("Computing sample scaling factors...\n")
   
   if (!is.data.frame(xs)){ 
-    stop("xs must be a data frame. If starting from a list of separate samples, use mergeSamples instead\n")
+    stop("xs must be a data table. If starting from a list of separate samples, use mergeSamples instead\n")
   }
   
   Ncols = grep("^N\\.(\\d+)", names(xs), value=T)
@@ -270,9 +298,11 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   npb = .readNPBfile()   
   
   message("Computing normalisation scores...")
-  npb$ntotpb = rowSums(npb[2:ncol(npb)])
-  npb = npb[,c(baitIDcol, "ntotpb")]
-  npb = data.table(npb)
+  whichN = names(npb)[2:ncol(npb)]
+  npb = npb[, ntotpb := eval(parse(text = paste0(whichN, collapse="+"))) ] 
+  for (nm in names(npb)[!names(npb)%in%c("baitID", "ntotpb")]){
+    set(npb, NULL, nm, NULL)
+  }
   setkeyv(npb, baitIDcol)
   setkeyv(xs, baitIDcol)
   xs = npb[xs]
@@ -295,97 +325,86 @@ mergeSamples = function(x, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm"
   
 }
 
-normaliseBaits = function(x, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
+normaliseBaits = function(cd, normNcol="NNb", adjBait2bait=TRUE, shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
-  alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
+
+  # NON-URGENT TODO: An even more memory-efficient way of doing this would be to have .normaliseFragmentSets assign
+  # the s_j, distbin and refBinMean columns by reference!
   
-  ##FIXME: to ease memory issues when rerunning this function later, if x is large, we reduce x to only the important columns
-  requiredCols <- c(baitIDcol,otherEndIDcol,Ncol,otherEndLencol,distcol,"isBait2bait")
-  #if(identical(sort(requiredCols), sort(colnames(x)))) 
-  if(ncol(x) < length(requiredCols) + 6) ##attempt optimization if too many columns are present
-  {
-    x = .normaliseFragmentSets(x=x, npb=.readNPBfile(), 
-                               viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
-                               shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
-    if(debug){return(x)} ##returns sbbm
-  } else {
-    temp = .normaliseFragmentSets(x=x[,requiredCols], npb=.readNPBfile(), 
-                               viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
-                               shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=debug)
-    if(debug) return(temp) ##returns sbbm
-    ##merge new columns back into x
-    x <- as.data.table(x)
-    temp <- as.data.table(temp[, colnames(temp)[!colnames(temp) %in% requiredCols[-(1:2)]], with=FALSE]) ##delete all columns already present in x, except those required for merging
-    setkeyv(x, c(baitIDcol, otherEndIDcol))
-    setkeyv(temp, c(baitIDcol, otherEndIDcol))
-    x <- merge(x, temp)
+  if(debug){
+    ##returns sbbm and not Chicago object! 
+    .normaliseFragmentSets(x=cd@x, npb=.readNPBfile(), 
+                           viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
+                           shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=T)
+  }
+  else{
+    cd@x = .normaliseFragmentSets(x=cd@x, npb=.readNPBfile(), 
+                           viewpoint="bait", idcol=baitIDcol, Ncol=Ncol, adjBait2bait=adjBait2bait, 
+                           shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=F)
+    
   }
   
+  
   # sort by baitID, otherEndID and move distbin column to the end of the table 
-  x[, normNcol] = round(x[,Ncol]/x$s_j)
-  x[x[,normNcol]==0, normNcol] = 1 # do not completely "cancel" interactions that have one read 
-  x = x[order(x[,baitIDcol], x[, otherEndIDcol]),]
-  distbincol = which(names(x)=="distbin")
-  othercols = which(names(x)!="distbin")
-  x = x[, c(othercols, distbincol)]
-  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
-  invisible(x) 
+  cd@x[, (normNcol):= pmax(1, round(get(Ncol)/s_j)) ] # do not completely "cancel" interactions that have one read 
+
+  setkey(cd@x, baitID, otherEndID)
+
+  distbincol = which(names(cd@x)=="distbin")
+  othercols = which(names(cd@x)!="distbin")
+
+  setcolorder(cd@x, c(othercols, distbincol))
+  
+  cd
+  
 }
 
-normaliseOtherEnds = function(x, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE, 
+normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE, 
                               filterTopPercent=0.01, minProxOEPerBin=1000, minProxB2BPerBin=minProxOEPerBin/10,
                               plot=TRUE, outfile=NULL){
 
-  alpha <- attributes(x)$dispersion ##store dispersion (if applicable)
-  
   # NON-URGENT TODO: instead of looking at bins defined by trans-counts & isB2B, look at bins defined by 
   # fragment length, mappability, GC content and isB2B; 
   # In this case, the call to .addTLB() will be substituted with something like .addLMGB() [to be written] 
-  x = .addTLB(x, adjBait2bait=adjBait2bait, filterTopPercent=filterTopPercent, 
+
+  cd@x = .addTLB(cd@x, adjBait2bait=adjBait2bait, filterTopPercent=filterTopPercent, 
               minProxOEPerBin=minProxOEPerBin, minProxB2BPerBin=minProxB2BPerBin)
-  
-  xAll = x
-  
-  x = x[abs(x[,distcol])<=maxLBrownEst & !is.na(x[,distcol]),]
-  x = data.table(x)
+  x = cd@x[abs(distSign)<=maxLBrownEst & is.na(distSign)==F]
   
   message("Computing total bait counts...")
   nbpb = .readNbaitsPBfile()
-  nbpb = data.table(nbpb)
   
-  setkeyv(nbpb, otherEndIDcol)
-  setkeyv(x, otherEndIDcol)
+  setkey(nbpb, otherEndID)
+  setkey(x, otherEndID)
   
   nbpb = nbpb[x]
   
   # Compute the sums of observed baits per bin for pools of other ends - 
   # NB: we need to some only once for each other end, but each other end is present
   # more than once for each tlb
-  setkeyv(nbpb, c(otherEndIDcol, "distbin"))
+  setkeyv(nbpb, c("otherEndID", "distbin"))
   nbpb = unique(nbpb)
   
-  nbpbSum = nbpb[, sum(.SD[,as.integer(distbin)+1,with=F]), by=c("tlb","distbin")]
+  nbpbSum = nbpb[, sum(get(paste0("bin",as.integer(distbin)))), by=c("tlb","distbin")]
   setkeyv(nbpbSum, c("tlb", "distbin"))
   setkeyv(x, c("tlb", "distbin"))
   x = nbpbSum[x]
   setnames(x, "V1", "ntot")
   
-  x = as.data.frame(x)
-  xt = x[,c("tlb", baitIDcol, Ncol, "distbin", "ntot")]  
-  
   message("Computing scaling factors...")
   
-  xtnorm=.normaliseFragmentSets(xt, viewpoint="otherEnd", idcol="tlb", Ncol=Ncol, npb = NULL, shrink=FALSE, 
+  x = .normaliseFragmentSets(x, viewpoint="otherEnd", idcol="tlb", Ncol=Ncol, npb = NULL, shrink=FALSE, 
                                 adjBait2bait=FALSE, refExcludeSuffix="B2B")
   
-  xtnorm = xtnorm[, c("tlb", "s_i")]  
-  xtnorm = data.table(xtnorm)
-  setkeyv(xtnorm, "tlb")
-  xtnorm = unique(xtnorm) # we don't need any other info than s_i for each tlb and it's one per tlb
-
+  setkey(x, tlb)
+  x = unique(x) # we don't need any other info than s_i for each tlb and it's one per tlb
+  set(x, NULL, "NNb", NULL)
+  set(x, NULL, "distbin", NULL)
+  set(x, NULL, "ntot", NULL)
+  
   if(plot){
     if (!is.null(outfile)){ pdf(outfile)}
-    with(xtnorm, barplot(s_i, names.arg=tlb, 
+    with(x, barplot(s_i, names.arg=tlb, 
                          col=sapply(tlb, function(x)ifelse(length(grep("B2B",x)), "darkblue", "red")), xlab="tlb", ylab="s_i"))
     legend("topleft", legend=c("non-B2B", "B2B"),fill=c("red", "darkblue"))
     if (!is.null(outfile)){ dev.off()}
@@ -393,28 +412,24 @@ normaliseOtherEnds = function(x, Ncol="NNb", normNcol="NNboe", adjBait2bait=TRUE
 
   message("Computing normalised counts...")
     
-  xAll = data.table(xAll)
-  setkeyv(xAll, "tlb")
+  setkey(cd@x, tlb)
   
-  xAll = merge(xAll, xtnorm, all.x=T)
+  cd@x = merge(cd@x, x, all.x=T, by="tlb")
   #setnames(xAll, "V1", "s_i")
   
   # if we can't estimate s_i robustly, assume it to be one
-  xAll$s_i[is.na(xAll$s_i)] = 1
-  
-  xAll[[normNcol]] = round(xAll[[Ncol]]/xAll$s_i)
-  xAll[[normNcol]][xAll[[normNcol]]==0] = 1
-  
+  set(cd@x, which(is.na(cd@x$s_i)), "s_i", 1)
+  cd@x[, (normNcol):= pmax(1, round(get(Ncol)/s_i))]
+        
   message("Post-processing...")
-  setkeyv(xAll, c(baitIDcol, otherEndIDcol)) # to reorder
+  setkeyv(cd@x, c(baitIDcol, otherEndIDcol)) # to reorder
   
-  x = as.data.frame(xAll) # note - redefining x
-  othercols = names(x)[(!names(x)%in%c(baitIDcol, otherEndIDcol))]
-  x = x[, c(baitIDcol, otherEndIDcol, othercols)]  
+  othercols = names(cd@x)[!names(cd@x)%in%c("baitID", "otherEndID", "distbin", Ncol, normNcol)]
   
-  attributes(x)$dispersion <- alpha ##return dispersion (if applicable)
+  setcolorder(cd@x, c("baitID", "otherEndID", "distbin", othercols, Ncol, normNcol))
   
-  invisible(x)
+  cd
+
 }
 
 estimateDistFun <- function (x, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, outfile=NULL) {
@@ -1015,7 +1030,7 @@ getScores <- function(x, method="weightedRelative",
   # "Viewpoint" will be used in the comments for either baits or sets of other ends,
   # depending on the direction of normalisation.
   
-  # npb is a data frame containing the number of reads per viewpoint per bin,
+  # npb is a data table containing the number of reads per viewpoint per bin,
   # for viewpoint=="bait" it's just the table from the nperbinfile (read via .readNPBfile),
   # where npb's idcol should match x's idcol.
   # for viewpoit=="otherEnd" the table from the nbaitsperbin file needs preprocessing   
@@ -1031,22 +1046,20 @@ getScores <- function(x, method="weightedRelative",
   if(viewpoint=="bait"){
     scol = "s_j"
   
-  	x$distbin = cut(abs(x[,distcol]), seq(0, maxLBrownEst, bin)) # will have NA for distal and trans interactions
+  	set(x, NULL, "distbin", cut(abs(x$distSign), seq(0, maxLBrownEst, bin))) # will have NA for distal and trans interactions
 
-  	xAll = data.table(x) # full data table with bait2bait and distal interactions
+  	xAll = x # full data table with bait2bait and distal interactions
   
   	if (adjBait2bait){
-    	x$isBait2bait = FALSE
-    	x$isBait2bait[whichbait2bait(x)] = TRUE
-    	x = x[!x$isBait2bait,]
+      if (!"isBait2bait" %in% names(x)){
+        x[, isBait2bait := FALSE]
+        x[wb2b(otherEndID), isBait2bait:= TRUE] 
+      }
+    	x = x[isBait2bait==F]
   	}
-  
-  	x = data.table(x)
   
   	# x is the data table used to compute the scaling factors
 	  x = x[is.na(distbin)==FALSE]    
-  
-  	npb = data.table(npb)
   
   	setkeyv(x, idcol)
   	setkeyv(npb, idcol)
@@ -1058,17 +1071,20 @@ getScores <- function(x, method="weightedRelative",
   }
   else{
 	# for other ends, bait2bait adjustment and adding ntot is performed before calling this function 
-  	x = data.table(x)
+  
     scol = "s_i"
   }
 
   message("Computing binwise means...")
   
-  x = x[, c(idcol, Ncol, "distbin", "ntot"), with=FALSE]
+  rmCol = names(x)[!names(x) %in% c(idcol, Ncol, "distbin", "ntot")]
+  for (col in rmCol){
+    set(x, NULL, col, NULL)    
+  }
     
   # sbbm is the input matrix for normalisation that contains the mean number of reads per bin for each bait
   setkeyv(x, c(idcol, "distbin"))
-  sbbm = x[, sum(get(Ncol))/ntot[1] , by=c(idcol, "distbin")]
+  sbbm = x[, get(Ncol)/ntot[1] , by=c(idcol, "distbin")]
   setkeyv(sbbm, "distbin")  
   setnames(sbbm, "V1", "bbm")
   setkey(sbbm, "distbin")
@@ -1078,7 +1094,7 @@ getScores <- function(x, method="weightedRelative",
     sbbm[, geomean:=geo_mean(bbm), by="distbin"]
   } else{
     # for other end normalisation, not including pools containing b2b interactions into the virtual reference
-    # computation, as they are a minority of them and we expect them to have much higher geo_means
+    # computation, as they are a minority and we expect them to have much higher geo_means
     sbbm[, geomean:=geo_mean(bbm[-grep(paste0(".",refExcludeSuffix,"$"), get(idcol))]), by="distbin"]    
   }
   
@@ -1088,7 +1104,7 @@ getScores <- function(x, method="weightedRelative",
     setkeyv(sbbm, idcol)    
     s_v = sbbm[, median(s_iv[!is.na(s_iv)]), by=idcol]
   }
-  else{   # Same but with a Gamma shrinkage of binwise means  
+  else{   # Same but with a Gamma shrinkage of binwise means - currently deprecated
     message("Computing shrunken means...")
         
     setkeyv(sbbm, "distbin")
@@ -1169,8 +1185,7 @@ getScores <- function(x, method="weightedRelative",
     xAll = merge(xAll, gm, all.x=T) 
   }
   
-  xAll = as.data.frame(xAll)
-  invisible(xAll)
+  xAll
   
 }  
 
@@ -1225,9 +1240,11 @@ getScores <- function(x, method="weightedRelative",
 #     stop("Bait files used for generating the NfragPerBin file and defined here do not match. 
 #          Amend either setting before running the analysis\n")
 #   }
-  npb = as.data.frame(fread(nperbinfile))
-  names(npb)[1] = baitIDcol
-  names(npb)[2:ncol(npb)] = paste0("bin", 1:(ncol(npb)-1))
+  npb = fread(nperbinfile)
+  setnames(npb, names(npb)[1], "baitID")
+  for(i in 2:ncol(npb)){
+    setnames(npb, names(npb)[i], paste0("bin", i-1))    
+  }
   npb
 }
 
@@ -1277,9 +1294,11 @@ getScores <- function(x, method="weightedRelative",
   #          Amend either setting before running the analysis\n")
   #   }
   
-  nbpb = as.data.frame(fread(nbaitsperbinfile))
-  names(nbpb)[1] = otherEndIDcol
-  names(nbpb)[2:ncol(nbpb)] = paste0("bin", 1:(ncol(nbpb)-1))
+  nbpb = fread(nbaitsperbinfile)
+  setnames(nbpb, names(nbpb)[1], "otherEndID")
+  for(i in 2:ncol(nbpb)){
+    setnames(nbpb, names(nbpb)[i], paste0("bin", i-1))    
+  }
   nbpb
 }
 
@@ -1343,46 +1362,42 @@ getScores <- function(x, method="weightedRelative",
   # Checking whether in the input, we had distances at trans-interactions labeled as NA 
   # (as opposed to a dummy maximum distance)
   transNA = FALSE
-  if(any(is.na(x[,distcol]))){
+  if(any(is.na(x$distSign))){
     transNA = TRUE
-    transD = max(x[!is.na(x[,distcol]),distcol])+binsize
-    x[is.na(x[,distcol]), distcol] = transD
+    transD = max(x[is.na(distSign)==F]$distSign)+binsize
+    x[is.na(distSign), distSign := transD]
   }
   else{
-    transD = max(x[,distcol])
+    transD = max(x$distSign)
     message("Warning: No NAs found in input. Assuming the max distance of ", transD, " is a dummy for trans-counts.")
   }
   
   message("Computing trans-counts...")
   
-  if (adjBait2bait){ # if we want special bins for bait2bait interactions 
-    if(!"isBait2bait" %in% names(x)){
-      x$isBait2bait = FALSE
-      x$isBait2bait[whichbait2bait(x)] = TRUE
+  if (adjBait2bait){
+    if (!"isBait2bait" %in% names(x)){
+      x[, isBait2bait := FALSE]
+      x[wb2b(otherEndID), isBait2bait:= TRUE] 
     }
-    x = data.table(x)
-    setkeyv(x, otherEndIDcol)
+    setkey(x, otherEndID)
     # we are interested in the minimum distance for interactions that involve each other end
     # to then be able to check how many other ends we are pooling together for each tlb bin   
-    transLen = x[, list(length(.I[get(distcol)==transD]), isBait2bait[1], min(get(distcol))), by=otherEndIDcol]
+    transLen = x[, list(length(.I[distSign==transD]), isBait2bait[1], min(distSign)), by=otherEndID]
     setnames(transLen, "V2", "isBait2bait")
-    setnames(transLen, "V3", distcol)
+    setnames(transLen, "V3", "distSign")
   }
   else{
     x = data.table(x)
     setkeyv(x, otherEndIDcol)
-    transLen = x[, list(length(.I[get(distcol)==transD]), min(get(distcol))), by=otherEndIDcol]    
-    setnames(transLen, "V2", distcol)
+    transLen = x[, list(length(.I[distSign==transD]), min(distSign)), by=otherEndID]    
+    setnames(transLen, "V2", "distSign")
   }
   
-  setnames(transLen, "V1", "transLen")
+  setnames(transLen, "V1", "transLength")
   
-  transLen = as.data.frame(transLen)
   transLen0 = transLen
-  transLen = transLen[transLen$transLen<quantile(transLen$transLen,1-filterTopPercent/100), ] 
-  # apparently data.tables don't like columns with the same name as themselves, so convert back to a data frame
-  
-  filteredLen = nrow(transLen0[!transLen0[,otherEndIDcol] %in% transLen[,otherEndIDcol],])
+  transLen = transLen[transLength<quantile(transLen$transLength,1-filterTopPercent/100)] 
+  filteredLen = nrow(transLen0[!otherEndID %in% transLen$otherEndID])
   message("Filtering out ", filteredLen, " other ends with top ", filterTopPercent, "% number of trans-interactions")
   
   # first use cut2 to compute bin boundaries on the proximal range based on the desired minProxOEPerBin
@@ -1394,62 +1409,58 @@ getScores <- function(x, method="weightedRelative",
   
   if (adjBait2bait){
     transLen0 = transLen
-    transLen = transLen0[!transLen0$isBait2bait,]
-    transLenB2B = transLen0[transLen0$isBait2bait,]
+    transLen = transLen0[isBait2bait==F]
+    transLenB2B = transLen0[isBait2bait==T]
     
   }
   
   message("Binning...")
   
-  cuts = cut2(transLen$transLen[abs(transLen[,distcol])<= maxLBrownEst], 
+  cuts = cut2(transLen[abs(distSign)<= maxLBrownEst]$transLength, 
               m=minProxOEPerBin, onlycuts=T)
   # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
   # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-  if (min(cuts)>min(transLen$transLen)){
-    cuts[1] = min(transLen$transLen)
+  if (min(cuts)>min(transLen$transLength)){
+    cuts[1] = min(transLen$transLength)
   }
-  if (max(cuts)<max(transLen$transLen)){
-    cuts[length(cuts)] = max(transLen$transLen)
+  if (max(cuts)<max(transLen$transLength)){
+    cuts[length(cuts)] = max(transLen$transLength)
   }
-  transLen$tlb = cut(transLen$transLen, breaks=cuts, include.lowest=T)
+  set(transLen, NULL, "tlb" , cut(transLen$transLength, breaks=cuts, include.lowest=T))
   
   if (adjBait2bait){
     
-    cutsB2B = cut2(transLenB2B$transLen[abs(transLenB2B[,distcol])<= maxLBrownEst], 
+    cutsB2B = cut2(transLenB2B[abs(distSign)<= maxLBrownEst]$transLength, 
                    m=minProxB2BPerBin, onlycuts=T)
     # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
     # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-    if (min(cutsB2B)>min(transLenB2B$transLen)){
-      cutsB2B[1] = min(transLenB2B$transLen)
+    if (min(cutsB2B)>min(transLenB2B$transLength)){
+      cutsB2B[1] = min(transLenB2B$transLength)
     }
-    if (max(cutsB2B)<max(transLenB2B$transLen)){
-      cutsB2B[length(cutsB2B)] = max(transLenB2B$transLen)
+    if (max(cutsB2B)<max(transLenB2B$transLength)){
+      cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
     }
-    transLenB2B$tlb = cut(transLenB2B$transLen, breaks=cutsB2B, include.lowest=T)
+    set(transLenB2B, NULL, "tlb", cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=T))
     levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
     
     transLen = rbind(transLen, transLenB2B)
   }      
   
-  transLen$transLen = NULL
-  transLen$isBait2bait = NULL
-  transLen[,distcol] = NULL
+  set(transLen, NULL, "transLength", NULL)
+  set(transLen, NULL, "isBait2bait", NULL)
+  set(transLen, NULL, "distSign", NULL)
   
-  transLen = data.table(transLen)
-  
-  setkeyv(x, otherEndIDcol)
-  setkeyv(transLen, otherEndIDcol)
+  setkey(x, otherEndID)
+  setkey(transLen, otherEndID)
   
   x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
   # removing the interactions with too "sticky" other ends and those mapping to very sparse bins
   
-  x = as.data.frame(x)
-  
   if(transNA){
-    x[x[,distcol]==max(x[,distcol]), distcol] = NA
+    x[distSign==max(x$distSign), distSign := NA]
   }
   
-  invisible(x)
+  x
 }
 
 plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,      
