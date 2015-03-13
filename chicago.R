@@ -467,6 +467,9 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
 
 }
 
+### I wonder if this function should update cd@params$distFun rather than return it.
+### This way f will be retained along with other params such as s_k and dispersion.
+### Just need to make sure cd@x doesn't get copied when we do this... 
 estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, outfile=NULL) {
   
   # Take the "refBinMean" column of the data x as f(d_b)
