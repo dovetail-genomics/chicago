@@ -14,6 +14,7 @@ as.dataTableList = function(cd){
   lapply(cd, function(cdi)cdi@x)
 }
 
+## This function still needs updating, along with plotBaits and exportResults
 chicagoPipeline <- function(x, outprefix, pi.rel)
 {
   message("\n*** Running normaliseBaits...\n")
