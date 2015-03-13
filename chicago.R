@@ -738,9 +738,6 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   invisible(xAll)
 }
 
-
-## TODO: THIS FUNCTION SHOULD PROBABLY OPERATE IN THE SCOPE OF .SD 
-## SO BASICALLY NO NEED FOR with (x, ...) 
 .estimateBMean = function(x, distFun, reEstimateMean=FALSE) {
   ##1) Gives a "Bmean" vector of length nrow(x), giving expected Brownian noise.
   
