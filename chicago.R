@@ -10,49 +10,63 @@ library(Delaporte)
 
 chicagoData <- setClass("chicagoData", slots=c(x="data.table", params="list", settings="list"))
 
-as.dataTableList = function(cd){
-  lapply(cd, function(cdi)cdi@x)
-}
-
-## This function still needs updating, along with plotBaits and exportResults
-chicagoPipeline <- function(x, outprefix, pi.rel)
+## Not tested yet in the updated version
+chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
-  x = normaliseBaits(x)
+  cd = normaliseBaits(cd)
 
-  print(gc())
+  if(reportMemory){
+    print(gc(reset=T))
+  }
   
   message("\n*** Running normaliseOtherEnds...\n")
-  x = normaliseOtherEnds(x, outfile=paste0(outprefix, "_oeNorm.pdf"))
+  cd = normaliseOtherEnds(cd, outfile=paste0(outprefix, "_oeNorm.pdf"))
   
-  print(gc())
-
+  if(reportMemory){
+    print(gc(reset=T))
+  }
+  
   message("\n*** Running estimateTechnicalNoise...\n")
-  x = estimateTechnicalNoise(x, outfile=paste0(outprefix, "_techNoise.pdf"))
+  cd = estimateTechnicalNoise(cd, outfile=paste0(outprefix, "_techNoise.pdf"))
   
-  print(gc())
-
+  if(reportMemory){
+    print(gc(reset=T))
+  }
+  
   message("\n*** Running estimateDistFun...\n")
-  f = estimateDistFun(x, outfile=paste0(outprefix, "_distFun.pdf"))
   
-  print(gc())
+  ### Note that f is now saved in cd@params
+  cd = estimateDistFun(cd, outfile=paste0(outprefix, "_distFun.pdf"))
   
+  if(reportMemory){
+    print(gc(reset=T))
+  }  
+  
+  ### Note that f is now saved as cd@params$f and  
+  ### subset is saved as cd@settings$brownianNoise.subset
   message("\n*** Running estimateBrownianNoise...\n")
-  x = estimateBrownianNoise(x, f, subset=1000)
+  cd = estimateBrownianNoise(cd)
 
-  print(gc())  
-
+  if(reportMemory){
+    print(gc(reset=T))
+  }  
+  
   message("\n*** Running getPvals...\n")
-  x = getPvals(x)
+  cd = getPvals(cd)
   
-  print(gc())
-
+  if(reportMemory){
+    print(gc(reset=T))
+  }  
+  
   message("\n*** Running getScores...\n")
-  x = getScores(x, relAbundance = pi.rel)
+  cd = getScores(cd)
   
-  print(gc())
-
-  invisible(x)
+  if(reportMemory){
+    print(gc(reset=T))
+  }  
+  
+  cd
 }
 
 ### This is where we now set the defaults
@@ -126,6 +140,17 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
   
+}
+
+modifySettings = function(cd, settings){
+  
+  message("Warning: settings are not checked for consistency with the previous ones.")
+  
+  for (s in names(settings)){
+    cd@settings[[s]] = settings[[s]]
+  }
+  
+  cd
 }
 
 readSample = function(file, cd){
@@ -478,7 +503,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
 
 }
 
-### I wonder if this function should update cd@params$distFun rather than return it.
+### I've modified this function so it updates cd@params$f and returns cd.
 ### This way f will be retained along with other params such as s_k and dispersion.
 ### Just need to make sure cd@x doesn't get copied when we do this... 
 estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, outfile=NULL) {
@@ -577,7 +602,8 @@ estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, l
     dev.off()
   }
   
-  f
+  cd@params$f = f
+  cd
 }
 
 estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
@@ -1410,21 +1436,20 @@ getScores = function(){}
   x
 }
 
-plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,      
-                              plevel1 = 12, plevel2 =10, outfile=NULL, removeBait2bait=TRUE, 
-                              width=20, height=20, maxD=NULL, ...){
+plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=NULL, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...){
+
   if(plotBaitNames){
-    baitmap = fread(baitmapfile)
+    baitmap = fread(cd@settings$baitmapfile)
   }
   if (is.null(baits)){
-    baits = sample(unique(x[,baitIDcol]),n)
+    baits = sample(unique(cd@x$baitID),n)
   }
   else{
     n = length(baits)
   }
  
   if(plotBprof){
-    disp = attributes(x)$dispersion 
+    disp = cd@params$dispersion 
   }
  
   if (!is.null(outfile)){ 
@@ -1437,12 +1462,14 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TR
     par(mfrow=c(n, 1))
   }
 
-  x = data.table(x)
-  setkeyv(x, baitIDcol)
+  setkey(x@x, baitID)
 
   for(i in 1:n){
 
-    this = x[get(baitIDcol)==baits[i]]
+    this = cd@x[baitID==baits[i]]
+    
+    
+    
     this = this[is.na(distSign)==FALSE]
 
     if (!is.null(maxD)){
@@ -1452,33 +1479,36 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TR
     if (removeBait2bait){
        this = this[isBait2bait==FALSE]
     }
-    this = as.data.frame(this)
-    this = this[order(this[,distcol]),]
 
-    cols <- rep("Black", nrow(this))
-    pchs <- rep(1, nrow(this))
+    setDF(this)
+    this = this[order(this$distSign),]
+
+    cols <- rep(bgCol, nrow(this))
+    pchs <- rep(bgPch, nrow(this))
     sel1 <- this[,pcol] >=plevel1
     sel2 <- this[,pcol] >=plevel2
-    cols[sel2] <- "Blue" ##less stringent first
-    cols[sel1] <- "Red"
-    pchs[sel1 | sel2] <- 20
+    cols[sel2] <- lev2Col ##less stringent first
+    cols[sel1] <- lev1Col
+    pchs[sel2] <- lev2Pch
+    pchs[sel1] <- lev2Pch
     
     title = paste(baits[i], sep="")
     if(plotBaitNames){
-         baitName = baitmap$V5[baitmap$V4==baits[i]]
+         baitName = baitmap[baitmap$V4==baits[i]][, cd@settings$baitmapGeneIDcol, with=F]
          if (length(grep(",",baitName))){
              baitName = gsub("(\\S+,).+","\\1", baitName)
              baitName = paste0(baitName, "...")
          }
-         title = paste(title, baitName, sep=" - ")
+         title = paste0(baitName, " (", title, ")")
     }    
 
-    plot(this[,distcol], this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
+    plot(this$distSign, this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
 
     if(plotBprof){
-	lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
-        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), lwd=1, lty=2, col="darkgrey")
+	      lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
+        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
+              lwd=1, lty=2, col="darkgrey")
     }
   }
   if (!is.null(outfile)){ 
@@ -1598,12 +1628,6 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=
   
 }
 
-
-whichbait2bait = function(x, baitmap=NULL){
-  stop("whichbait2bait is deprecated. Use wb2b instead")
-}
-
-# A quicker version of the above function, taking just one column as input
 wb2b = function(oeID, s, baitmap=NULL){
   # s is the current chicagoData object's settings list
   if (is.null(baitmap)){
@@ -1612,15 +1636,17 @@ wb2b = function(oeID, s, baitmap=NULL){
   which(oeID %in% baitmap[[s$baitmapFragIDcol]])
 }
 
-
-distbinToDist = function(db, abs=TRUE){
-  distSt = gsub("^\\(", "", db)
-  distSt = gsub("\\,.+$", "", distSt)
-  ifelse(abs, abs(as.numeric(distSt)), as.numeric(distSt))
+whichbait2bait = function(x, baitmap=NULL){
+  stop("whichbait2bait is deprecated. Use wb2b instead")
 }
-distbinToDistVec = Vectorize(distbinToDist, "db")
 
-geo_mean <-function(data){    
+as.dataTableList <- function(cd){ 
+  # takes a list of chicagoData objects cd and returns a list of data tables 
+  # from the respective cd@x slots
+  lapply(cd, function(cdi)cdi@x)
+}
+
+geo_mean <- function(data){    
   log_data <- log(data);    
   gm <- exp(mean(log_data[is.finite(log_data)]));    
   return(gm) 

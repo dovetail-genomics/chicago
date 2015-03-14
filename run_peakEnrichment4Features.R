@@ -175,11 +175,7 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 }
 
 
-peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL,no_bins, sample_number, 
-                                    folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",filename=NULL,
-                                    position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag=NULL, sep="\t", header=TRUE, 
-                                    plot_name=NULL, distal=FALSE, coldist=NULL, unique=TRUE, filterB2B=FALSE,
-                                    b2bcol="isBait2bait", negFraction = 1) {
+peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL, no_bins, sample_number, folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",filename=NULL, position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag=NULL, sep="\t", header=TRUE,plot_name=NULL, distal=FALSE, coldist=NULL, unique=TRUE, filterB2B=FALSE, b2bcol="isBait2bait", negFraction = 1) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (any(c("V1", "V2", "V3", "V4") %in% names(x1))){
@@ -219,8 +215,7 @@ peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=
   ######
   
   cat("Overlap our reads with Features")
-  x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",
-                               position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag = list_frag)
+  x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd_folder = "/bi/group/sysgen/CHIC/", position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag = list_frag)
   cat("Extract significant interactions...\n")
   result_1 <- Extract(x1=x1, filename=filename, score=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist, significant=TRUE)
   if (unique){
