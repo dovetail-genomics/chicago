@@ -120,6 +120,7 @@ if (nfiles){
   }
   cat("\n*** Running mergeSamples...\n")
   x = mergeSamples(x1)
+  rm(x1) # Removing individual replicates to save memory!
 }else{
   if (length(clArgs)<7+nopts){
     stop("Some mandatory arguments are missing.\n")
