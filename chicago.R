@@ -56,7 +56,10 @@ chicagoPipeline <- function(x, outprefix, pi.rel)
 }
 
 ### This is where we now set the defaults
-setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
+### Order of priority:
+### settings override settings from settingsFile
+### both override def.settings
+setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
  def.settings=list(
   rmapfile= file.path(designDir, "Digest_Human_HindIII.bed"),
   baitmapfile= file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"),
@@ -75,7 +78,7 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   adjBait2bait=TRUE,
   tlb.filterTopPercent=0.01, 
   tlb.minProxOEPerBin=1000, 
-  tlb.minProxB2BPerBin=25,
+  tlb.minProxB2BPerBin=100,
   techNoise.minBaitsPerBin=1000, 
   brownianNoise.subset=1000,
   brownianNoise.seed=NULL,
@@ -86,21 +89,23 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   ### TODO: add alpha, beta, gamma, delta here.
   )){
   
+  modSettings = vector("list")
+  
   if(!is.null(settingsFile)){
     
     message(paste0("Reading custom experimental settings from ", settingsFile, "..."))
     
     # http://stackoverflow.com/questions/6602881/text-file-to-list-in-r
     sf <- scan(settingsFile, what="", sep="\n")
-    settings <- strsplit(sf, "[[:space:]]+")
-    names(settings) <- sapply(settings, `[[`, 1)
-    settings <- lapply(settings, `[`, -1)
+    modSettings <- strsplit(sf, "[[:space:]]+")
+    names(modSettings) <- sapply(modSettings, `[[`, 1)
+    modSettings <- lapply(modSettings, `[`, -1)
     
     # convert numerically defined settings to numbers
     # do the same for logical settings
     # suppressing "NAs introduced by coercion" warnings
     suppressWarnings({
-      settings <- lapply(settings, function(s){
+      modSettings <- lapply(modSettings, function(s){
         num_s = as.numeric(s);
         if(!is.na(num_s)) { return (num_s) };
         bool_s = as.logical(s);
@@ -109,9 +114,14 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
       })
     })
   }
-  
+
   for (s in names(settings)){
-      def.settings[[s]] = settings[[s]]
+    modSettings[[s]] = settings[[s]]
+  }
+  
+  
+  for (s in names(modSettings)){
+      def.settings[[s]] = modSettings[[s]]
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
@@ -1017,7 +1027,7 @@ getScores = function(){}
     
   # sbbm is the input matrix for normalisation that contains the mean number of reads per bin for each bait
   setkeyv(x, c(idcol, "distbin"))
-  sbbm = x[, get(Ncol)/ntot[1] , by=c(idcol, "distbin")]
+  sbbm = x[, sum(get(Ncol))/ntot[1] , by=c(idcol, "distbin")]
   setkeyv(sbbm, "distbin")  
   setnames(sbbm, "V1", "bbm")
   setkey(sbbm, "distbin")
