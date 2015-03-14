@@ -1487,12 +1487,8 @@ plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TR
   baits
 }
 
-exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1],
-                                 b2bcutoff=NULL, abscutoff=T, rmap=NULL, baitmap=NULL, #logp=T, 
-                                 b2bcol = "isBait2bait"){
-  
-  #stop("Not yet supported")
-  
+exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=NULL, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1]){
+    
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
@@ -1503,77 +1499,60 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
     stop ("Order must be either position (default) or score\n")
   }
   
-  if (is.null(rmap)){
-    message("Reading the restriction map file...")
-    rmap = as.data.frame(read.table(rmapfile))
-  }
-  names(rmap) = c("rChr", "rStart", "rEnd", "otherEndID")
+  message("Reading the restriction map file...")
+  rmap = fread(cd@settings$rmapfile)
+  setnames(rmap, "V1", "rChr")
+  setnames(rmap, "V2", "rStart")
+  setnames(rmap, "V3", "rEnd")
+  setnames(rmap, "V4", "otherEndID")
   
-  if (is.null(baitmap)){
-    message("Reading the bait map file...")
-    baitmap = as.data.frame(fread(baitmapfile))
-  }
-  names(baitmap)[1:3] = c("bChr", "bStart", "bEnd") 
-  names(baitmap)[baitmapGeneIDcol] = "bID"
+  message("Reading the bait map file...")
+  baitmap = fread(cd@settings$baitmapfile)
+
+  setnames(baitmap, "V1", "baitChr")
+  setnames(baitmap, "V2", "baitStart")
+  setnames(baitmap, "V3", "baitEnd")
+  setnames(baitmap, cd@settings$baitmapFragIDcol, "baitID")
+  setnames(baitmap, cd@settings$baitmapGeneIDcol, "promID")
   
-  #if (baitIDformat=="chr_st_end"){
-  #  if (!"index" %in% names(baitmap)){
-  #    cat("Generating baitmap index...\n")
-  #    baitmap[,1] = as.character(baitmap[,1])
-  #    baitmap$index = paste(baitmap[,1], baitmap[,2], baitmap[,3], sep="_")  
-  #  }
-  #}
   message("Preparing the output table...")
-  # just in case
-  baitmap = baitmap[!duplicated(baitmap$V4),]
-  rmap = rmap[!duplicated(rmap$otherEndID),]
-  if (abscutoff) { ps = abs(x[,pcol]) }
-  else { ps = x[,pcol] }
-  
+
   if (is.null(b2bcutoff)){
-    x = x[ ps>=cutoff, ]
+    x = cd@x[ get(scoreCol)>=cutoff ]
   }
   else{
-    x = x[ ( (!x[,b2bcol]) & ps>=cutoff ) | ( (x[,b2bcol]) & ps>=b2bcutoff ) , ]
+    x = cd@x[ (isBait2bait==T & get(scoreCol)>=b2bcutoff ) | 
+                ( isBait2bait==F & get(scoreCol)>=cutoff )]
   }
-  x = data.table(x)
-  rmap = data.table(rmap)
-  setnames(x, otherEndIDcol, "otherEndID")
+
+  x = x[, c("baitID", "otherEndID", scoreCol), with=F]
+  
   setkey(x, otherEndID)
   setkey(rmap, otherEndID)
   
-  xa = merge(x,rmap, all.x=T, all.y=F, allow.cartesian=T)
-  baitmap = data.table(baitmap)
-  setkey(xa, baitID)
+  x = merge(x, rmap, by="otherEndID", allow.cartesian = T)
+  setkey(x, baitID)
   
-  #if (baitIDformat =="chr_st_end") { 
-  #  setnames(baitmap, "index", names(baitmap)[baitmapFragIDcol], "baitID")
-  #  setkey(baitmap, baitID)  
-  #  xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
-  #}
-  #else{
-  setnames(baitmap, names(baitmap)[baitmapFragIDcol], "baitID")
   setkey(baitmap, baitID)  
-  xb = merge(xa, baitmap, all.x=T, all.y=F, allow.cartesian=T)
-  #}
+  x = merge(x, baitmap, by="baitID", allow.cartesian = T)
+        
+  # note that baitmapGeneIDcol has been renamed into "promID" above 
+  bm2 = baitmap[,c ("baitID", "promID"), with=F]
+
+  setDF(x)
+  setDF(bm2)
   
-  out = as.data.frame(xb)
+  # this way we can be sure that the new column will be called promID.y  
+  out = merge(x, bm2, by.x="otherEndID", by.y="baitID", all.x=T, all.y=F, sort=F)
+  out[is.na(out$promID.y), "promID.y"] = "."
   
-  out = merge(out, as.data.frame(baitmap)[,c(baitmapFragIDcol, baitmapGeneIDcol)], # note that baitmapGeneIDcol has been renamed into "bID" above 
-              by.x=otherEndIDcol, by.y=1, all.x=T, all.y=F, sort=F)  # this way we can be sure that the new column will be called bID.y
+  out = out[,c("baitChr", "baitStart", "baitEnd", "promID.x", "rChr", "rStart", "rEnd", "otherEndID", scoreCol, "N", "promID.y")]
   
-  if (any (is.na(out$bID.y))) { 
-    out$bID.y[is.na(out$bID.y)] = "."
-  }
-  #out = out[order(out$bID.x, out[,otherEndIDcol]),]
-  
-  out = out[,c("bChr", "bStart", "bEnd", "bID.x", "rChr", "rStart", "rEnd", otherEndIDcol, pcol, Ncol, "bID.y"),]
-  names(out) = c("bait_chr", "bait_start", "bait_end", "bait_name", "otherEnd_chr", 
-                 "otherEnd_start", "otherEnd_end", "otherEnd_ID", "score", "N_reads", "otherEnd_name")
+  names(out) = c("bait_chr", "bait_start", "bait_end", "bait_name", "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_ID", "score", "N_reads", "otherEnd_name")
   
   out$N_reads [ is.na(out$N_reads) ] = 0
-  
   out$score = round(out$score,2)
+
   if (order=="position"){
     out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
   }
@@ -1586,16 +1565,10 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
     message("Writing out for seqMonk...")
     out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
     
-    #out$star = "*"
-    #out$starNewLineOEChr = paste("*\n",out[,"otherEnd_chr"], sep="")
-    
-    out$newLineOEChr = paste("\n",out[,"otherEnd_chr"], sep="")
-    
-    out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", 
-                 "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
-    message("Writing out for seqMonk...")		
+    out$newLineOEChr = paste("\n",out[,"otherEnd_chr"], sep="")    
+    out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
+  
     write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
-    
   }	
   if ("interBed" %in% format){
     message("Writing out interBed...")
@@ -1612,9 +1585,10 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
    out$i = seq(1,nrow(out)*2,2)
    res = apply(out,1,function(x){
          lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
+
          if(x["otherEnd_name"]=="."){ # for bait2bait interactions the second line will be created anyway as the results are duplicated in the original dataframe
             lines = paste0(lines,  "\n",
-                paste0(x["otherEnd_chr"], "\t", x["otherEnd_start"], "\t", x["otherEnd_end"], "\t", x["bait_chr"],":", x["bait_start"], "-", x["bait_end"], ",", x["score"],"\t", as.numeric(x["i"])+1, "\t", "."))
+        paste0(x["otherEnd_chr"], "\t", x["otherEnd_start"], "\t", x["otherEnd_end"], "\t", x["bait_chr"],":", x["bait_start"], "-", x["bait_end"], ",", x["score"],"\t", as.numeric(x["i"])+1, "\t", "."))
          } 
          lines
     })
@@ -1626,10 +1600,7 @@ exportResults = function(x, outfileprefix, pcol="score", cutoff, format=c("seqMo
 
 
 whichbait2bait = function(x, baitmap=NULL){
-  if (is.null(baitmap)){
-    baitmap = as.data.frame(fread(baitmapfile))
-  }
-  which(x[,otherEndIDcol] %in% baitmap[,baitmapFragIDcol])
+  stop("whichbait2bait is deprecated. Use wb2b instead")
 }
 
 # A quicker version of the above function, taking just one column as input
