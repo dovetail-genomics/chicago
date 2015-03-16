@@ -696,6 +696,8 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
 # I don't think lookup tables are needed when we can subset and assign by reference
 # Probably more efficient to just use the original data table instead...
 
+  # the lookup table can be generated on the fly x[, s_j[1], by=baitID]
+  # but on the other hand, sjLookup is very small anyway
   sjLookup <- unique(x[,c("baitID","s_j"),with=FALSE])
   setkey(sjLookup, baitID)
   if(siPresent)
@@ -717,8 +719,10 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   ## - 0s in Ncol
 #   x[[Ncol]] <- ifelse(is.na(x[[Ncol]]), 0, x[[Ncol]])
   x[is.na(N), N:=0]
-  ## - s_js
+  ## - Aren't s_js already in x??
   x$s_j <- sjLookup[J(x[[baitIDcol]])]$s_j
+  # 
+  # set(x, <whichCols or NULL if all>, "colName", values )
 # Needs to be something like   x[, s_j:=sjLookup[J(baitID)]$s_j ]
 # But actually, I don't think lookup tables are needed when we can subset and assign by reference
   ## - s_is (if present)
@@ -749,8 +753,9 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   # Same issue here 
   # Probably need:
   # x[, Bmean:=.estimateBMean(.SD)]
+  # check using x[, Bmean:={browser(); .estimateBMean(.SD)}]
   x$Bmean <- .estimateBMean(x, distFun, reEstimateMean)
-  
+  # distFun == cd@params$f
   ##Fit model
   ##---------
   message("Calculating dispersion...")
@@ -776,13 +781,13 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
 }
 
 .estimateBMean = function(x, distFun, reEstimateMean=FALSE) {
+  
   ##1) Gives a "Bmean" vector of length nrow(x), giving expected Brownian noise.
   
   if(reEstimateMean) {stop("reEstimateMean=TRUE not implemented yet.")}
   ##this is a little tricky because we need to reinstate zeros to do it
   ##Two strategies - grab restriction fragment information & calculate explicitly, or cleverly use Mikhail's precomputed tables somehow
-  
-  
+    
   ##Calculate means
   ##---------------
   
@@ -790,6 +795,7 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   {
     #message("s_i factors found - estimating means...")
     out <- with(x, s_j*s_i*distFun(abs(distSign)))
+    #x[, out:=s_j*s_i*distFun(abs(distSign))]
   } else {
     #message("s_i factors NOT found - variance will increase, estimating means anyway...")
     out <- with(x, s_j*distFun(abs(distSign)))
@@ -803,6 +809,7 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   }
   
   out
+  #x
 }
 
 
