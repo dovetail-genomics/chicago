@@ -1490,7 +1490,7 @@ getScores <- function(x, method="weightedRelative",
 }
 
 plotBaits=function(x, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,      
-                              plevel1 = 12, plevel2 =10, outfile=NULL, removeBait2bait=TRUE, 
+                              plevel1 = 5, plevel2 =3, outfile=NULL, removeBait2bait=TRUE, 
                               width=20, height=20, maxD=NULL, ...){
   if(plotBaitNames){
     baitmap = fread(baitmapfile)
