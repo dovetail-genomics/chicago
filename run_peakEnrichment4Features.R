@@ -73,6 +73,54 @@ convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TR
   return(result)
 }
 
+# This function bins results assigns probabilities to bins depending on their distance from bait
+Binning <- function(sign, no_bins, x1_nonsign, distal) {
+  # Bin distances from bait in sign - 100 bins
+  if (is.null(sign$dist)) {
+    sign$dist<-abs(sign$distSign)
+  }
+  
+  sign$distbin2 <- cut(sign$dist, breaks=(no_bins))
+  
+  # Calculate how many other-ends in this bin
+  sign <- data.table(sign)
+  bin_reads2 <- sign[,length(dist), by="distbin2"]
+  setnames(bin_reads2,"distbin2","udbin2")
+  setnames(bin_reads2,"V1","bin_reads")
+  # bin_reads <- tapply(sign$dist, sign$distbin2, length)
+  # bin_reads2 <- data.frame(udbin2=names(bin_reads),bin_reads=as.vector(bin_reads))
+  
+  # Bin distances from bait in x1_nonsign
+  if (is.null(x1_nonsign$dist)) {
+    x1_nonsign$dist<-abs(x1_nonsign$distSign)
+  }
+  if (distal) {
+    x1_nonsign <- x1_nonsign[x1_nonsign$dist>=min(sign$dist) & x1_nonsign$dist<=max(sign$dist),]
+  }
+  
+  x1_nonsign$distbin3 <- cut(x1_nonsign$dist, breaks=(no_bins))
+  udbin3<-unique(x1_nonsign$distbin3)
+  udbin3<-udbin3[order(udbin3)]
+  
+  # bin_reads2$udbin3<-udbin3
+  bin_reads2[,distbin3:=udbin3]
+  
+  # Assign to each bin, how many other-ends should be sampled
+  # x1_nonsign$bin_reads <- mclapply(x1_nonsign$distbin3, function(x) {bin_reads2$bin_reads[bin_reads2$udbin3==x]}, mc.cores=8)
+  x1_nonsign <- data.table(x1_nonsign)
+  setkey(x1_nonsign, distbin3)
+  setkey(bin_reads2, distbin3)
+  
+  x1_nonsign<-x1_nonsign[bin_reads2[,udbin2:=NULL],allow.cartesian=T]
+  x1_nonsign <- as.data.frame(x1_nonsign)
+  
+  # x1_nonsign$bin_reads <- unlist(x1_nonsign$bin_reads)                              
+  x1_nonsign$bin_reads[is.na(x1_nonsign$bin_reads)]=0
+  # Provide correct indexing for non-sign paired-end reads
+  x1_nonsign$i <- seq(1,nrow(x1_nonsign))
+  return(x1_nonsign)
+}
+
 
 overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd_folder=NULL, position_otherEnd_file =NULL, list_frag, sep="\t", header=TRUE) {
   if (is.null(x)) {
@@ -175,15 +223,48 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 }
 
 
-peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL, no_bins, sample_number, folder=NULL, position_otherEnd_folder = "/bi/group/sysgen/CHIC/",filename=NULL, position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag=NULL, sep="\t", header=TRUE,plot_name=NULL, distal=FALSE, coldist=NULL, unique=TRUE, filterB2B=FALSE, b2bcol="isBait2bait", negFraction = 1) {
+peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, 
+                                    beyond_dist=NULL, before_dist=NULL, no_bins, sample_number, folder=NULL, 
+                                    position_otherEnd_folder = NULL,filename=NULL, 
+                                    position_otherEnd_file = NULL,list_frag=NULL, 
+                                    sep="\t", header=TRUE, plot_name=NULL, distal=FALSE, coldist=NULL, 
+                                    unique=TRUE, filterB2B=FALSE, b2bcol="isBait2bait", negFraction = 1) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
-  if (any(c("V1", "V2", "V3", "V4") %in% names(x1))){
-    stop ("x1 column names cannot be called V1, V2, V3, V4 - sorry...\n")
+  if (is.null(colname_score)){
+    stop("colname_score needs to be specified...\n")
+  } 
+  
+  if (is.data.frame(x1)) {
+    cat("Input is not a CHiCAGO object but a dataframe.\n
+        Warning: This will require the explicit specification of parameters that otherwise would be contained\n
+        in the CHiCAGO object settings...\n")
+    if (!any(c(is.null(position_otherEnd_folder),is.null(position_otherEnd_file),is.null(colname_dist)))){
+      cat(paste0("All parameters were specified:\n
+                 position_otherEnd_folder = ",position_otherEnd_folder,"\n
+                 position_otherEnd_file = ",position_otherEnd_file,"\n
+                 colname_dist = ",colname_dist,"\n
+                 colname_score = ",colname_score,"\n)"))
+      position_otherEnd <- paste0(position_otherEnd_folder,position_otherEnd_file)
+    }
+    else {
+      if (is.null(position_otherEnd_folder)){
+        stop("position_otherEnd_folder needs to be specified...\n")
+      }
+      if (is.null(position_otherEnd_file)){
+        stop("position_otherEnd_file needs to be specified...\n")
+      }
+      if (is.null(colname_dist)){
+        stop("colname_dist needs to be specified...\n")
+      }
+    } 
+  } else {
+    cat("Input is a CHiCAGO object...\n")
+    position_otherEnd <- x1@settings$rmapfile
+    colname_dist <- x1@settings$distcol
+    x1 <- as.data.frame(x1@x)   
   }
-  
-  position_otherEnd <- paste0(position_otherEnd_folder,position_otherEnd_file)
-  
+    
   if(filterB2B){
     cat("Filtering out bait2bait interactions...\n")
     x1 <- x1[! x1[,b2bcol], ]
