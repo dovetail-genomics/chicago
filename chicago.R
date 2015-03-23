@@ -99,8 +99,11 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   baitIDcol = "baitID",
   otherEndIDcol = "otherEndID",
   otherEndLencol = "otherEndLen", 
-  distcol = "distSign"
-  ### TODO: add alpha, beta, gamma, delta here.
+  distcol = "distSign",
+  weightAlpha <- 34.1157346557331, ##from macrophage. Remove as default?
+  weightBeta <- -2.58688050486759,
+  weightGamma <- -17.1347845819659,
+  weightDelta <- -7.07609245521541
   )){
   
   modSettings = vector("list")
@@ -139,7 +142,6 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
-  
 }
 
 modifySettings = function(cd, settings){
@@ -964,10 +966,176 @@ getPvals <- function(cd){
   cd
 }
 
-## TODO: getScores has undergone a major rewrite in another branch 
-## and also needs to be updated for
-## using data.tables and the chicagoData object
-getScores = function(){}
+##FIXME: Needs updating to fit class system
+getScores <- function(x, method="weightedRelative",
+                      weightPars, includeTrans=TRUE, includeBait2Bait=TRUE, plot=T, outfile=NULL)
+{
+  ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
+  ## - Then, use Benjamini-Hochberg to calculate FDRs
+  
+  ##relAbundance is the "relative abundance" i.e. (pi_1^B)/(pi_1^T)
+  ##where pi_1^B = probability of interaction in Brownian-dominated bin
+  ##and   pi_1^T = probability of interaction in Technical-dominated bin
+  
+  ##Note to self: Algebra is on P96 of my lab notebook.
+  
+  if(!method %in% c("unweighted","weightedRelative")) {stop("method=",method," not recognized.")}
+  col <- switch(method, unweighted="log.p", weightedRelative="log.q")
+  
+  if(!includeBait2Bait)
+  {
+    message("Removing bait2bait interactions...")
+    sel <- whichbait2bait(x)
+    if(length(sel) > 0)
+    {
+      x <- x[-sel,] ##remove all bait2bait interactions here
+    }
+  }
+  
+  if(!includeTrans)
+  {
+    x <- x[!is.na(x$distSign),]
+  }
+  
+  if(method == "weightedRelative")
+  {
+    ##Get weights, weight p-values
+    message("Calculating p-value weights...")
+    x$log.w <- .getWeights(abs(x$distSign), pars=weightPars, includeTrans=includeTrans)
+    x$log.q <- x$log.p - x$log.w ##weighted p-val
+    message("Calculating scores...")
+
+    ##get score (more interpretable than log.q)
+    minval <- .getWeights(0, pars=weightPars, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
+    x$score <- pmax(- minval - x$log.q, 0)
+    
+    #x$fdr <- getFDRs(x, includeBait2Bait=includeBait2Bait, includeTrans=includeTrans)
+  } else {
+    stop("Only method='weightedRelative' available currently.")
+  }
+  x
+}
+
+##FIXME: Needs updating to fit class system
+.getAvgFragLength <- function(excludeMT=TRUE)
+{
+  rmap = fread(rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  if(excludeMT) {rmap <- rmap[rmap$chr != "MT",]}
+  
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  sum(as.numeric(chrMax$V1))/nrow(rmap)
+}
+
+##FIXME: Needs updating to fit class system
+.getNoOfHypotheses <- function(includeTrans=TRUE, includeBait2Bait=TRUE)
+{
+  ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
+  rmap = fread(rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  
+  baitmap = fread(baitmapfile)
+  nBaits <- table(baitmap$V1) ##number of baits on each chr
+  
+  chr <- chrMax$chr
+  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria please!
+  
+  ##count # of hypotheses
+  if(includeTrans)
+  {
+    Nhyp <- sum(nBaits)*(2*nrow(rmap) - sum(nBaits) - 1)/2L ##number of hypotheses being tested
+  } else {
+    temp <- chrMax[chrMax$chr != "MT",]
+    temp$nBaits <- nBaits[as.character(temp$chr)]
+    temp$nFrag <- as.integer(temp$V1/avgFragLen)
+    temp$Nhyp <- with(temp, nBaits*(2*nFrag - nBaits - 1))
+    Nhyp <- sum(temp$Nhyp) ##see p257 of JMC lab book
+  }
+  Nhyp
+}
+
+##FIXME: Needs updating to fit class system
+.getWeights <- function(dist, pars, includeTrans=TRUE, includeBait2Bait=TRUE)
+{
+  ##1. Collect parameters
+  alpha = pars[1]
+  beta = pars[2]
+  gamma = pars[3]
+  delta = pars[4]
+  
+  ##2. Get genomic/fragment map information
+  rmap = fread(rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  
+  baitmap = fread(baitmapfile)
+  nBaits <- table(baitmap$V1) ##number of baits on each chr
+  
+  chr <- chrMax$chr
+  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
+  
+  ##count # of hypotheses
+  Nhyp <- .getNoOfHypotheses(includeTrans, includeBait2Bait)
+  
+  ##3. Calculate eta.bar
+  ##Loop, summing contributions of eta
+  
+  eta.sigma <- 0 
+  for(c in chr)
+  {
+    ##length of chromosome
+    d.c <- as.numeric(chrMax$V1[chrMax$chr == c])
+    ##no of baits on chromosome
+    n.c <- nBaits[c]
+    
+    #eta <- rep(0, n.c) ##diagnostic
+    for(i in 1:n.c) ##FIXME nested for loop can be replaced with lapply & function
+    {
+      d = d.c*i/n.c
+      d.near = min(d, d.c-d) ##dist to nearest chromosome end
+      d.other <- seq(from=avgFragLen, to=max(avgFragLen,d.near), by = avgFragLen) ##locations of fragments
+      d.other2 <- seq(from=d.near, to=d.c-d.near, by = avgFragLen)
+      eta.sigma <- eta.sigma + 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+      #eta[i] <- 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+    }
+  }
+  
+  eta.bar <- eta.sigma/Nhyp
+  
+  ##4. Calculate weights
+  eta <- expit(alpha + beta*log(naToInf(dist)))
+  log.w <- log((expit(delta) - expit(gamma))*eta + expit(gamma)) -
+    log((expit(delta) - expit(gamma))*eta.bar + expit(gamma))
+  
+  log.w
+}
+
+# getFDRs <- function(x, col="log.q", includeTrans=TRUE, includeBait2Bait=TRUE)
+# {
+#   ##calculate FDR
+#   ##How many hypotheses are we testing?
+#   N.hyp <- .getNoOfHypotheses(includeTrans, includeBait2Bait)
+#   
+#   ##sort pvals and derive threshold
+#   pvals <- x[,col]
+#   if(any(is.na(pvals)))
+#   {
+#     warning(sum(is.na(pvals))," ", col," values were NA - assuming that means they are -Inf.") ##i.e. underflow in pdelap()
+#     pvals[is.na(pvals)] <- (-Inf)
+#   }
+#   #message("Correcting ", col," values for FDR...")
+#   
+#   temp.FDR <- pvals + log(N.hyp) - log(rank(pvals, ties.method="max"))
+#   sel <- order(pvals, na.last=FALSE) ##"NA" means -Inf, thus these should be first
+#   out <- rep(0, length(sel))
+#   out[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
+#   
+#   -out
+# }
 
 .normaliseFragmentSets = function(x, s, npb, viewpoint, idcol, Ncol, adjBait2bait=TRUE, shrink=TRUE, 
                           refExcludeSuffix=NULL, plot=TRUE, outfile=NULL, debug=FALSE){   #minPosBins = 5, 
@@ -1419,8 +1587,9 @@ getScores = function(){}
   x
 }
 
-plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=NULL, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...){
 
+plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=NULL, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
+{
   if(plotBaitNames){
     baitmap = fread(cd@settings$baitmapfile)
   }
@@ -1640,3 +1809,8 @@ logit <- function(p){log(p/(1-p))}
 expit <- function(x){1/(1+exp(-x))}
 
 removeNAs <- function(x) {x[!is.na(x)]}
+
+naToInf <- function(x)
+{
+  ifelse(is.na(x), Inf, x) ##Convert NAs to infs.
+}
