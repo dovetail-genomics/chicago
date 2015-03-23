@@ -610,15 +610,15 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   ##1) Reinstate zeros
   ##2) Add a "Bmean" column to x, giving expected Brownian noise.
   ##3) Calculate dispersion by regressing against "Bmean", added to x as "dispersion" attribute
-  ##subset: Since we don't need the entire data set, can just calculate based on a random subset of pairs.
+  ##subset: Since we don't need the entire data set, can just calculate based on a random subset of baits.
   ##!!NB!! Use set.seed to force subset analysis to be reproducible
   
   s = cd@settings
   adjBait2bait=s$adjBait2bait
   subset=s$brownianNoise.subset
   seed = s$brownianNoise.seed
-  maxLBrownEst = s$brownianNoise.seed
-    
+  maxLBrownEst = s$maxLBrownEst
+  
   if (!is.null(seed)){
     set.seed(seed)
   }
@@ -633,8 +633,9 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
     message("s_i factors NOT found - variance will increase, estimating Brownian noise anyway...")
   }
   
-  ##Pre-filtering
-  ##-------------
+  
+  ##Pre-filtering: get subset of data, store as x
+  ##---------------------------------------------
   
   if(!is.null(subset))
   {
@@ -643,13 +644,13 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
     ##much faster than in situ data.frame calculation
     setkey(cd@x, baitID)
     if( nrow(cd@x[, .I[1], by=baitID])>subset){ 
-       sel.sub <- sort(sample(unique(cd@x$baitID), subset))
-       x <- cd@x[J(sel.sub)]
+      sel.sub <- sort(sample(unique(cd@x$baitID), subset))
+      x <- cd@x[J(sel.sub)]
     }
     else{
-       x <- cd@x
-       subset=NULL
-       warning("subset > number of baits in data, so use the full dataset.\n")
+      x <- cd@x
+      subset=NULL
+      warning("subset > number of baits in data, so use the full dataset.\n")
     }
   }
   else{
@@ -657,10 +658,8 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   }
   
   ##consider proximal region only...
-#   sel <- abs(x[,distcol]) < maxLBrownEst ##be careful to omit NAs
-#   sel <- ifelse(is.na(sel), FALSE, sel)
   setkey(x, distSign)
-  x = x[distSign<maxLBrownEst & is.na(distSign)==F,] # will have NA for distal and trans interactions
+  x = x[abs(distSign)<maxLBrownEst & is.na(distSign)==F,] # will have NA for distal and trans interactions
   
   ##remove bait2bait...
   if (adjBait2bait){
@@ -671,13 +670,13 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
     x = x[isBait2bait==FALSE]
   }
   
-  ##Reinstate zeros:
+  ##1) Reinstate zeros:
   ##----------------
-  ##1) Grab precomputed data.table: baitID, otherends in range, distance
+  ##1A) Grab precomputed data.table: baitID, otherends in range, distance
   proxOE <- .readProxOEfile(s)
   
-  ##2) Delete censored baits (i.e. those with too few observations). Note: censored fragments,
-  ##   censored bait2bait pairs (etc...) already taken care of in pre-computation.
+  ##1B) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
+  ##   censored bait2bait pairs (etc...) already taken care of in pre-computation of ProxOE.  
   
   if(!is.null(subset)) {
     ## if we chose a subset of baits, restrict to that (none of these should be censored)
@@ -685,17 +684,17 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   } else {
     sel.baits <- unique(x$baitID)
   }
-    
+  
   setkey(proxOE, baitID)
   proxOE <- proxOE[J(sel.baits),]
-      
-  ##3) Merge with our data, thus reinstating zero pairs.
+  
+  ##1C) Merge with our data, thus reinstating zero pairs.
   setkey(x, baitID, otherEndID)
   
   ##(make some lookup tables so we can get s_is, s_js later)
-# I don't think lookup tables are needed when we can subset and assign by reference
-# Probably more efficient to just use the original data table instead...
-
+  # I don't think lookup tables are needed when we can subset and assign by reference
+  # Probably more efficient to just use the original data table instead...
+  
   # the lookup table can be generated on the fly x[, s_j[1], by=baitID]
   # but on the other hand, sjLookup is very small anyway
   sjLookup <- unique(x[,c("baitID","s_j"),with=FALSE])
@@ -714,49 +713,40 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   } else {
     x <- merge(x, proxOE, all.y=TRUE)[,c("baitID","s_j","N","distSign","dist"), with=FALSE]
   }
+  ##Merging like this means that we are missing N, s_i, s_j information for most of the rows. So:
+  ##1D) Repopulate table with information...
   
-  ##4) Repopulate table with information...
+  # TODO: Recast following, avoid lookup tables, instead subset and assign by reference
   ## - 0s in Ncol
-#   x[[Ncol]] <- ifelse(is.na(x[[Ncol]]), 0, x[[Ncol]])
   x[is.na(N), N:=0]
-  ## - Aren't s_js already in x??
-  x$s_j <- sjLookup[J(x[[baitIDcol]])]$s_j
-  # 
-  # set(x, <whichCols or NULL if all>, "colName", values )
-# Needs to be something like   x[, s_j:=sjLookup[J(baitID)]$s_j ]
-# But actually, I don't think lookup tables are needed when we can subset and assign by reference
+  ## - s_js
+  x[, s_j:=sjLookup[J(x$baitID)]$s_j ]
   ## - s_is (if present)
   if(siPresent)
   {
-    x$s_i <- siLookup[J(x[[otherEndIDcol]])]$s_i
-    # Same as the comment above
+    x[, s_i:=siLookup[J(x$otherEndID)]$s_i ]
     if(any(is.na(x$s_i)))
     {
       ##If we don't have any information on a particular other end's s_i then...
       warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
-      x$s_i <- ifelse(is.na(x$s_i), 1, x$s_i)
+      x[,s_i := ifelse(is.na(s_i), 1, s_i)]
     }
   }
   ## - distances
   ##Sanity check - the distances should agree (modulo rounding)
   if(any(removeNAs(abs(x$dist - abs(x$distSign))) > 1))
   {
-    warning("Distances in precomputed ProxOE file did not match distances supplied. Using precomputed distances.")
+    warning("estimateBrownianNoise: Distances in precomputed ProxOE file did not match distances supplied.")
   }
-  # Need to avoid not-by-reference assignment
-  # Probably this will work:
-  # x[, distSign:=dist]
-  x$distSign <- x$dist
   
-  ##Calculate Bmeans
+  x[, distSign:=dist]
+  ##FIXME delete dist column
+  
+  ##2) Calculate Bmeans
   ##----------------
-  # Same issue here 
-  # Probably need:
-  # x[, Bmean:=.estimateBMean(.SD)]
-  # check using x[, Bmean:={browser(); .estimateBMean(.SD)}]
-  x$Bmean <- .estimateBMean(x, distFun, reEstimateMean)
-  # distFun == cd@params$f
-  ##Fit model
+  x <- .estimateBMean(x, distFun=cd@params$f)
+  
+  ##3)Fit model
   ##---------
   message("Calculating dispersion...")
   model <- glm.nb(formula= x$N ~ offset(log(x$Bmean)) + 0) 
@@ -772,46 +762,29 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
     stop("Not implemented yet")
     ##Basically you need to grab the means from the x object - reestimating means on xAll doesn't work due to 0 truncation.
   } else {
-    # Here I got lost as to why .estimateBMean gets called again
-    # And same issue as above. Here could just do something like:
-    # cd@x[, Bmean:=estimateBMean(.SD)]
-    xAll$Bmean <- .estimateBMean(xAll, distFun, reEstimateMean=FALSE)
+    cd@x <- .estimateBMean(cd@x, cd@params$f)
   }
-  invisible(xAll)
+  cd
 }
 
-.estimateBMean = function(x, distFun, reEstimateMean=FALSE) {
+.estimateBMean = function(x, distFun) {
   
-  ##1) Gives a "Bmean" vector of length nrow(x), giving expected Brownian noise.
-  
-  if(reEstimateMean) {stop("reEstimateMean=TRUE not implemented yet.")}
-  ##this is a little tricky because we need to reinstate zeros to do it
-  ##Two strategies - grab restriction fragment information & calculate explicitly, or cleverly use Mikhail's precomputed tables somehow
-    
-  ##Calculate means
-  ##---------------
+  ##Adds a "Bmean" vector to a data.table x, giving expected value of Brownian noise.
+  ##NB updates by reference
   
   if("s_i" %in% colnames(x))
   {
-    #message("s_i factors found - estimating means...")
-    out <- with(x, s_j*s_i*distFun(abs(distSign)))
-    #x[, out:=s_j*s_i*distFun(abs(distSign))]
+    x[, Bmean:=s_j*s_i*distFun(abs(distSign))]
   } else {
-    #message("s_i factors NOT found - variance will increase, estimating means anyway...")
-    out <- with(x, s_j*distFun(abs(distSign)))
+    warning("s_i factors NOT found in .estimateBMean - variance will increase, estimating means anyway...")
+    x[, Bmean:=s_j*distFun(abs(distSign))]
   }
-  ##distcol == NA for trans-pairs. Thus Bmean = 0.
-  out <- ifelse(is.na(x$distSign), 0, out)
+  ##distcol == NA for trans-pairs. Thus set Bmean = 0.
+  x[is.na(distSign), Bmean:=0]
   
-  if(reEstimateMean)
-  {
-    ##TODO Reserved for future use
-  }
-  
-  out
-  #x
+  #out
+  x
 }
-
 
 estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){ 
 
@@ -938,54 +911,57 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
   cd  
 }
 
-## TODO: Rewrite using chicagoData as both input and output, and 
-## avoiding data.table '$<-' assignments 
-## Ncol is now always N, and I think it's safe enough to hardcode outcol as well
-getPvals <- function(x, Ncol="N", outcol="log.p", plot=TRUE){
+getPvals <- function(cd){
   ## - Calls p-values
-
+  
   # No need for this anymore
-  alpha = attributes(x)$dispersion
-  if(is.null(alpha)) {stop("getPvals: 'dispersion' attribute of x not found.")}
+  alpha = cd@params$dispersion
+  x = cd@x
+  if(is.null(alpha)) {stop("getPvals: 'dispersion' parameter of x not found.")}
+  
+  message("Calculating p-values...") 
   
   ##p-values:
   ##(gives P(X > x-1) = P(X >= x))
-  message("Calculating p-values...") 
-  
   ##The "ifelse" is because pdelap cannot deal with beta=0.
   ##TODO can probably optimize this:
-  x[,outcol] <- ifelse(
-    x$Bmean < .Machine$double.eps,
-    ppois(x[,Ncol] - 1L, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE),
-    pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
-  )
-
+  #   x[,"log.p"] <- ifelse(
+  #     x$Bmean < .Machine$double.eps,
+  #     ppois(x[,Ncol] - 1L, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE),
+  #     pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
+  #   )
+  x[,log.p:= 
+      ifelse(Bmean < .Machine$double.eps,
+             ppois(N - 1L, lambda=Tmean, lower.tail=FALSE, log.p=TRUE),
+             pdelap(N - 1L, alpha, beta=Bmean/alpha, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)
+      )
+    ]
+  
   # Large N approximation ---------------------------------------------------
   
   ##In rare cases where pdelap returns Infs, estimate the p-value magnitude
   ##using an NB approximation, through method of moments argument
   ##NaNs occur when pdelap() thinks the p-value is negative (since can have 1 - 1 != 0),
   ##thus these are also approximated.
-  sel <- which(is.infinite(x[,outcol]) | is.nan(x[,outcol]))
+  sel <- which(is.infinite(x$log.p) | is.nan(x$log.p))
   if(length(sel) > 0)
   {
     message("Approximating ", length(sel), " very small p-values.")
-    x.inf <- x[sel,]
-  
-    gamma <- with(x.inf, alpha*(1+Tmean/Bmean)^2)
+    
+    gamma <- x[sel,alpha*(1+Tmean/Bmean)^2] ##gamma is the "effective" dispersion
+    
     ##in the case where Bmean << Tmean, gamma becomes Inf, so cap gamma above
     ##(should make very little difference since we are basically Poisson in this case)
     ##Case where Bmean >> Tmean causes no problem.
     gamma <- pmin(gamma, 1e10)
-    x.inf[,outcol] <- with(x.inf,
-                           pnbinom(x.inf[,Ncol] - 1L, size=gamma, mu=Bmean+Tmean, lower.tail=FALSE, log.p=TRUE)
-    )
-    x[sel,outcol] <- x.inf[,outcol]
-    if(any(is.infinite(x.inf[,outcol]))) {warning("Some log-p-values were infinite.")}
-    if(any(is.nan(x.inf[,outcol]))) {warning("Some log-p-values were NaNs.")}
+    
+    x[sel,log.p := pnbinom(N - 1L, size=gamma, mu=Bmean+Tmean, lower.tail=FALSE, log.p=TRUE)]
+    
+    if(any(is.infinite(x[sel,log.p]))) {warning("Some log-p-values were infinite.")}
+    if(any(is.nan(x[sel,log.p]))) {warning("Some log-p-values were NaNs.")}
   }
-  if(any(is.na(x[,outcol]))) {warning("Some log-p-values were NA.")}
-  invisible(x)
+  if(any(is.na(x$log.p))) {warning("Some log-p-values were NA.")}
+  cd
 }
 
 ## TODO: getScores has undergone a major rewrite in another branch 
