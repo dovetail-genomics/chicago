@@ -966,82 +966,70 @@ getPvals <- function(cd){
   cd
 }
 
-##FIXME: Needs updating to fit class system
-getScores <- function(x, method="weightedRelative",
-                      weightPars, includeTrans=TRUE, includeBait2Bait=TRUE, plot=T, outfile=NULL)
+getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
-  ## - Then, use Benjamini-Hochberg to calculate FDRs
-  
-  ##relAbundance is the "relative abundance" i.e. (pi_1^B)/(pi_1^T)
-  ##where pi_1^B = probability of interaction in Brownian-dominated bin
-  ##and   pi_1^T = probability of interaction in Technical-dominated bin
-  
   ##Note to self: Algebra is on P96 of my lab notebook.
   
-  if(!method %in% c("unweighted","weightedRelative")) {stop("method=",method," not recognized.")}
-  col <- switch(method, unweighted="log.p", weightedRelative="log.q")
+  x <- cd@x
+  set <- cd@settings
+  avgFragLen <- .getAvgFragLength(cd) ##average fragment length
   
-  if(!includeBait2Bait)
-  {
-    message("Removing bait2bait interactions...")
-    sel <- whichbait2bait(x)
-    if(length(sel) > 0)
-    {
-      x <- x[-sel,] ##remove all bait2bait interactions here
-    }
-  }
+  if(!method %in% c("unweighted","weightedRelative")) {stop("method=",method," not recognized.")}
   
   if(!includeTrans)
   {
-    x <- x[!is.na(x$distSign),]
+    x <- x[!is.na(x$distSign),] ##Cannot delete row by reference yet?
   }
   
   if(method == "weightedRelative")
   {
     ##Get weights, weight p-values
     message("Calculating p-value weights...")
-    x$log.w <- .getWeights(abs(x$distSign), pars=weightPars, includeTrans=includeTrans)
-    x$log.q <- x$log.p - x$log.w ##weighted p-val
+    x[, log.w:= .getWeights(abs(x$distSign), cd, includeTrans=includeTrans)]
+    x[, log.q:= log.p - log.w] ##weighted p-val
     message("Calculating scores...")
-
-    ##get score (more interpretable than log.q)
-    minval <- .getWeights(0, pars=weightPars, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
-    x$score <- pmax(- minval - x$log.q, 0)
     
-    #x$fdr <- getFDRs(x, includeBait2Bait=includeBait2Bait, includeTrans=includeTrans)
+    ##get score (more interpretable than log.q)
+    minval <- .getWeights(0, cd, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
+    x[,score := pmax(- minval - log.q, 0)]
+    
   } else {
     stop("Only method='weightedRelative' available currently.")
   }
-  x
+  cd
 }
 
-##FIXME: Needs updating to fit class system
-.getAvgFragLength <- function(excludeMT=TRUE)
+.getAvgFragLength <- function(cd, excludeMT=TRUE)
 {
-  rmap = fread(rmapfile)
+  rmap = fread(cd@settings$rmapfile)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
-  if(excludeMT) {rmap <- rmap[rmap$chr != "MT",]}
-  
-  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  if(excludeMT) {  
+    chrMax <- rmap[chr != "MT",max(end),by="chr"] ##length of each chr
+  }else{
+    chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  }
   sum(as.numeric(chrMax$V1))/nrow(rmap)
 }
 
-##FIXME: Needs updating to fit class system
-.getNoOfHypotheses <- function(includeTrans=TRUE, includeBait2Bait=TRUE)
+.getNoOfHypotheses <- function(cd, includeTrans=TRUE, excludeMT=TRUE)
 {
+  set <- cd@settings
+  
   ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
-  rmap = fread(rmapfile)
+  rmap = fread(set$rmapfile)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   chrMax <- rmap[,max(end),by="chr"] ##length of each chr
   
-  baitmap = fread(baitmapfile)
+  baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
+  avgFragLen <- .getAvgFragLength(cd) ##average fragment length
+  
   chr <- chrMax$chr
-  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria please!
+  if(excludeMT && any(chr == "MT")) chr <- chr[chr != "MT"] ##remove mitochondria
   
   ##count # of hypotheses
   if(includeTrans)
@@ -1057,29 +1045,32 @@ getScores <- function(x, method="weightedRelative",
   Nhyp
 }
 
-##FIXME: Needs updating to fit class system
-.getWeights <- function(dist, pars, includeTrans=TRUE, includeBait2Bait=TRUE)
+.getWeights <- function(dist, cd, includeTrans=TRUE)
 {
+  set <- cd@settings
+  
   ##1. Collect parameters
-  alpha = pars[1]
-  beta = pars[2]
-  gamma = pars[3]
-  delta = pars[4]
+  alpha = set$weightAlpha
+  beta = set$weightBeta
+  gamma = set$weightGamma
+  delta = set$weightDelta
   
   ##2. Get genomic/fragment map information
-  rmap = fread(rmapfile)
+  rmap = fread(set$rmapfile)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   chrMax <- rmap[,max(end),by="chr"] ##length of each chr
   
-  baitmap = fread(baitmapfile)
+  baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
   chr <- chrMax$chr
   if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
   
+  avgFragLen <- .getAvgFragLength(cd)
+  
   ##count # of hypotheses
-  Nhyp <- .getNoOfHypotheses(includeTrans, includeBait2Bait)
+  Nhyp <- .getNoOfHypotheses(cd, includeTrans)
   
   ##3. Calculate eta.bar
   ##Loop, summing contributions of eta
@@ -1092,8 +1083,7 @@ getScores <- function(x, method="weightedRelative",
     ##no of baits on chromosome
     n.c <- nBaits[c]
     
-    #eta <- rep(0, n.c) ##diagnostic
-    for(i in 1:n.c) ##FIXME nested for loop can be replaced with lapply & function
+    for(i in 1:n.c) ##TODO nested for loop can be replaced with lapply & function
     {
       d = d.c*i/n.c
       d.near = min(d, d.c-d) ##dist to nearest chromosome end
@@ -1113,29 +1103,6 @@ getScores <- function(x, method="weightedRelative",
   
   log.w
 }
-
-# getFDRs <- function(x, col="log.q", includeTrans=TRUE, includeBait2Bait=TRUE)
-# {
-#   ##calculate FDR
-#   ##How many hypotheses are we testing?
-#   N.hyp <- .getNoOfHypotheses(includeTrans, includeBait2Bait)
-#   
-#   ##sort pvals and derive threshold
-#   pvals <- x[,col]
-#   if(any(is.na(pvals)))
-#   {
-#     warning(sum(is.na(pvals))," ", col," values were NA - assuming that means they are -Inf.") ##i.e. underflow in pdelap()
-#     pvals[is.na(pvals)] <- (-Inf)
-#   }
-#   #message("Correcting ", col," values for FDR...")
-#   
-#   temp.FDR <- pvals + log(N.hyp) - log(rank(pvals, ties.method="max"))
-#   sel <- order(pvals, na.last=FALSE) ##"NA" means -Inf, thus these should be first
-#   out <- rep(0, length(sel))
-#   out[sel] <- rev(cummin(rev(temp.FDR[sel]))) ##for final version, pmin(..., 0) to prevent FDR > 1
-#   
-#   -out
-# }
 
 .normaliseFragmentSets = function(x, s, npb, viewpoint, idcol, Ncol, adjBait2bait=TRUE, shrink=TRUE, 
                           refExcludeSuffix=NULL, plot=TRUE, outfile=NULL, debug=FALSE){   #minPosBins = 5, 
