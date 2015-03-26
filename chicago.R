@@ -16,21 +16,21 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   message("\n*** Running normaliseBaits...\n")
   cd = normaliseBaits(cd)
 
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }
   
   message("\n*** Running normaliseOtherEnds...\n")
   cd = normaliseOtherEnds(cd, outfile=paste0(outprefix, "_oeNorm.pdf"))
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }
   
   message("\n*** Running estimateTechnicalNoise...\n")
   cd = estimateTechnicalNoise(cd, outfile=paste0(outprefix, "_techNoise.pdf"))
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }
   
@@ -39,7 +39,7 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   ### Note that f is now saved in cd@params
   cd = estimateDistFun(cd, outfile=paste0(outprefix, "_distFun.pdf"))
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
@@ -48,21 +48,21 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   message("\n*** Running estimateBrownianNoise...\n")
   cd = estimateBrownianNoise(cd)
 
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
   message("\n*** Running getPvals...\n")
   cd = getPvals(cd)
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
   message("\n*** Running getScores...\n")
   cd = getScores(cd)
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
