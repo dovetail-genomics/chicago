@@ -45,7 +45,8 @@ for (i in 1:nrow(input)){
 
 cat("Converting to data.table and indexing...\n")
 for (d in names(data)){
-  data[[d]] = data.table(data[[d]])
+  setDF(data[[d]])
+#  data[[d]] = data.table(data[[d]])
   setkey(data[[d]], baitID, otherEndID)
   setnames(data[[d]], "score", d)
 }
