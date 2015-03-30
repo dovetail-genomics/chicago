@@ -37,6 +37,29 @@ Extract <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=N
   return(result)
 }
 
+splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL) {
+  if (is.null(x1) & is.null(filename)) {
+    stop("Please provide file with paired-end reads")
+  }
+  else if (!is.null(filename)) {
+    x1 <- read.table(samplefilename, header=TRUE)
+  }  
+  x1 <- data.table(x1)
+  if (!is.null(colname_dist)) {
+    if (is.null(before_dist) & is.null(beyond_dist)) {
+      cat("No distance from bait to trim sample was provided...\n")
+    }
+    else {
+      x1 <- x1[,dist := abs(x1[,get(colname_dist)])]
+      if (!is.null(before_dist)) {x1<-x1[dist<=before_dist]}
+      if (!is.null(beyond_dist)) {x1<-x1[dist>=beyond_dist]}
+    }
+  }
+  result <- list(x1[get(colname_score)>=threshold],
+                 x1 <- x1[get(colname_score)<threshold])
+  return(result)
+}
+
 
 convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TRUE) {
   if (is.null(folder) ) {
@@ -75,15 +98,18 @@ convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TR
 
 # This function bins results assigns probabilities to bins depending on their distance from bait
 Binning <- function(sign, no_bins, x1_nonsign, distal) {
+  if(!is.data.table(sign)){sign<-data.table(sign)}
   # Bin distances from bait in sign - 100 bins
   if (is.null(sign$dist)) {
-    sign$dist<-abs(sign$distSign)
+    # sign$dist<-abs(sign$distSign)
+    sign[,dist := abs(distSign)]
   }
   
-  sign$distbin2 <- cut(sign$dist, breaks=(no_bins))
+  # sign$distbin2 <- cut(sign$dist, breaks=(no_bins))
+  sign[,distbin2 := cut(dist, breaks=(no_bins))]
   
   # Calculate how many other-ends in this bin
-  sign <- data.table(sign)
+  # sign <- data.table(sign)
   bin_reads2 <- sign[,length(dist), by="distbin2"]
   setnames(bin_reads2,"distbin2","udbin2")
   setnames(bin_reads2,"V1","bin_reads")
@@ -91,14 +117,16 @@ Binning <- function(sign, no_bins, x1_nonsign, distal) {
   # bin_reads2 <- data.frame(udbin2=names(bin_reads),bin_reads=as.vector(bin_reads))
   
   # Bin distances from bait in x1_nonsign
+  if(!is.data.table(x1_nonsign)){x1_nonsign<-data.table(x1_nonsign)}
+  # browser()
   if (is.null(x1_nonsign$dist)) {
-    x1_nonsign$dist<-abs(x1_nonsign$distSign)
+    x1_nonsign[,dist:=abs(distSign)]
   }
   if (distal) {
-    x1_nonsign <- x1_nonsign[x1_nonsign$dist>=min(sign$dist) & x1_nonsign$dist<=max(sign$dist),]
+    x1_nonsign <- x1_nonsign[dist>=min(dist) & dist<=max(dist),]
   }
   
-  x1_nonsign$distbin3 <- cut(x1_nonsign$dist, breaks=(no_bins))
+  x1_nonsign[,distbin3:= cut(dist, breaks=(no_bins))]
   udbin3<-unique(x1_nonsign$distbin3)
   udbin3<-udbin3[order(udbin3)]
   
@@ -107,17 +135,21 @@ Binning <- function(sign, no_bins, x1_nonsign, distal) {
   
   # Assign to each bin, how many other-ends should be sampled
   # x1_nonsign$bin_reads <- mclapply(x1_nonsign$distbin3, function(x) {bin_reads2$bin_reads[bin_reads2$udbin3==x]}, mc.cores=8)
-  x1_nonsign <- data.table(x1_nonsign)
+  # x1_nonsign <- data.table(x1_nonsign)
   setkey(x1_nonsign, distbin3)
   setkey(bin_reads2, distbin3)
   
   x1_nonsign<-x1_nonsign[bin_reads2[,udbin2:=NULL],allow.cartesian=T]
-  x1_nonsign <- as.data.frame(x1_nonsign)
+  # x1_nonsign <- as.data.frame(x1_nonsign)
   
-  # x1_nonsign$bin_reads <- unlist(x1_nonsign$bin_reads)                              
-  x1_nonsign$bin_reads[is.na(x1_nonsign$bin_reads)]=0
+                            
+  # x1_nonsign$bin_reads[is.na(x1_nonsign$bin_reads)]=0
+  x1_nonsign[is.na(bin_reads),bin_reads:=0]
+  
   # Provide correct indexing for non-sign paired-end reads
-  x1_nonsign$i <- seq(1,nrow(x1_nonsign))
+  # x1_nonsign$i <- seq(1,nrow(x1_nonsign))
+  x1_nonsign[,i:=seq(1,nrow(x1_nonsign))]
+  sign[,distbin2:=NULL]
   return(x1_nonsign)
 }
 
@@ -157,34 +189,47 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd_folder
 
 drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
   sample_NP <- list()
-  x1_nonsign<-data.table(x1_nonsign)
+  if(!is.data.table(x1_nonsign)){x1_nonsign<-data.table(x1_nonsign)}  
   setkey(x1_nonsign,distbin3)
   sample_NP <-  lapply(1:sample_number, function(j) {
     b <- x1_nonsign[,.I[sample(1:length(.I),bin_reads[1],replace=TRUE)],by="distbin3"]
-    s1<-as.data.frame(x1_nonsign)[b$V1,]
+    
+    #s1<-as.data.frame(x1_nonsign)[b$V1,]
+    s1 <- x1_nonsign[b$V1]
+    
     if(unique){
-      s1<-s1[!duplicated(s1$otherEndID),]
+      s1<-s1[!duplicated(otherEndID)]
     }
     return(s1)
   })
   if (length(sample_NP)<sample_number){
-    browser()
+    cat("Warning: The Number of samples generated is smaller than the number requested.
+        This may cause troubles in the downstream processing.")
   }
   return(sample_NP)
 }
 
 plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
-  x_sign$dist<-NULL
-  x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign)],na.rm = T)
+#   x_sign<-as.data.frame(x_sign)
+#   x_sign$dist<-NULL
+#   x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign)],na.rm = T)
+#  browser()
+  x_sign[,dist:=NULL]
+  x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign),with=FALSE],na.rm = T)
+  
   sample_number<- length(s)
   featureSumsMatrix <- matrix(rep(0),length(files)*sample_number,nrow=sample_number,ncol=length(files))
   for (i in 1:sample_number){
     x<-s[[i]]
-    x$dist <- NULL
-    x$distbin3<-NULL
-    x$bin_reads <- NULL
-    x$i <- NULL
-    featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x)],na.rm = T)
+    x[,dist:=NULL]
+    x[,distbin3:=NULL]
+    x[,bin_reads:=NULL]
+    x[,i:=NULL]
+#     x$dist <- NULL
+#     x$distbin3<-NULL
+#     x$bin_reads <- NULL
+#     x$i <- NULL
+    featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x),with=FALSE],na.rm = T)
     featureSumsMatrix[i,]<-featureSums
   }
   colnames(featureSumsMatrix)<-names(files)
@@ -297,24 +342,20 @@ peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=
   
   cat("Overlap our reads with Features")
   x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd_folder = "/bi/group/sysgen/CHIC/", position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag = list_frag)
-  cat("Extract significant interactions...\n")
-  result_1 <- Extract(x1=x1, filename=filename, score=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist, significant=TRUE)
+  cat("Separate significant interactions from non-significant interactions...\n")
+  x1 <- splitCHiC(x1=x1, filename=filename, threshold=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist)
   if (unique){
     cat("Removing duplicated other-ends from significant interactions (same will happen with samples)...\n")
-    result_1 <- result_1[!duplicated(result_1$otherEndID),]
+    x1[[1]] <- x1[[1]][!duplicated(otherEndID)]
   }
-  # Extract non-significant interactions
-  # You are trimming for the same window that was specified for significant interactions
-  cat("Extract non-significant interactions...\n")
-  result_2 <- Extract(x1=x1, filename=filename, score=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist, significant=FALSE)
   # Bin non-significant interactions according to distance from bait before drawing random samples
   cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
-  result_2 <- Binning(sign=result_1, no_bins=no_bins, x1_nonsign=result_2, distal=distal)
+  x1[[2]] <- Binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]], distal=distal)
   # Draw random samples
   cat("Draw random samples...\n")
-  result_3 <- drawSamples(x1_nonsign=result_2, sample_number=sample_number)
+  result_3 <- drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
   cat("Sum number of overlaps with feature in our significant interactions and in our samples...\n")
-  result_5<-plotNumberOL(x_sign = result_1, s=result_3, files = list_frag,  plot_name=plot_name)
+  result_5<-plotNumberOL(x_sign = x1[[1]], s=result_3, files = list_frag,  plot_name=plot_name)
   return(result_5)
   
 }
