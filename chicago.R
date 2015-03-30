@@ -16,21 +16,21 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   message("\n*** Running normaliseBaits...\n")
   cd = normaliseBaits(cd)
 
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }
   
   message("\n*** Running normaliseOtherEnds...\n")
   cd = normaliseOtherEnds(cd, outfile=paste0(outprefix, "_oeNorm.pdf"))
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }
   
   message("\n*** Running estimateTechnicalNoise...\n")
   cd = estimateTechnicalNoise(cd, outfile=paste0(outprefix, "_techNoise.pdf"))
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }
   
@@ -39,7 +39,7 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   ### Note that f is now saved in cd@params
   cd = estimateDistFun(cd, outfile=paste0(outprefix, "_distFun.pdf"))
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
@@ -48,21 +48,21 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   message("\n*** Running estimateBrownianNoise...\n")
   cd = estimateBrownianNoise(cd)
 
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
   message("\n*** Running getPvals...\n")
   cd = getPvals(cd)
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
   message("\n*** Running getScores...\n")
   cd = getScores(cd)
   
-  if(reportMemory){
+  if(printMemory){
     print(gc(reset=T))
   }  
   
@@ -99,8 +99,11 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   baitIDcol = "baitID",
   otherEndIDcol = "otherEndID",
   otherEndLencol = "otherEndLen", 
-  distcol = "distSign"
-  ### TODO: add alpha, beta, gamma, delta here.
+  distcol = "distSign",
+  weightAlpha = 34.1157346557331, ##from macrophage. Remove as default?
+  weightBeta = -2.58688050486759,
+  weightGamma = -17.1347845819659,
+  weightDelta = -7.07609245521541
   )){
   
   modSettings = vector("list")
@@ -139,7 +142,6 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
-  
 }
 
 modifySettings = function(cd, settings){
@@ -964,10 +966,143 @@ getPvals <- function(cd){
   cd
 }
 
-## TODO: getScores has undergone a major rewrite in another branch 
-## and also needs to be updated for
-## using data.tables and the chicagoData object
-getScores = function(){}
+getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, outfile=NULL)
+{
+  ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
+  ##Note to self: Algebra is on P96 of my lab notebook.
+  
+  x <- cd@x
+  set <- cd@settings
+  avgFragLen <- .getAvgFragLength(cd) ##average fragment length
+  
+  if(!method %in% c("unweighted","weightedRelative")) {stop("method=",method," not recognized.")}
+  
+  if(!includeTrans)
+  {
+    x <- x[!is.na(x$distSign),] ##Cannot delete row by reference yet?
+  }
+  
+  if(method == "weightedRelative")
+  {
+    ##Get weights, weight p-values
+    message("Calculating p-value weights...")
+    x[, log.w:= .getWeights(abs(x$distSign), cd, includeTrans=includeTrans)]
+    x[, log.q:= log.p - log.w] ##weighted p-val
+    message("Calculating scores...")
+    
+    ##get score (more interpretable than log.q)
+    minval <- .getWeights(0, cd, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
+    x[,score := pmax(- minval - log.q, 0)]
+    
+  } else {
+    stop("Only method='weightedRelative' available currently.")
+  }
+  cd
+}
+
+.getAvgFragLength <- function(cd, excludeMT=TRUE)
+{
+  rmap = fread(cd@settings$rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  if(excludeMT) {  
+    chrMax <- rmap[chr != "MT",max(end),by="chr"] ##length of each chr
+  }else{
+    chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  }
+  sum(as.numeric(chrMax$V1))/nrow(rmap)
+}
+
+.getNoOfHypotheses <- function(cd, includeTrans=TRUE, excludeMT=TRUE)
+{
+  set <- cd@settings
+  
+  ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
+  rmap = fread(set$rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  
+  baitmap = fread(set$baitmapfile)
+  nBaits <- table(baitmap$V1) ##number of baits on each chr
+  
+  avgFragLen <- .getAvgFragLength(cd) ##average fragment length
+  
+  chr <- chrMax$chr
+  if(excludeMT && any(chr == "MT")) chr <- chr[chr != "MT"] ##remove mitochondria
+  
+  ##count # of hypotheses
+  if(includeTrans)
+  {
+    Nhyp <- sum(nBaits)*(2*nrow(rmap) - sum(nBaits) - 1)/2L ##number of hypotheses being tested
+  } else {
+    temp <- chrMax[chrMax$chr != "MT",]
+    temp$nBaits <- nBaits[as.character(temp$chr)]
+    temp$nFrag <- as.integer(temp$V1/avgFragLen)
+    temp$Nhyp <- with(temp, nBaits*(2*nFrag - nBaits - 1))
+    Nhyp <- sum(temp$Nhyp) ##see p257 of JMC lab book
+  }
+  Nhyp
+}
+
+.getWeights <- function(dist, cd, includeTrans=TRUE)
+{
+  set <- cd@settings
+  
+  ##1. Collect parameters
+  alpha = set$weightAlpha
+  beta = set$weightBeta
+  gamma = set$weightGamma
+  delta = set$weightDelta
+  
+  ##2. Get genomic/fragment map information
+  rmap = fread(set$rmapfile)
+  setnames(rmap, "V1", "chr")
+  setnames(rmap, "V3", "end")
+  chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+  
+  baitmap = fread(set$baitmapfile)
+  nBaits <- table(baitmap$V1) ##number of baits on each chr
+  
+  chr <- chrMax$chr
+  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
+  
+  avgFragLen <- .getAvgFragLength(cd)
+  
+  ##count # of hypotheses
+  Nhyp <- .getNoOfHypotheses(cd, includeTrans)
+  
+  ##3. Calculate eta.bar
+  ##Loop, summing contributions of eta
+  
+  eta.sigma <- 0 
+  for(c in chr)
+  {
+    ##length of chromosome
+    d.c <- as.numeric(chrMax$V1[chrMax$chr == c])
+    ##no of baits on chromosome
+    n.c <- nBaits[c]
+    
+    for(i in 1:n.c) ##TODO nested for loop can be replaced with lapply & function
+    {
+      d = d.c*i/n.c
+      d.near = min(d, d.c-d) ##dist to nearest chromosome end
+      d.other <- seq(from=avgFragLen, to=max(avgFragLen,d.near), by = avgFragLen) ##locations of fragments
+      d.other2 <- seq(from=d.near, to=d.c-d.near, by = avgFragLen)
+      eta.sigma <- eta.sigma + 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+      #eta[i] <- 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+    }
+  }
+  
+  eta.bar <- eta.sigma/Nhyp
+  
+  ##4. Calculate weights
+  eta <- expit(alpha + beta*log(naToInf(dist)))
+  log.w <- log((expit(delta) - expit(gamma))*eta + expit(gamma)) -
+    log((expit(delta) - expit(gamma))*eta.bar + expit(gamma))
+  
+  log.w
+}
 
 .normaliseFragmentSets = function(x, s, npb, viewpoint, idcol, Ncol, adjBait2bait=TRUE, shrink=TRUE, 
                           refExcludeSuffix=NULL, plot=TRUE, outfile=NULL, debug=FALSE){   #minPosBins = 5, 
@@ -1419,8 +1554,9 @@ getScores = function(){}
   x
 }
 
-plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=NULL, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...){
 
+plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=NULL, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
+{
   if(plotBaitNames){
     baitmap = fread(cd@settings$baitmapfile)
   }
@@ -1640,3 +1776,8 @@ logit <- function(p){log(p/(1-p))}
 expit <- function(x){1/(1+exp(-x))}
 
 removeNAs <- function(x) {x[!is.na(x)]}
+
+naToInf <- function(x)
+{
+  ifelse(is.na(x), Inf, x) ##Convert NAs to infs.
+}
