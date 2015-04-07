@@ -10,8 +10,10 @@ spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample n
                 "<bait-map>", "Full path to bait map ID file"),  byrow=T, ncol=2)
 p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda files.", name="Rscript makePeakMatrix.R")
 p = add.argument(p, arg=spec[,1], help=spec[,2])
-p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 12, type = "numeric")
+p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
 p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default =10000, type="numeric")
+p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", default = NA, type="numeric")
+p = add.argument(p, arg="--scorecol", help = "Column name for the scores", default = "score", type="numeric")
 opts = parse.args(p, args)
 
 
@@ -25,6 +27,8 @@ cutoff = opts[["cutoff"]]
 sampsize = opts[["subset"]]
 rmapfile = opts[["<digest-map>"]]
 baitmapfile = opts[["<bait-map>"]]
+maxdist = opts[["maxdist"]]
+scorecol = opts[["scorecol"]]
 
 input = read.table(namesfile,stringsAsFactors = F)
 names(input) = c("name", "file")
@@ -37,16 +41,22 @@ for (i in 1:nrow(input)){
 
      cat("Processing",  f, "...")
      x = x[!is.na(x$distSign),]
-       
+
+     if (!is.na(maxdist)){
+       x = x[abs(x$distSign)<=maxdist,]
+     }
+     
      name = input[i, "name"]
-     data[[name]] = x[, c("baitID", "otherEndID", "score")]
+     data[[name]] = x[, c("baitID", "otherEndID", scorecol)]
+     if (scorecol!="score"){
+       names(data[[name]])[names(data[[name]])==scorecol] = "score"
+     }
      cat("done\n")    
 }
 
 cat("Converting to data.table and indexing...\n")
 for (d in names(data)){
   setDT(data[[d]])
-#  data[[d]] = data.table(data[[d]])
   setkey(data[[d]], baitID, otherEndID)
   setnames(data[[d]], "score", d)
 }
