@@ -15,6 +15,7 @@ p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, t
 p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default = 100000, type="numeric")
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", default = NA, type="numeric")
 p = add.argument(p, arg="--scorecol", help = "Column name for the scores", default = "score", type="numeric")
+p = add.argument(p, arg="--clustmethod", help = "The clustering method to use (average/ward.D2/complete)", default = "average", type="numeric")
 opts = parse.args(p, args)
 
 
@@ -30,6 +31,7 @@ rmapfile = opts[["<digest-map>"]]
 baitmapfile = opts[["<bait-map>"]]
 maxdist = opts[["maxdist"]]
 scorecol = opts[["scorecol"]]
+clMethod = opts[["clustmethod"]]
 
 input = read.table(namesfile,stringsAsFactors = F)
 names(input) = c("name", "file")
@@ -131,7 +133,7 @@ if (nrow(input)>2){
   cat("Using continuous signals...\n") 
   zsamp = z[sample(1:nrow(z), sampsize),]
   d = dist(t(zsamp[,12:ncol(zsamp)]))
-  h = hclust(d, method="average")
+  h = hclust(d, method=clMethod)
   
   pdfname = paste0(prefix, "_tree.pdf")
   cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
@@ -139,15 +141,15 @@ if (nrow(input)>2){
   plot(h)
   dev.off()
 
-  cat("Using binary signals ( cutoff =", cutoff, ")...\n")
-  zsbin = apply(zsamp[, 12:ncol(zsamp)],1,function(x){x[x<cutoff]=0; x[x>=cutoff];x})
-  db = daisy(t(zsbin), metric="gower")
-  hb = hclust(db, method="average")
-  pdfname = paste0(prefix, "_tree_binary.pdf")
-  cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
-  pdf(pdfname, width=20, height=10)
-  plot(hb)
-  dev.off()
+  #cat("Using binary signals ( cutoff =", cutoff, ")...\n")
+  #zsbin = apply(zsamp[, 12:ncol(zsamp)],1,function(x){x[x<cutoff]=0; x[x>=cutoff];x})
+  #db = daisy(t(zsbin), metric="gower")
+  #hb = hclust(db, method=clMethod)
+  #pdfname = paste0(prefix, "_tree_binary.pdf")
+  #cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
+  #pdf(pdfname, width=20, height=10)
+  #plot(hb)
+  #dev.off()
 }else{
   cat("Clustering not performed as n<=2\n")
 }
