@@ -48,6 +48,7 @@ for (i in 1:nrow(input)){
      
      name = input[i, "name"]
      data[[name]] = x[, c("baitID", "otherEndID", scorecol)]
+
      if (scorecol!="score"){
        names(data[[name]])[names(data[[name]])==scorecol] = "score"
      }
@@ -127,7 +128,7 @@ if (nrow(input)>2){
   
   zsamp = z[sample(1:nrow(z), sampsize),]
   d = dist(t(zsamp[,12:ncol(zsamp)]))
-  h = hclust(d)
+  h = hclust(d, method="average")
   
   pdfname = paste0(prefix, "_tree.pdf")
   cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
