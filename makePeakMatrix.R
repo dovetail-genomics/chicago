@@ -1,5 +1,6 @@
 library(data.table)
 library(matrixStats)
+library(cluster)
 library(argparser)
 
 cat("\n")
@@ -11,7 +12,7 @@ spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample n
 p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda files.", name="Rscript makePeakMatrix.R")
 p = add.argument(p, arg=spec[,1], help=spec[,2])
 p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
-p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default =10000, type="numeric")
+p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default = 100000, type="numeric")
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", default = NA, type="numeric")
 p = add.argument(p, arg="--scorecol", help = "Column name for the scores", default = "score", type="numeric")
 opts = parse.args(p, args)
@@ -125,16 +126,27 @@ write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 if (nrow(input)>2){
   cat("Clustering samples based on", sampsize,  "random interactions...\n")
-  
+ 
+
+  cat("Using continuous signals...\n") 
   zsamp = z[sample(1:nrow(z), sampsize),]
   d = dist(t(zsamp[,12:ncol(zsamp)]))
   h = hclust(d, method="average")
   
   pdfname = paste0(prefix, "_tree.pdf")
   cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
-  
-  pdf(pdfname)
+  pdf(pdfname, width=20, height=10)
   plot(h)
+  dev.off()
+
+  cat("Using binary signals ( cutoff =", cutoff, ")...\n")
+  zsbin = apply(zsamp[, 12:ncol(zsamp)],1,function(x){x[x<cutoff]=0; x[x>=cutoff];x})
+  db = daisy(t(zsbin), metric="gower")
+  hb = hclust(db, method="average")
+  pdfname = paste0(prefix, "_tree_binary.pdf")
+  cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
+  pdf(pdfname, width=20, height=10)
+  plot(hb)
   dev.off()
 }else{
   cat("Clustering not performed as n<=2\n")
