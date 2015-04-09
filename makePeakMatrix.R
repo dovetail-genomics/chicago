@@ -38,19 +38,56 @@ nChunks = opts[["chunks"]]
 
 bm = fread(baitmapfile)
 setnames(bm, c("V1", "V2", "V3", "V4", "V5"), c("baitChr", "baitStart", "baitEnd", "baitID", "baitName"))
-baits = unique(bm$baitID)
-baitsCut = cut2(baits, g=nChunks)
 
 input = read.table(namesfile,stringsAsFactors = F)
 names(input) = c("name", "file")
 
+baitsCut = NA
+if (nChunks>1){
+  baits = unique(bm$baitID)
+  baitsCut = cut2(baits, g=nChunks)
+    
+  cat("Splitting the input R images into", nChunks, "chunks...\n")
+  for(i in 1:nrow(input)){
+    f = input[i,"file"]
+
+    cat("Loading", f, "...\n")
+    load(f)
+    setDT(x)
+    setkey(x, baitID)
+
+    chfolder = paste0(dirname(f), "/", basename(f), "_chunks/")
+    if(system(paste("mkdir -p", chfolder))){
+      stop (paste("Failed to create folder", chfolder, "\n"))
+    }
+    cat("Splitting and saving", f)
+    for(j in 1:nChunks){
+      cBaits = baits[as.numeric(baitsCut)==j]    
+      y = x[J(cBaits)]
+      save(y, file=paste0(chfolder, basename(f), ".chunk", j))
+      cat(".")
+    }
+    cat("\n")
+  }
+}
+
 zlist = vector("list")
-for (i in 1:nChunks){
-  cat("Processing baits ", levels(baitsCut)[i], "\n...")
-  cBaits = baits[as.numeric(baitsCut)==i]
+for (j in 1:nChunks){
+  if(nChunks>1){
+    cat("Processing baits ", levels(baitsCut)[j], "...\n")
+  }
+    
   data = vector("list")
   for (i in 1:nrow(input)){
-    f = input[i,"file"]
+    if(nChunks>1){
+      f0 = input[i,"file"]
+      chfolder = paste0(dirname(f0), "/", basename(f0), "_chunks/")
+      f = paste0(chfolder, basename(f0), ".chunk", j)
+    }
+    else{
+      f = input[i,"file"]    
+    }
+    
     cat("Loading", f, "...\n")
     load(f)
     
@@ -60,14 +97,7 @@ for (i in 1:nChunks){
     if (!is.na(maxdist)){
       x = x[abs(x$distSign)<=maxdist,]
     }
-    
-    if (nChunks>1){
-      setDT(x)
-      setkey(x, baitID)
-      x = x[J(cBaits)]
-      setDF(x)
-    }
-      
+          
     name = input[i, "name"]
     data[[name]] = x[, c("baitID", "otherEndID", scorecol)]
     
@@ -133,7 +163,7 @@ for (i in 1:nChunks){
   z = z[, c("baitChr", "baitStart", "baitEnd", "baitID", "baitName", "oeChr", "oeStart", "oeEnd", "oeID", "oeName", "dist", input[,"name"])]
   
   z = z[order(z$baitChr, z$baitStart, z$oeChr, z$oeStart), ]
-  zlist[[i]] = z
+  zlist[[j]] = z
 }
 
 z = rbindlist(zlist)
