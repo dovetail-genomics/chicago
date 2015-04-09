@@ -1736,17 +1736,25 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=
   }
   if("washU" %in% format){
    message("Writing out for washU browser...")
-   out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
-                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
-                 "N_reads", "score")]
+   out = out0[,c("bait_chr", "bait_start", "bait_end", 
+                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
+                 "score")]
+   
+   ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
+   setDT(x)
+   setkey(x, baitID, otherEndID)
+   x$ReversedInteractionScore <- x[J(x$otherEndID, x$baitID), get(scoreCol)]
+   sel <- x[,get(scoreCol)] > x$ReversedInteractionScore
+   sel <- ifelse(is.na(sel), TRUE, sel) ##"FALSE" entries in sel should correspond to minima
+   setDF(x)
+   x$ReversedInteractionScore <- NULL
+   out <- out[sel,]
+   
    out$i = seq(1,nrow(out)*2,2)
    res = apply(out,1,function(x){
-         lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
-
-         if(x["otherEnd_name"]=="."){ # for bait2bait interactions the second line will be created anyway as the results are duplicated in the original dataframe
-            lines = paste0(lines,  "\n",
+      lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
+      lines = paste0(lines,  "\n",
         paste0(x["otherEnd_chr"], "\t", x["otherEnd_start"], "\t", x["otherEnd_end"], "\t", x["bait_chr"],":", x["bait_start"], "-", x["bait_end"], ",", x["score"],"\t", as.numeric(x["i"])+1, "\t", "."))
-         } 
          lines
     })
     res = gsub(" ", "", res)
