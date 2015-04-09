@@ -59,15 +59,15 @@ for (i in 1:nChunks){
     
     if (!is.na(maxdist)){
       x = x[abs(x$distSign)<=maxdist,]
-      if (nChunks>1){
+    }
+    
+    if (nChunks>1){
         setDT(x)
         setkey(x, baitID)
         x = x[J(cBaits)]
         setDF(x)
-      }
-      
     }
-    
+      
     name = input[i, "name"]
     data[[name]] = x[, c("baitID", "otherEndID", scorecol)]
     
