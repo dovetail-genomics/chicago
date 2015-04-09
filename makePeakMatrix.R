@@ -46,7 +46,7 @@ names(input) = c("name", "file")
 
 zlist = vector("list")
 for (i in 1:nChunks){
-  cat("Processing baits ", baitsCut[i], "\n...")
+  cat("Processing baits ", levels(baitsCut)[i], "\n...")
   cBaits = baits[as.numeric(baitsCut)==i]
   data = vector("list")
   for (i in 1:nrow(input)){
@@ -62,10 +62,10 @@ for (i in 1:nChunks){
     }
     
     if (nChunks>1){
-        setDT(x)
-        setkey(x, baitID)
-        x = x[J(cBaits)]
-        setDF(x)
+      setDT(x)
+      setkey(x, baitID)
+      x = x[J(cBaits)]
+      setDF(x)
     }
       
     name = input[i, "name"]
