@@ -1649,7 +1649,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
-  if (! format %in% c("seqMonk","interBed", "washU")){
+  if (!all(format %in% c("seqMonk","interBed", "washU"))){
     stop ("Format must be either seqMonk, interBed or washU (or a vector containing several of these)\n")
   }
   if (! order %in% c("position","score")){
@@ -1682,7 +1682,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=
                 ( isBait2bait==F & get(scoreCol)>=cutoff )]
   }
 
-  x = x[, c("baitID", "otherEndID", scoreCol), with=F]
+  x = x[, c("baitID", "otherEndID", "N", scoreCol), with=F]
   
   setkey(x, otherEndID)
   setkey(rmap, otherEndID)

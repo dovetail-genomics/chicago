@@ -156,9 +156,7 @@ plotBaits(x, baits=baits, outfile=paste0(outprefix, "_examples.pdf"))
 # 5. Exporting results
 
 cat("\n*** Exporting results...\n")
-exportResults(x, outfile=paste0(outprefix,".txt"), cutoff=outputCutoff)
-exportResults(x, outfile=paste0(outprefix,".ibed"), format="interBed", cutoff=outputCutoff)
-
+exportResults(x, outfileprefix=outprefix, cutoff=outputCutoff)
 
 # 6. Creating subfolders
 
