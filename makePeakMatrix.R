@@ -1,4 +1,8 @@
+library(data.table)
+library(matrixStats)
+library(cluster)
 library(argparser)
+
 cat("\n")
 args = commandArgs(trailingOnly=T)
 spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample names (1st column) and full paths to input Rda files (2nd column)", 
@@ -7,8 +11,11 @@ spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample n
                 "<bait-map>", "Full path to bait map ID file"),  byrow=T, ncol=2)
 p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda files.", name="Rscript makePeakMatrix.R")
 p = add.argument(p, arg=spec[,1], help=spec[,2])
-p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 12, type = "numeric")
-p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default =10000, type="numeric")
+p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
+p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default = 100000, type="numeric")
+p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", default = NA, type="numeric")
+p = add.argument(p, arg="--scorecol", help = "Column name for the scores", default = "score", type="numeric")
+p = add.argument(p, arg="--clustmethod", help = "The clustering method to use (average/ward.D2/complete)", default = "average", type="numeric")
 opts = parse.args(p, args)
 
 
@@ -22,6 +29,9 @@ cutoff = opts[["cutoff"]]
 sampsize = opts[["subset"]]
 rmapfile = opts[["<digest-map>"]]
 baitmapfile = opts[["<bait-map>"]]
+maxdist = opts[["maxdist"]]
+scorecol = opts[["scorecol"]]
+clMethod = opts[["clustmethod"]]
 
 input = read.table(namesfile,stringsAsFactors = F)
 names(input) = c("name", "file")
@@ -34,27 +44,23 @@ for (i in 1:nrow(input)){
 
      cat("Processing",  f, "...")
      x = x[!is.na(x$distSign),]
+
+     if (!is.na(maxdist)){
+       x = x[abs(x$distSign)<=maxdist,]
+     }
      
-#      t1 = gsub("step2_data_processed_separately/res_\\S+_chicago2/data/", "", f)
-#      t2 = gsub("_step2.RDa", "", t1)
-  
      name = input[i, "name"]
-     data[[name]] = x[, c("baitID", "otherEndID", "score")]
+     data[[name]] = x[, c("baitID", "otherEndID", scorecol)]
+
+     if (scorecol!="score"){
+       names(data[[name]])[names(data[[name]])==scorecol] = "score"
+     }
      cat("done\n")    
 }
 
-# setwd(currdir)
-
-#save(data, file="data.Rda")
-
-library(data.table)
-library(matrixStats)
-#cat("Loading data...\n")
-#load("data.Rda")
-
 cat("Converting to data.table and indexing...\n")
 for (d in names(data)){
-  data[[d]] = data.table(data[[d]])
+  setDT(data[[d]])
   setkey(data[[d]], baitID, otherEndID)
   setnames(data[[d]], "score", d)
 }
@@ -63,17 +69,18 @@ cat("Merging...\n")
 z = Reduce(function(x,y) merge(x,y,all=TRUE), data)
 
 cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
-z = as.data.frame(z)[rowMaxs(as.data.frame(z)[,3:ncol(z)], na.rm = T)>=cutoff ,]
+scoreCols = names(z)[3:ncol(z)]
+z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]
+z = z[rmax>=cutoff]
 
 cat("Replacing NAs and negative scores with zeros...\n")
 for (i in 3:ncol(z)){
-   z[is.na(z[,i]) | z[,i]<0, i] = 0
+   set(z, which(is.na(z[[i]]) | z[[i]]<0), i, 0)
 }
 
-
 cat("Adding bait coordinates and annotation...\n")
-z = data.table(z)
 setkey(z, baitID)
+
 bm = fread(baitmapfile)
 setnames(bm, c("V1", "V2", "V3", "V4", "V5"), c("baitChr", "baitStart", "baitEnd", "baitID", "baitName"))
 
@@ -97,16 +104,16 @@ cat("Annotating bait2bait interations...\n")
 setnames(bm, c("baitID", "baitName"), c("otherEndID", "otherEndName")) # sic!
 setkey(bm, otherEndID)
 z = merge(z, bm[, c("otherEndID", "otherEndName"), with=F], all.x=T, all.y=F)
-z$otherEndName[is.na(z$otherEndName)] = "."
+set(z, which(is.na(z$otherEndName)), "otherEndName", ".")
 
 cat("Reordering and sorting...\n")
 
-z$dist = NA_real_
-z[baitChr==oeChr]$dist = with(z[baitChr==oeChr], ceiling(oeStart+(oeEnd-oeStart)/2-(baitStart+(baitEnd-baitStart)/2))) 
+z[, dist := NA_real_]
+z[baitChr==oeChr, dist := ceiling(oeStart+(oeEnd-oeStart)/2-(baitStart+(baitEnd-baitStart)/2))]
 
 setnames(z, "otherEndID", "oeID")
 setnames(z, "otherEndName", "oeName")
-z = as.data.frame(z)
+setDF(z)
 z = z[, c("baitChr", "baitStart", "baitEnd", "baitID", "baitName", "oeChr", "oeStart", "oeEnd", "oeID", "oeName", "dist", input[,"name"])]
 
 z = z[order(z$baitChr, z$baitStart, z$oeChr, z$oeStart), ]
@@ -121,17 +128,28 @@ write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 if (nrow(input)>2){
   cat("Clustering samples based on", sampsize,  "random interactions...\n")
-  
+ 
+
+  cat("Using continuous signals...\n") 
   zsamp = z[sample(1:nrow(z), sampsize),]
   d = dist(t(zsamp[,12:ncol(zsamp)]))
-  h = hclust(d)
+  h = hclust(d, method=clMethod)
   
   pdfname = paste0(prefix, "_tree.pdf")
   cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
-  
-  pdf(pdfname)
+  pdf(pdfname, width=20, height=10)
   plot(h)
   dev.off()
+
+  #cat("Using binary signals ( cutoff =", cutoff, ")...\n")
+  #zsbin = apply(zsamp[, 12:ncol(zsamp)],1,function(x){x[x<cutoff]=0; x[x>=cutoff];x})
+  #db = daisy(t(zsbin), metric="gower")
+  #hb = hclust(db, method=clMethod)
+  #pdfname = paste0(prefix, "_tree_binary.pdf")
+  #cat(paste0("Saving the sample dendrogram as ", pdfname, "...\n"))
+  #pdf(pdfname, width=20, height=10)
+  #plot(hb)
+  #dev.off()
 }else{
   cat("Clustering not performed as n<=2\n")
 }

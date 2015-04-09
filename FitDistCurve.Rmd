@@ -1,0 +1,226 @@
+# Determine the weighting function based on call overlap across replicates
+
+Functions used to fit a bounded logistic regression model.
+
+Essentially, $p$, the probability of an interaction between two fragments, is a function of $d_i$, the distance between those fragments:
+
+$p = (expit \delta - expit \gamma)\times expit(\alpha + \beta\log{d_i}) + expit(\gamma)$
+
+##Inputs
+
+Parameters required:
+
+```{r}
+##location of restriction fragment map (rmapfile)
+rmapfile <- "/bi/group/sysgen/CHIC/Digest_Human_HindIII.bed"
+
+##extremely stringent threshold at which things are called
+##(set to NA if you have pre-thresholded interactions)
+threshold <- -10
+
+##number of subsets to estimate parameters from, individually
+Nsub <- 5
+
+##bins
+breaks <- c(0, (2L^((-3):2))*1E6L, (2L:16L)*4E6L)
+
+bins <- data.frame(
+  start=breaks + 1,
+  end=c(breaks[-1], Inf)
+)
+bins$mid <- with(bins, 0.5*(end + start - 1))
+```
+
+Data input: maxPvals object, data.table with cols: baitID, otherendID, distSign, log.p
+
+(log.p can be omitted if threshold <- NA)
+
+Replace following code chunk to supply your own maxPvals object:
+
+```{r}
+source("~/RLibraryDev/chicagov2/chicago.R")
+
+rdaFile <- paste0("~/Projects/ChicagoPiRelFromOverlap/PvalSummaryMacrophage.Rda")
+message("Loading ", rdaFile)
+load(rdaFile)
+```
+
+Result is as follows :
+
+```{r}
+head(maxPvals)
+```
+
+To calculate the number of pairs expected at each distance, we need to be a bit clever. (derivation: p215-217, JMC lab book)
+
+```{r}
+##Obtain some information about the fragment map
+
+rmap = fread(rmapfile)
+setnames(rmap, "V1", "chr")
+setnames(rmap, "V3", "end")
+rmap <- rmap[rmap$chr != "MT",]
+chrMax <- rmap[,max(end),by="chr"] ##length of each chr
+
+##Chromsome lengths
+C = as.numeric(sort(chrMax$V1))
+##Genome size
+G = sum(C)
+##Number of baits
+Nbaits <- length(unique(maxPvals$baitID))
+##average fragment length
+Lfrag <- .getAvgFragLength(rmapfile=rmapfile)
+
+##calculate number of hypotheses at given distances
+bins$N <- as.numeric(NA)
+for(i in 1:(nrow(bins)-1))
+{
+  bins$N[i] <- with(bins,
+              (2*(end[i] - start[i])*Nbaits/(G*Lfrag))*sum(pmax(0, C - 0.5*end[i] - 0.5*start[i]))
+               )
+}
+bins$N[nrow(bins)] <- with(bins,
+              (Nbaits/(G*Lfrag))*sum((pmax(0, C - start[nrow(bins)]))^2)
+               )
+#number of trans pairs is:
+Ntrans <- (G^2 - sum(C^2))*Nbaits/(G*Lfrag)
+
+
+#bins$N.old <- with(bins, 2*Nbaits*(end - start)/4000) ##can be improved
+```
+
+label each interactions by its distance bin.
+
+```{r}
+maxPvals$bin <- cut(abs(maxPvals$distSign), c(breaks, Inf))
+```
+
+##Split data into subsets
+
+Idea is to split data into $N_{sub}$ pieces, and somehow combine these intelligently to avoid outliers.
+
+We will get a matrix "obsJack". Each column contains one subset.
+
+```{r}
+maxPvals$BIDbin <- cut(maxPvals$baitID, 5)
+table(maxPvals$BIDbin)
+
+outJack <- vector("list", Nsub)
+obsJack <- matrix(nrow = nrow(bins)+1,ncol=Nsub)
+
+for(i in 1:Nsub)
+{
+  lev = levels(maxPvals$BIDbin)[i]
+
+  ##get subset of matrix
+  temp <- maxPvals[maxPvals$BIDbin == lev,]
+  
+  ##calculate "obsmax"
+  if(is.na(threshold))
+    {
+      obsJack[,i] <- as.matrix(with(temp, table(bin, useNA="always")))
+    } else {
+      obsJack[,i] <- as.matrix(with(temp, table(bin[log.p < threshold], useNA="always")))
+    }
+}
+
+print(obsJack)
+```
+
+##fit model
+
+1. Construct likelihood function to maximise:
+
+```{r}
+f <- function(params)
+{
+  if(length(params) != 4) warning("Derp! f got passed a weird vector.")
+  alpha <- params[1]
+  beta <- params[2]
+  gamma <- params[3]
+  delta <- params[4]
+  
+  d <- log(data.lr$mid)
+  x <- data.lr$Ints
+  N <- data.lr$N
+  
+  if(is.nan(beta*Inf))
+    {
+      p <- (expit(delta)-expit(gamma))*expit(alpha) + expit(gamma)
+    } else {
+      p <- (expit(delta)-expit(gamma))*expit(alpha + beta*d) + expit(gamma)
+    }
+  
+  summands <- x*log(p) + (N-x)*log(1-p)
+  #print(p)
+  -sum(summands)
+}
+```
+
+
+2. Construct data, optim
+
+```{r}
+for(i in 1:Nsub)
+  {
+    data.lr <- cbind(rbind(bins, c(Inf,Inf,Inf,Ntrans)), Ints=obsJack[,i])
+    data.lr$N <- data.lr$N %/% Nsub ##CRUCIAL!
+    data.lr$notInts <- with(data.lr, N - Ints)
+    #data.lr$mid <- with(data.lr, 0.5*(end + start - 1))
+    
+    start <- c(4*14.5, -4, -14.6, -8)
+    #start <- c(0,-0.0000000001,-10, -1)
+    out <- optim(start, f)
+    out2 <- optim(out$par, f)
+    outJack[[i]] <- out2
+  }
+
+outJackPar <- do.call(cbind,lapply(outJack, function(x){x$par}))
+rownames(outJackPar) <- c("alpha","beta","gamma","delta")
+outJackPar <- rbind(outJackPar, d0=-outJackPar["alpha",]/outJackPar["beta",])
+outJackPar <- rbind(outJackPar, expd0=exp(outJackPar["d0",]))
+outJackPar <- rbind(outJackPar, logPiRel=outJackPar["delta",] - outJackPar["gamma",])
+outJackPar <- rbind(outJackPar, piRel=exp(outJackPar["logPiRel",]))
+
+medianJackPar <- apply(outJackPar, 1, median)
+```
+
+
+Plotting
+
+```{r}
+p.fit <- function(d, params)
+{
+  alpha <- params[1]
+  beta <- params[2]
+  gamma <- params[3]
+  delta <- params[4]
+  
+  if(is.nan(beta*Inf))
+    {
+      p <- (expit(delta)-expit(gamma))*expit(alpha) + expit(gamma)
+    } else {
+      p <- (expit(delta)-expit(gamma))*expit(alpha + beta*d) + expit(gamma)
+    }
+  p
+}
+
+##lines from fit to each subset:
+plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
+for(i in 2:Nsub)
+{
+  lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[i]]$par)), col=rainbow(5)[i])
+}
+
+##median fit
+lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), col="black", lty=2, pch=7, type="o")
+
+#save(outFull, outCensor, outJack, medianJackPar, file = paste0("Resources/Parameters",keyword,".Rda"))
+medianJackPar
+```
+
+## FINAL OUTPUT
+
+```{r}
+dput(medianJackPar[1:4])
+```
