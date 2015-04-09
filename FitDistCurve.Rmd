@@ -11,6 +11,9 @@ $p = (expit \delta - expit \gamma)\times expit(\alpha + \beta\log{d_i}) + expit(
 Parameters required:
 
 ```{r}
+##location of restriction fragment map (rmapfile)
+rmapfile <- "/bi/group/sysgen/CHIC/Digest_Human_HindIII.bed"
+
 ##extremely stringent threshold at which things are called
 ##(set to NA if you have pre-thresholded interactions)
 threshold <- -10
@@ -28,34 +31,25 @@ bins <- data.frame(
 bins$mid <- with(bins, 0.5*(end + start - 1))
 ```
 
-Data input: maxPvals object, data.table with cols: baitID otherendID distSign log.p
+Data input: maxPvals object, data.table with cols: baitID, otherendID, distSign, log.p
 
-like this (but log.p can be omitted if threshold <- NA):
+(log.p can be omitted if threshold <- NA)
 
-> head(maxPvals)
->   baitID otherEndID distSign       log.p
-> 1:    219        197   -88681 -0.08264367
-> 2:    219        198   -82433 -0.31432547
-> 3:    219        199   -76075 -0.24835447
-> ...
+Replace following code chunk to supply your own maxPvals object:
 
 ```{r}
-
 source("~/RLibraryDev/chicagov2/chicago.R")
 
-keyword <- "Macrophage" ##only MACROPHAGES
-
-rdaFile <- paste0("~/Projects/ChicagoPiRelFromOverlap/PvalSummary",keyword,".Rda")
+rdaFile <- paste0("~/Projects/ChicagoPiRelFromOverlap/PvalSummaryMacrophage.Rda")
 message("Loading ", rdaFile)
 load(rdaFile)
-
-##coerce to data.table, if required
-if(!"data.table" %in% class(maxPvals))
-  {
-    maxPvals <- data.table(maxPvals)
-  }
 ```
 
+Result is as follows :
+
+```{r}
+head(maxPvals)
+```
 
 To calculate the number of pairs expected at each distance, we need to be a bit clever. (derivation: p215-217, JMC lab book)
 
@@ -75,7 +69,7 @@ G = sum(C)
 ##Number of baits
 Nbaits <- length(unique(maxPvals$baitID))
 ##average fragment length
-Lfrag <- .getAvgFragLength()
+Lfrag <- .getAvgFragLength(rmapfile=rmapfile)
 
 ##calculate number of hypotheses at given distances
 bins$N <- as.numeric(NA)
@@ -212,7 +206,7 @@ p.fit <- function(d, params)
 }
 
 ##lines from fit to each subset:
-plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main=paste0("Data subsetting (",keyword,")"), xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
+plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
 for(i in 2:Nsub)
 {
   lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[i]]$par)), col=rainbow(5)[i])

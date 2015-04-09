@@ -1000,9 +1000,17 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, 
   cd
 }
 
-.getAvgFragLength <- function(cd, excludeMT=TRUE)
+.getAvgFragLength <- function(cd, rmapfile=NULL, excludeMT=TRUE)
 {
-  rmap = fread(cd@settings$rmapfile)
+  ##Normally, takes rmapfile from cd object.
+  ##However, if rmapfile is specified, this overrides cd.
+  
+  if(!is.null(rmapfile))
+  {
+    rmap <- fread(rmapfile)
+  } else {
+    rmap = fread(cd@settings$rmapfile)
+  }
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   if(excludeMT) {  
