@@ -1,16 +1,3 @@
-# (c) Mikhail Spivakov, Jonathan Cairns, Paula Freire-Pritchett
-
-# Note: when converting into an R package, please also include the package argparser 
-# as "suggested" since it's needed for the standalone scripts
-library(data.table)
-library(matrixStats)
-library(MASS)
-library(Hmisc)
-library(Delaporte)
-
-chicagoData <- setClass("chicagoData", slots=c(x="data.table", params="list", settings="list"))
-
-## Not tested yet in the updated version
 chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
