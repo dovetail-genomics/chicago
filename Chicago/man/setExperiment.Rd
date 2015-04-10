@@ -30,11 +30,7 @@ setExperiment(designDir = "", settings = list(), settingsFile = NULL, def.settin
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An object of class \code{chicagoData}.
 }
 \references{
 %% ~put references to the literature/web site here ~

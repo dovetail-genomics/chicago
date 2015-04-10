@@ -12,9 +12,7 @@ mergeSamples(cdl, normalise = TRUE, NcolOut = "N", NcolNormPrefix = "NNorm", mer
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{cdl}{
-%%     ~~Describe \code{cdl} here~~
-}
+  \item{cdl}{A \code{list} of \code{chicagoData} objects.}
   \item{normalise}{
 %%     ~~Describe \code{normalise} here~~
 }
@@ -32,11 +30,7 @@ mergeSamples(cdl, normalise = TRUE, NcolOut = "N", NcolNormPrefix = "NNorm", mer
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An object of class \code{chicagoData}.
 }
 \references{
 %% ~put references to the literature/web site here ~

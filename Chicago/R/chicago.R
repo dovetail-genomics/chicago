@@ -1,4 +1,4 @@
-chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
+chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
   cd = normaliseBaits(cd)
@@ -8,14 +8,24 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   }
   
   message("\n*** Running normaliseOtherEnds...\n")
-  cd = normaliseOtherEnds(cd, outfile=paste0(outprefix, "_oeNorm.pdf"))
+  cd = normaliseOtherEnds(cd,
+                          outfile=ifelse(is.null(outprefix),
+                                         NULL,
+                                         paste0(outprefix, "_oeNorm.pdf")
+                                      )
+                          )
   
   if(printMemory){
     print(gc(reset=T))
   }
   
   message("\n*** Running estimateTechnicalNoise...\n")
-  cd = estimateTechnicalNoise(cd, outfile=paste0(outprefix, "_techNoise.pdf"))
+  cd = estimateTechnicalNoise(cd,
+                              outfile=ifelse(is.null(outprefix),
+                                             NULL,
+                                             paste0(outprefix, "_techNoise.pdf")
+                                             )
+                              )
   
   if(printMemory){
     print(gc(reset=T))
@@ -24,8 +34,13 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   message("\n*** Running estimateDistFun...\n")
   
   ### Note that f is now saved in cd@params
-  cd = estimateDistFun(cd, outfile=paste0(outprefix, "_distFun.pdf"))
-  
+  cd = estimateDistFun(cd,
+                       outfile=ifelse(is.null(outprefix),
+                                      NULL,
+                                      paste0(outprefix, "_distFun.pdf")
+                       )
+  )
+
   if(printMemory){
     print(gc(reset=T))
   }  
@@ -595,7 +610,7 @@ estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, l
   cd
 }
 
-estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
+estimateBrownianNoise <- function(cd) {
   ##1) Reinstate zeros
   ##2) Add a "Bmean" column to x, giving expected Brownian noise.
   ##3) Calculate dispersion by regressing against "Bmean", added to x as "dispersion" attribute
@@ -611,8 +626,6 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   if (!is.null(seed)){
     set.seed(seed)
   }
-  
-  if(reEstimateMean) {stop("reEstimateMean=TRUE not implemented yet.")}
   
   siPresent <- "s_i" %in% colnames(cd@x)
   if(siPresent)
@@ -745,14 +758,7 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   
   ##NB Parametrization: var = mu + (mu^2)/dispersion
   cd@params$dispersion <- model$theta
-  
-  if(reEstimateMean)
-  {
-    stop("Not implemented yet")
-    ##Basically you need to grab the means from the x object - reestimating means on xAll doesn't work due to 0 truncation.
-  } else {
-    cd@x <- .estimateBMean(cd@x, cd@params$f)
-  }
+  cd@x <- .estimateBMean(cd@x, cd@params$f)
   cd
 }
 

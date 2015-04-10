@@ -2,50 +2,48 @@
 \alias{chicagoPipeline}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+CHiCAGO pipeline function
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function runs data through the CHiCAGO pipeline.
 }
 \usage{
-chicagoPipeline(cd, outprefix, printMemory = FALSE)
+chicagoPipeline(cd, outprefix = NULL, printMemory = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{cd}{
-%%     ~~Describe \code{cd} here~~
+  \item{cd}{A \code{chicagoData} object.}
+  \item{outprefix}{\code{NULL}, or a character string. If \code{NULL}, diagnostic plots are outputted to the current plotting device. If a character string, then pdfs will be generated for a series of diagnostic plots, in files of form "[outprefix]_[plotname].pdf". For example, \code{outprefix="experiment1"} leads to files experiment1_oeNorm.pdf, etc...}
+  \item{printMemory}{Set to \code{TRUE} for memory diagnostics.}
 }
-  \item{outprefix}{
-%%     ~~Describe \code{outprefix} here~~
-}
-  \item{printMemory}{
-%%     ~~Describe \code{printMemory} here~~
-}
+\warning{
+The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This pipeline runs the following functions in order:
+\code{\link{normaliseBaits}}
+\code{\link{normaliseOtherEnds}}
+\code{\link{estimateTechnicalNoise}}
+\code{\link{estimateDistFun}}
+\code{\link{estimateBrownianNoise}}
+\code{\link{getPvals}}
+\code{\link{getScores}}
+It does not export the output - use \code{\link{exportResults}} for this.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An object of class \code{chicagoData}.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Jonathan Cairns
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{exportResults}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
@@ -96,5 +94,5 @@ function (cd, outprefix, printMemory = FALSE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

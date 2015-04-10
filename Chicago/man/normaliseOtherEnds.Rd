@@ -12,9 +12,7 @@ normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{cd}{
-%%     ~~Describe \code{cd} here~~
-}
+  \item{cd}{A \code{chicagoData} object.}
   \item{Ncol}{
 %%     ~~Describe \code{Ncol} here~~
 }
@@ -28,15 +26,14 @@ normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = 
 %%     ~~Describe \code{outfile} here~~
 }
 }
+\warning{
+The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
+}
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An object of class \code{chicagoData}.
 }
 \references{
 %% ~put references to the literature/web site here ~

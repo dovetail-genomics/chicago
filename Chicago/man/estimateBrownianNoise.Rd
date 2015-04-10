@@ -2,44 +2,32 @@
 \alias{estimateBrownianNoise}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Estimate Brownian Noise
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Estimates the dispersion, and adds a a \code{Bmean} column giving the mean Brownian noise.
 }
 \usage{
-estimateBrownianNoise(cd, distFun, Ncol = "N", reEstimateMean = FALSE)
+estimateBrownianNoise(cd)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{cd}{
-%%     ~~Describe \code{cd} here~~
+  \item{cd}{A \code{chicagoData} object.}
 }
-  \item{distFun}{
-%%     ~~Describe \code{distFun} here~~
-}
-  \item{Ncol}{
-%%     ~~Describe \code{Ncol} here~~
-}
-  \item{reEstimateMean}{
-%%     ~~Describe \code{reEstimateMean} here~~
-}
+\warning{
+The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An object of class \code{chicagoData}.
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~
@@ -48,7 +36,7 @@ estimateBrownianNoise(cd, distFun, Ncol = "N", reEstimateMean = FALSE)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{chicagoPipeline}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

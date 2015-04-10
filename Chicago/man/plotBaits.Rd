@@ -12,9 +12,7 @@ plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL, plotBaitNames = 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{cd}{
-%%     ~~Describe \code{cd} here~~
-}
+  \item{cd}{A \code{chicagoData} object.}
   \item{pcol}{
 %%     ~~Describe \code{pcol} here~~
 }
