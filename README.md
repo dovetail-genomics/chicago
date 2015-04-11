@@ -126,7 +126,6 @@ seqmonk format (ends with ...seqmonk.txt)
 
 washU format (ends with ...washU.txt)
 
-- (We are aware of some issues relating to this output.)
 - Can be read by WashU browser (epigenomegateway.wustl.edu)
 - An interaction is represented by two rows, with each representing one of the fragments involved in the interaction. However, the two rows need not be adjacent.
 - First three columns are: chromosome, start, end. Column four is of form [Chr]:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see above). The remaining columns can be ignored.
