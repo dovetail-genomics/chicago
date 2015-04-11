@@ -56,8 +56,9 @@ if(twoPass){
   
     cat("\t\tFiltering and adding to the list...\n")  
     setDT(x)
-    
-    x = x[scorecol>=cutoff]  
+   
+    setnames(x, scorecol, "score") 
+    x = x[score>=cutoff]  
     
     if(!useTrans){
       x = x[is.na(distSign)==F]
@@ -72,8 +73,9 @@ if(twoPass){
     sel = unique(sel)
   }
   
+  print (gc(reset = T))
   rm(x)
-  gc(reset = T)
+  print (gc(reset = T))
   
   cat("Saving the peak list as", paste0(prefix,"_peaklist.txt"), "...\n")
   
@@ -118,18 +120,19 @@ for (i in 1:nrow(input)){
   setnames(data[[name]], scorecol, name)
   setkey(data[[name]], baitID, otherEndID)
   
-  gc(reset = T)
+  print(gc(reset = T))
 }
 
 rm(x)
-gc(reset = T)
+print(gc(reset = T))
 
 cat("\nMerging...\n")
 
 z = Reduce(function(x,y) merge(x,y,all=TRUE), data)
 
+print(gc(reset = T))
 rm(data)
-gc(reset = T)
+print(gc(reset = T))
 
 if(!twoPass){
   cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
