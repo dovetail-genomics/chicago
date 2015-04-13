@@ -2,10 +2,9 @@
 \alias{estimateDistFun}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Estimate the Distance Function
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
 estimateDistFun(cd, method = "cubic", n.obs.head = 10, n.obs.tail = 25, logScale = FALSE, outfile = NULL)
@@ -36,7 +35,7 @@ The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. S
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-An object of class \code{chicagoData}.
+An object of class \code{chicagoData}, with the distance function at cd@params$f.
 }
 \references{
 %% ~put references to the literature/web site here ~

@@ -1,11 +1,11 @@
 \name{exportResults}
 \alias{exportResults}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Export Results
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Export the results from a \code{chicagoData} object to disk.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff, b2bcutoff = NULL, format = c("seqMonk", "interBed", "washU"), order = c("position", "score")[1])
@@ -14,38 +14,35 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff, b2bcutoff = NULL, f
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{outfileprefix}{
-%%     ~~Describe \code{outfileprefix} here~~
+  A character string that forms the prefix for each output file.
 }
   \item{scoreCol}{
-%%     ~~Describe \code{scoreCol} here~~
+  The column of \code{cd@x} that contains the score.
 }
   \item{cutoff}{
-%%     ~~Describe \code{cutoff} here~~
+  The score cutoff.
 }
   \item{b2bcutoff}{
-%%     ~~Describe \code{b2bcutoff} here~~
+  If desired, an alternative score cutoff for bait-to-bait interactions.
 }
   \item{format}{
-%%     ~~Describe \code{format} here~~
+  The file format(s) to output. If a multiple formats are supplied as a vector, then all of these formats will be outputted.
 }
   \item{order}{
-%%     ~~Describe \code{order} here~~
-}
-\warning{
-The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
+  Should output be ordered by position or score?
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-FIXME nothing?
+NULL
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~

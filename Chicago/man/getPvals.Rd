@@ -1,16 +1,15 @@
 \name{getPvals}
 \alias{getPvals}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Get P-values
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Based on a Delaporte model, calculate the P-value associated with each observation.
 }
 \usage{
 getPvals(cd)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
 }
@@ -21,13 +20,13 @@ The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. S
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-An object of class \code{chicagoData}.
+An object of class \code{chicagoData}, with new column \code{log.p}.
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~
