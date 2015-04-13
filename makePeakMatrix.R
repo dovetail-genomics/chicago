@@ -13,6 +13,7 @@ spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample n
 p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda files.", name="Rscript makePeakMatrix.R")
 p = add.argument(p, arg=spec[,1], help=spec[,2])
 p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
+p = add.argument(p, arg="--lessthan", help = "Pick interactions with scorecol *below* the cutoff rather than above", flag = T)
 p = add.argument(p, arg="--subset", help = "Number of interactions to randomly subset for clustering", default = 100000)
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", default = NA, type="numeric")
 p = add.argument(p, arg="--scorecol", help = "Column name for the scores", default = "score")
@@ -34,9 +35,14 @@ clMethod = opts[["clustmethod"]]
 noTrans = opts[["notrans"]]
 twoPass = opts[["twopass"]]
 peaklistfile  = opts[["peaklist"]]
+lessThanCutoff = opts[["lessthan"]]
 
 if(twoPass & !is.na(peaklistfile)){
   stop("The specified options --twopass or --peaklist are mutually exclusive.\n")  
+}
+
+if(lessThanCutoff){
+  cat("Will pick interactions with scores *below* the cutoff\n\n")
 }
 
 bm = fread(baitmapfile)
@@ -57,8 +63,12 @@ if(twoPass){
     cat("\t\tFiltering and adding to the list...\n")  
     setDT(x)
     cat("\t\t\tTotal:", nrow(x), "interactions\n")   
-
-    x = x[get(scorecol)>=cutoff]  
+       
+    if (lessThanCutoff){
+        x = x[get(scorecol)<=cutoff]
+    }else{
+    	x = x[get(scorecol)>=cutoff]  
+    }
     cat("\t\t\tAfter filtering by score:", nrow(x), "interactions\n")
 
     if(noTrans){
@@ -113,7 +123,11 @@ for (i in 1:nrow(input)){
     cat("\t\t\tAfter x[sel]:", nrow(x), "interactions\n")
   }
   else{
-    x = x[get(scorecol)>=cutoff]  
+    if (lessThanCutoff){
+        x = x[get(scorecol)<=cutoff]
+    }else{
+        x = x[get(scorecol)>=cutoff]
+    }
     cat("\t\t\tAfter subsetting by score:", nrow(x), "\n")
 
     if(noTrans){
