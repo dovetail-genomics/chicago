@@ -2,10 +2,10 @@
 \alias{normaliseBaits}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Normalise Baits
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Calculate normalisation factors \code{s_j} for each bait.
 }
 \usage{
 normaliseBaits(cd, normNcol = "NNb", shrink = FALSE, plot = TRUE, outfile = NULL, debug = FALSE)
@@ -14,22 +14,20 @@ normaliseBaits(cd, normNcol = "NNb", shrink = FALSE, plot = TRUE, outfile = NULL
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{normNcol}{
-%%     ~~Describe \code{normNcol} here~~
+The name of the column in \code{cd} that contains normalised counts.
 }
   \item{shrink}{
-%%     ~~Describe \code{shrink} here~~
+Deprecated.
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+If \code{TRUE}, output a diagnostic plot.
 }
-  \item{outfile}{
-%%     ~~Describe \code{outfile} here~~
-}
+  \item{outfile}{\code{NULL}, or a character string. If \code{NULL}, the diagnostic plot is outputted to the current plotting device. If a character string, e.g. \code{outfile="tech.pdf"}, then the plot will be outputted to that file.}
   \item{debug}{
-%%     ~~Describe \code{debug} here~~
+Deprecated.
 }
 }
-\warning{
+\section{Warning}{
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
@@ -42,7 +40,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~

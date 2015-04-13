@@ -16,19 +16,27 @@ chicagoPipeline(cd, outprefix = NULL, printMemory = FALSE)
   \item{outprefix}{\code{NULL}, or a character string. If \code{NULL}, diagnostic plots are outputted to the current plotting device. If a character string, then pdfs will be generated for a series of diagnostic plots, in files of form "[outprefix]_[plotname].pdf". For example, \code{outprefix="experiment1"} leads to files experiment1_oeNorm.pdf, etc...}
   \item{printMemory}{Set to \code{TRUE} for memory diagnostics.}
 }
-\warning{
+\section{Warning}{
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
 This pipeline runs the following functions in order:
-\code{\link{normaliseBaits}}
-\code{\link{normaliseOtherEnds}}
-\code{\link{estimateTechnicalNoise}}
-\code{\link{estimateDistFun}}
-\code{\link{estimateBrownianNoise}}
-\code{\link{getPvals}}
-\code{\link{getScores}}
-It does not export the output - use \code{\link{exportResults}} for this.
+
+- \code{\link{normaliseBaits}}
+
+- \code{\link{normaliseOtherEnds}}
+
+- \code{\link{estimateTechnicalNoise}}
+
+- \code{\link{estimateDistFun}}
+
+- \code{\link{estimateBrownianNoise}}
+
+- \code{\link{getPvals}}
+
+- \code{\link{getScores}}
+
+It does not export the output. Use \code{\link{exportResults}} for this.
 }
 \value{
 An object of class \code{chicagoData}.

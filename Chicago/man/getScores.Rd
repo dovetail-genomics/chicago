@@ -4,28 +4,28 @@
 Get CHiCAGO scores.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Converts p-values into a CHiCAGO score, using p-value weighting.
 }
 \usage{
-getScores(cd, method = "weightedRelative", includeTrans = TRUE, plot = T, outfile = NULL)
+getScores(cd, method = "weightedRelative", includeTrans = TRUE, plot = TRUE, outfile = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{method}{
-%%     ~~Describe \code{method} here~~
+  Either "weightedRelative" (recommended), or "unweighted".
 }
   \item{includeTrans}{
-%%     ~~Describe \code{includeTrans} here~~
+  If \code{FALSE}, trans interactions are discounted.
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+  Plot a diagnostic plot.
 }
   \item{outfile}{
-%%     ~~Describe \code{outfile} here~~
+  A string containing a .pdf file location to write to.
 }
 }
-\warning{
+\section{Warning}{
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
@@ -35,10 +35,10 @@ The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. S
 An object of class \code{chicagoData}.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Genovese, C. R., Roeder, K., & Wasserman, L. (2006). False discovery control with p-value weighting. Biometrika, 93, 509–524. doi:10.1093/biomet/93.3.509
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~

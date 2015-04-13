@@ -2,10 +2,10 @@
 \alias{modifySettings}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Modify Settings
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Modify the settings in a \code{chicagoData} object.
 }
 \usage{
 modifySettings(cd, settings)
@@ -13,15 +13,10 @@ modifySettings(cd, settings)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
-  \item{settings}{
-%%     ~~Describe \code{settings} here~~
-}
-}
-\warning{
-The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
+  \item{settings}{A named list.}
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+\code{cd}'s settings are updated. Setting \code{names(settings)[1]} is set to (settings)[[1]], and so on.
 }
 \value{
 An object of class \code{chicagoData}.
@@ -30,7 +25,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~

@@ -2,7 +2,7 @@
 \alias{mergeSamples}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Merge samples together.
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
@@ -14,16 +14,16 @@ mergeSamples(cdl, normalise = TRUE, NcolOut = "N", NcolNormPrefix = "NNorm", mer
 \arguments{
   \item{cdl}{A \code{list} of \code{chicagoData} objects.}
   \item{normalise}{
-%%     ~~Describe \code{normalise} here~~
+If \code{TRUE}, use a normalisation procedure, specified by \code{mergeMethod}, to arrive at a normalised count. If \code{FALSE}, take the mean number of reads.
 }
   \item{NcolOut}{
-%%     ~~Describe \code{NcolOut} here~~
+The column to store the normalised counts in.
 }
   \item{NcolNormPrefix}{
-%%     ~~Describe \code{NcolNormPrefix} here~~
+Each sample gains a "normalized count" column, that begins with this prefix.
 }
   \item{mergeMethod}{
-%%     ~~Describe \code{mergeMethod} here~~
+If \code{mergeMethod == "weightedMean"}, then NcolOut is the weighted mean of the sample-wise counts adjusted by the samples' respective scaling factors \code{s_k}. If \code{mergeMethod == "normMean"}, then sample-specific counts are first normalised by dividing by s_k, and NcolOut is computed as the mean of these normalised counts.
 }
 }
 \details{
@@ -36,7 +36,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~
@@ -45,7 +45,7 @@ An object of class \code{chicagoData}.
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{readAndMerge}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

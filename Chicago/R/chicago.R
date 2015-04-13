@@ -510,7 +510,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
 ### I've modified this function so it updates cd@params$f and returns cd.
 ### This way f will be retained along with other params such as s_k and dispersion.
 ### Just need to make sure cd@x doesn't get copied when we do this... 
-estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, outfile=NULL) {
+estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, plot=TRUE, outfile=NULL) {
   
   # Take the "refBinMean" column of the data x as f(d_b)
   # then interpolate & extrapolate to get f(d).
@@ -593,19 +593,21 @@ estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, l
   } else {
     f <- function(x) exp(log.f(log(x)))
   }
+  if(plot)
+  {
+    if (!is.null(outfile)){ 
+      pdf(outfile)
+    }
+      curve(log.f.obs, obs.min, obs.max,
+            main = paste0("Distance function (points = obs, line = ", method, " fit)"),
+            xlab = "log(distance)",
+            ylab = "log(f(d))")
+      with(f.d, points(log(midpoint), log(refBinMean)))
+    if (!is.null(outfile)){ 
+      dev.off()
+    }
+  }
 
-  if (!is.null(outfile)){ 
-    pdf(outfile)
-  }
-    curve(log.f.obs, obs.min, obs.max,
-          main = paste0("Distance function (points = obs, line = ", method, " fit)"),
-          xlab = "log(distance)",
-          ylab = "log(f(d))")
-    with(f.d, points(log(midpoint), log(refBinMean)))
-  if (!is.null(outfile)){ 
-    dev.off()
-  }
-  
   cd@params$f = f
   cd
 }
@@ -959,7 +961,7 @@ getPvals <- function(cd){
   cd
 }
 
-getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, outfile=NULL)
+getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRUE, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
   ##Note to self: Algebra is on P96 of my lab notebook.
@@ -988,7 +990,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, 
     x[,score := pmax(- minval - log.q, 0)]
     
   } else {
-    stop("Only method='weightedRelative' available currently.")
+    x[,score := - log.p]
   }
   cd
 }

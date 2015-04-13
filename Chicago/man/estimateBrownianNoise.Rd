@@ -14,7 +14,7 @@ estimateBrownianNoise(cd)
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
 }
-\warning{
+\section{Warning}{
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{

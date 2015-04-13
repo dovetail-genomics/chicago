@@ -2,10 +2,10 @@
 \alias{plotBaits}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Plot Baits
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Plot the read counts around baits.
 }
 \usage{
 plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL, plotBaitNames = TRUE, plotBprof = FALSE, plevel1 = 5, plevel2 = 3, outfile = NULL, removeBait2bait = TRUE, width = 20, height = 20, maxD = NULL, bgCol = "black", lev2Col = "blue", lev1Col = "red", bgPch = 1, lev1Pch = 20, lev2Pch = 20, ...)
@@ -14,29 +14,29 @@ plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL, plotBaitNames = 
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{pcol}{
-%%     ~~Describe \code{pcol} here~~
+The name of the column that contains the score.
 }
   \item{Ncol}{
-%%     ~~Describe \code{Ncol} here~~
+The name of the column that contains counts.
 }
   \item{n}{
-%%     ~~Describe \code{n} here~~
+The number of baits to plot (ignored if \code{baits} is specified).
 }
   \item{baits}{
-%%     ~~Describe \code{baits} here~~
+The IDs of the baits to plot.
 }
   \item{plotBaitNames}{
-%%     ~~Describe \code{plotBaitNames} here~~
+If \code{TRUE}, the names of the baits, rather than their IDs, will appear in the plot.
 }
   \item{plotBprof}{
-%%     ~~Describe \code{plotBprof} here~~
+If \code{TRUE}, display a line representing the expected Brownian noise at each distance.
 }
-  \item{plevel1}{
+  \item{plevel1, plevel2}{
 %%     ~~Describe \code{plevel1} here~~
 }
-  \item{plevel2}{
+%  \item{plevel2}{
 %%     ~~Describe \code{plevel2} here~~
-}
+%}
   \item{outfile}{
 %%     ~~Describe \code{outfile} here~~
 }

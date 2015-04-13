@@ -2,10 +2,10 @@
 \alias{normaliseOtherEnds}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Normalise Other Ends
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Compute \code{s_i} normalisation factors for other ends.
 }
 \usage{
 normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = NULL)
@@ -14,19 +14,17 @@ normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = 
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{Ncol}{
-%%     ~~Describe \code{Ncol} here~~
+The name of the column in \code{cd} that contains normalised counts.
 }
   \item{normNcol}{
-%%     ~~Describe \code{normNcol} here~~
+FIXME%%     ~~Describe \code{normNcol} here~~
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+If \code{TRUE}, output a diagnostic plot.
 }
-  \item{outfile}{
-%%     ~~Describe \code{outfile} here~~
+  \item{outfile}{\code{NULL}, or a character string. If \code{NULL}, the diagnostic plot is outputted to the current plotting device. If a character string, e.g. \code{outfile="tech.pdf"}, then the plot will be outputted to that file.}
 }
-}
-\warning{
+\section{Warning}{
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
@@ -39,7 +37,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~

@@ -2,10 +2,10 @@
 \alias{readSample}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Read Sample
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function reads input data from a file, into a \code{chicagoData} object.
 }
 \usage{
 readSample(file, cd)
@@ -13,7 +13,7 @@ readSample(file, cd)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{file}{
-%%     ~~Describe \code{file} here~~
+The location of an input file FIXME more details!
 }
   \item{cd}{A \code{chicagoData} object.}
 }
@@ -30,7 +30,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~

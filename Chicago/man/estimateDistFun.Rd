@@ -5,43 +5,47 @@
 Estimate the Distance Function
 }
 \description{
+Estimates the function that models how the expected number of counts decreases with increasing distance.
 }
 \usage{
-estimateDistFun(cd, method = "cubic", n.obs.head = 10, n.obs.tail = 25, logScale = FALSE, outfile = NULL)
+estimateDistFun(cd, method = "cubic", n.obs.head = 10, n.obs.tail = 25, logScale = FALSE, plot = TRUE, outfile = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{method}{
-%%     ~~Describe \code{method} here~~
+Choice of method: "lm" for a linear model, or "cubic" for a cubic spline with linear extrapolation.
 }
   \item{n.obs.head}{
-%%     ~~Describe \code{n.obs.head} here~~
+If \code{method="lm"}, the number of observations in the head (see details).
 }
   \item{n.obs.tail}{
-%%     ~~Describe \code{n.obs.tail} here~~
+If \code{method="lm"}, the number of observations in the tail (see details).
 }
   \item{logScale}{
-%%     ~~Describe \code{logScale} here~~
+If \code{TRUE}, the function \code{f()} will output on the log.scale. Note that \code{f()}'s input is always assumed to be on the log scale.
+}
+  \item{plot}{
+  Output a diagnostic plot.
 }
   \item{outfile}{
-%%     ~~Describe \code{outfile} here~~
+  If \code{NULL}, plot to current device. Otherwise, plot to the .pdf file \code{outfile}.
 }
 }
-\warning{
+\section{Warning}{
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+By default, we look in 75 distance bins, and a cubic fit is used. If \code{method="lm"}, then it is assumed that the distance function consists of two segments. The first \code{n.obs.head} are used to estimate the first segment, and the last \code{n.obs.tail} are used to estimate the second segment.
 }
 \value{
-An object of class \code{chicagoData}, with the distance function at cd@params$f.
+An object of class \code{chicagoData}, with the distance function present as cd@params$f.
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~
