@@ -169,9 +169,9 @@ if(!twoPass){
   z = z[rmax>=cutoff]
 }
 
-cat("Replacing NAs and negative scores with zeros...\n")
+cat("Replacing NAs with zeros...\n")
 for (i in 3:ncol(z)){
-  set(z, which(is.na(z[[i]]) | z[[i]]<0), i, 0)
+  set(z, which(is.na(z[[i]])), i, 0)
 }
 
 cat("Adding bait coordinates and annotation...\n")
