@@ -15,9 +15,11 @@ readAndMerge(files, cd, ...)
   \item{files}{
   Character vector containing the locations of the files to read in.
 }
-  \item{cd}{A \code{chicagoData} object, usually created with \link{\code{setExperiment}}}.
-  \item{\dots}{
-  Further arguments passed to \link{\code{mergeSamples}}.
+  \item{cd}{
+  A \code{chicagoData} object, usually created with {\code{\link{setExperiment}}}.
+}
+  \item{...}{
+  Further arguments passed to \code{\link{mergeSamples}}.
 }
 }
 \details{
