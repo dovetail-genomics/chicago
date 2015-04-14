@@ -41,9 +41,6 @@ Genovese, C. R., Roeder, K., and Wasserman, L. (2006). False discovery control w
 \author{
 Jonathan Cairns
 }
-\note{
-%%  ~~further notes~~
-}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

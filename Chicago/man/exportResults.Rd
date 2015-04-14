@@ -39,14 +39,8 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff, b2bcutoff = NULL,
 \value{
 NULL
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
-}
-\note{
-%%  ~~further notes~~
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

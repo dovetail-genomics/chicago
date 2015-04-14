@@ -33,14 +33,8 @@ If \code{mergeMethod == "weightedMean"}, then NcolOut is the weighted mean of th
 \value{
 An object of class \code{chicagoData}.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
-}
-\note{
-%%  ~~further notes~~
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

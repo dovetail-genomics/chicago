@@ -8,7 +8,8 @@ Set Experiment
 Creates a template CHiCAGO experiment object. This should be the first function called.
 }
 \usage{
-setExperiment(designDir = "", settings = list(), settingsFile = NULL, def.settings=defaultSettings(designDir))
+setExperiment(designDir = "", settings = list(),
+      settingsFile = NULL, def.settings=defaultSettings(designDir))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -31,14 +32,8 @@ For a list of settings, see \code{\link{defaultSettings}}.
 \value{
 An object of class \code{chicagoData}.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
-}
-\note{
-%%  ~~further notes~~
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

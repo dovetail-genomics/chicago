@@ -57,7 +57,7 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{setExperiment}}, \code{\link{modifySettings}}
 }
 \examples{
 s <- defaultSettings()

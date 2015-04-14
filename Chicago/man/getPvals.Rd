@@ -22,14 +22,8 @@ The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. S
 \value{
 An object of class \code{chicagoData}, with new column \code{log.p}.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
-}
-\note{
-%%  ~~further notes~~
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

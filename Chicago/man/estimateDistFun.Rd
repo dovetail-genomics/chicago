@@ -42,17 +42,9 @@ By default, we look in 75 distance bins, and a cubic fit is used. If \code{metho
 \value{
 An object of class \code{chicagoData}, with the distance function present as cd@params$f.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 \code{\link{chicagoPipeline}}

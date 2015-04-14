@@ -36,73 +36,42 @@ If \code{TRUE}, the names of the baits, rather than their IDs, will appear in th
 If \code{TRUE}, display a line representing the expected Brownian noise at each distance.
 }
   \item{plevel1, plevel2}{
-%%     ~~Describe \code{plevel1} here~~
+Thresholds used on the \code{pcol} column. \code{plevel1} should be the more stringent threshold.
 }
-%  \item{plevel2}{
-%%     ~~Describe \code{plevel2} here~~
-%}
   \item{outfile}{
-%%     ~~Describe \code{outfile} here~~
+If \code{NULL}, output to current plotting device. Otherwise, this specifies a pdf file to write to.
 }
   \item{removeBait2bait}{
-%%     ~~Describe \code{removeBait2bait} here~~
+If \code{TRUE}, bait-to-bait interactions are not plotted.
 }
-  \item{width}{
-%%     ~~Describe \code{width} here~~
-}
-  \item{height}{
-%%     ~~Describe \code{height} here~~
+  \item{width, height}{
+Passed through to \code{\link{pdf}}
 }
   \item{maxD}{
-%%     ~~Describe \code{maxD} here~~
+The maximum distance to plot.
 }
-  \item{bgCol}{
-%%     ~~Describe \code{bgCol} here~~
+  \item{bgCol, lev1Col, lev2Col}{
+Colours to be used for background points, and for the two stringency levels defined by \code{plevel1} and \code{plevel2}, respectively.
 }
-  \item{lev2Col}{
-%%     ~~Describe \code{lev2Col} here~~
-}
-  \item{lev1Col}{
-%%     ~~Describe \code{lev1Col} here~~
-}
-  \item{bgPch}{
-%%     ~~Describe \code{bgPch} here~~
-}
-  \item{lev1Pch}{
-%%     ~~Describe \code{lev1Pch} here~~
-}
-  \item{lev2Pch}{
-%%     ~~Describe \code{lev2Pch} here~~
+  \item{bgPch, lev1Pch, lev2Pch}{
+Plotting character for background points, and for points exceeding the two stringency levels defined by \code{plevel1} and \code{plevel2}, respectively. Specified as per \code{pch} in \code{\link{points}}.
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Additional arguments passed to \code{\link{plot}}
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+Vector of the baitIDs plotted (useful if baitIDs were sampled randomly).
 }
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,
