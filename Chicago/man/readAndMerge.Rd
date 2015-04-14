@@ -2,10 +2,10 @@
 \alias{readAndMerge}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Read And Merge
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+A wrapper that calls readSample() on a number of files, then mergeSamples().
 }
 \usage{
 readAndMerge(files, cd, ...)
@@ -13,11 +13,11 @@ readAndMerge(files, cd, ...)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{files}{
-%%     ~~Describe \code{files} here~~
+  Character vector containing the locations of the files to read in.
 }
-  \item{cd}{A \code{chicagoData} object.}
+  \item{cd}{A \code{chicagoData} object, usually created with \link{\code{setExperiment}}}.
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+  Further arguments passed to \link{\code{mergeSamples}}.
 }
 }
 \details{
@@ -30,7 +30,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~
@@ -39,7 +39,7 @@ An object of class \code{chicagoData}.
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{readSample}}, \code{\link{mergeSamples}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

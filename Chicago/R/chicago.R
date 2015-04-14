@@ -172,7 +172,7 @@ readSample = function(file, cd){
          (! s$distcol %in% names(x))){
     stop("Named columns baitIDcol = ", s$baitIDcol, ", otherEndIDcol = ", s$otherEndIDcol,
          ", Ncol = ", s$Ncol, ", otherEndLencol = ", s$otherEndLencol, " and distcol = ", s$distcol, 
-         " must be present in the input file. Change these global parameters if names do not macth\n")
+         " must be present in the input file. Change these global parameters if names do not match\n")
   }
   
   setnames(x, s$baitIDcol, "baitID")

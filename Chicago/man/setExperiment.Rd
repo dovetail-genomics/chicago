@@ -2,10 +2,10 @@
 \alias{setExperiment}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Set Experiment
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Creates a template CHiCAGO experiment object. This should be the first function called.
 }
 \usage{
 setExperiment(designDir = "", settings = list(), settingsFile = NULL, def.settings = list(rmapfile = file.path(designDir, "Digest_Human_HindIII.bed"), baitmapfile = file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"), nperbinfile = file.path(designDir, "Digest_Human_HindIII_NperBin.txt"), nbaitsperbinfile = file.path(designDir, "Digest_Human_HindIII_NbaitsPerBin.txt"), proxOEfile = file.path(designDir, "proxOE_out.txt"), Ncol = "N", baitmapFragIDcol = 4, baitmapGeneIDcol = 5, maxLBrownEst = 1500000, minFragLen = 150, maxFragLen = 40000, minNPerBait = 250, binsize = 20000, removeAdjacent = TRUE, 
@@ -14,16 +14,16 @@ setExperiment(designDir = "", settings = list(), settingsFile = NULL, def.settin
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{designDir}{
-%%     ~~Describe \code{designDir} here~~
+  The location of the design directory, e.g "~/resources/path". (Should not end with a slash.)
 }
   \item{settings}{
-%%     ~~Describe \code{settings} here~~
+  A named list containing settings to apply. Setting \code{names(settings)[1]} is set to (settings)[[1]], and so on. This overrides anything specified in \code{settingsFile}, or in \code{def.settings}.
 }
   \item{settingsFile}{
-%%     ~~Describe \code{settingsFile} here~~
+  The location of a file containing settings. Each row should contain the name of a setting, followed by whitespace, followed by the value of that setting. Overrides anything specified in \code{def.settings}.
 }
   \item{def.settings}{
-%%     ~~Describe \code{def.settings} here~~
+  These are the default settings. Note that \code{designDir} is taken into account when constructing file locations.
 }
 }
 \details{
@@ -36,7 +36,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Jonathan Cairns
 }
 \note{
 %%  ~~further notes~~
