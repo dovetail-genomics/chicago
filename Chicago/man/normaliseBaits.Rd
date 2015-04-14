@@ -40,7 +40,7 @@ An object of class \code{chicagoData}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Jonathan Cairns
+Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 \note{
 %%  ~~further notes~~

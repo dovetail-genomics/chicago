@@ -26,7 +26,7 @@ An object of class \code{chicagoData}, with new column \code{log.p}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Jonathan Cairns
+Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 \note{
 %%  ~~further notes~~
