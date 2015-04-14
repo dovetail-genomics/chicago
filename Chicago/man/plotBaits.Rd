@@ -8,7 +8,11 @@ Plot Baits
 Plot the read counts around baits.
 }
 \usage{
-plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL, plotBaitNames = TRUE, plotBprof = FALSE, plevel1 = 5, plevel2 = 3, outfile = NULL, removeBait2bait = TRUE, width = 20, height = 20, maxD = NULL, bgCol = "black", lev2Col = "blue", lev1Col = "red", bgPch = 1, lev1Pch = 20, lev2Pch = 20, ...)
+plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL,
+      plotBaitNames = TRUE, plotBprof = FALSE, plevel1 = 5, plevel2 = 3,
+      outfile = NULL, removeBait2bait = TRUE, width = 20, height = 20,
+      maxD = NULL, bgCol = "black", lev2Col = "blue", lev1Col = "red",
+      bgPch = 1, lev1Pch = 20, lev2Pch = 20, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

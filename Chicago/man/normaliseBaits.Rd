@@ -8,7 +8,8 @@ Normalise Baits
 Calculate normalisation factors \code{s_j} for each bait.
 }
 \usage{
-normaliseBaits(cd, normNcol = "NNb", shrink = FALSE, plot = TRUE, outfile = NULL, debug = FALSE)
+normaliseBaits(cd, normNcol = "NNb", shrink = FALSE,
+      plot = TRUE, outfile = NULL, debug = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

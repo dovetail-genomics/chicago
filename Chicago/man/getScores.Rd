@@ -7,7 +7,8 @@ Get CHiCAGO scores.
 Converts p-values into a CHiCAGO score, using p-value weighting.
 }
 \usage{
-getScores(cd, method = "weightedRelative", includeTrans = TRUE, plot = TRUE, outfile = NULL)
+getScores(cd, method = "weightedRelative", 
+      includeTrans = TRUE, plot = TRUE, outfile = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -35,7 +36,7 @@ The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. S
 An object of class \code{chicagoData}.
 }
 \references{
-Genovese, C. R., Roeder, K., & Wasserman, L. (2006). False discovery control with p-value weighting. Biometrika, 93, 509–524. doi:10.1093/biomet/93.3.509
+Genovese, C. R., Roeder, K., and Wasserman, L. (2006). False discovery control with p-value weighting. Biometrika, 93, 509-524. doi:10.1093/biomet/93.3.509
 }
 \author{
 Jonathan Cairns

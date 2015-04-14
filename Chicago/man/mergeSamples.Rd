@@ -8,7 +8,8 @@ Merge samples together.
 Merge a number of \code{chicagoData} objects together, summarising their counts into a normalised value.
 }
 \usage{
-mergeSamples(cdl, normalise = TRUE, NcolOut = "N", NcolNormPrefix = "NNorm", mergeMethod = c("weightedMean", "mean")[1])
+mergeSamples(cdl, normalise = TRUE, NcolOut = "N",
+      NcolNormPrefix = "NNorm", mergeMethod = c("weightedMean", "mean")[1])
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

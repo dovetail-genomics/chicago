@@ -16,25 +16,18 @@ modifySettings(cd, settings)
   \item{settings}{A named list.}
 }
 \details{
-\code{cd}'s settings are updated. Setting \code{names(settings)[1]} is set to (settings)[[1]], and so on.
+\code{cd}'s settings are updated. Setting \code{names(settings)[1]} is set to (settings)[[1]], and so on. For a list of available settings, see \code{\link{defaultSettings}}.
 }
 \value{
 An object of class \code{chicagoData}.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-\note{
-%%  ~~further notes~~
-}
-
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{defaultSettings}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

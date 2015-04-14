@@ -8,7 +8,8 @@ Estimate the Distance Function
 Estimates the function that models how the expected number of counts decreases with increasing distance.
 }
 \usage{
-estimateDistFun(cd, method = "cubic", n.obs.head = 10, n.obs.tail = 25, logScale = FALSE, plot = TRUE, outfile = NULL)
+estimateDistFun(cd, method = "cubic", n.obs.head = 10, n.obs.tail = 25,
+              logScale = FALSE, plot = TRUE, outfile = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

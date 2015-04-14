@@ -71,42 +71,47 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   cd
 }
 
+defaultSettings <- function(designDir="")
+{
+  list(
+    rmapfile= file.path(designDir, "Digest_Human_HindIII.bed"),
+    baitmapfile= file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"),
+    nperbinfile = file.path(designDir, "Digest_Human_HindIII_NperBin.txt"),
+    nbaitsperbinfile = file.path(designDir, "Digest_Human_HindIII_NbaitsPerBin.txt"),
+    proxOEfile = file.path(designDir, "proxOE_out.txt"),
+    Ncol = "N",
+    baitmapFragIDcol=4,
+    baitmapGeneIDcol=5,
+    maxLBrownEst = 1.5e6,
+    minFragLen = 150,
+    maxFragLen = 40000,
+    minNPerBait = 250,
+    binsize=20000,
+    removeAdjacent = TRUE,
+    adjBait2bait=TRUE,
+    tlb.filterTopPercent=0.01, 
+    tlb.minProxOEPerBin=1000, 
+    tlb.minProxB2BPerBin=100,
+    techNoise.minBaitsPerBin=1000, 
+    brownianNoise.subset=1000,
+    brownianNoise.seed=NULL,
+    baitIDcol = "baitID",
+    otherEndIDcol = "otherEndID",
+    otherEndLencol = "otherEndLen", 
+    distcol = "distSign",
+    weightAlpha = 34.1157346557331, ##from macrophage. Remove as default?
+    weightBeta = -2.58688050486759,
+    weightGamma = -17.1347845819659,
+    weightDelta = -7.07609245521541
+  )
+}
+
 ### This is where we now set the defaults
 ### Order of priority:
 ### settings override settings from settingsFile
 ### both override def.settings
 setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
- def.settings=list(
-  rmapfile= file.path(designDir, "Digest_Human_HindIII.bed"),
-  baitmapfile= file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"),
-  nperbinfile = file.path(designDir, "Digest_Human_HindIII_NperBin.txt"),
-  nbaitsperbinfile = file.path(designDir, "Digest_Human_HindIII_NbaitsPerBin.txt"),
-  proxOEfile = file.path(designDir, "proxOE_out.txt"),
-  Ncol = "N",
-  baitmapFragIDcol=4,
-  baitmapGeneIDcol=5,
-  maxLBrownEst = 1.5e6,
-  minFragLen = 150,
-  maxFragLen = 40000,
-  minNPerBait = 250,
-  binsize=20000,
-  removeAdjacent = TRUE,
-  adjBait2bait=TRUE,
-  tlb.filterTopPercent=0.01, 
-  tlb.minProxOEPerBin=1000, 
-  tlb.minProxB2BPerBin=100,
-  techNoise.minBaitsPerBin=1000, 
-  brownianNoise.subset=1000,
-  brownianNoise.seed=NULL,
-  baitIDcol = "baitID",
-  otherEndIDcol = "otherEndID",
-  otherEndLencol = "otherEndLen", 
-  distcol = "distSign",
-  weightAlpha = 34.1157346557331, ##from macrophage. Remove as default?
-  weightBeta = -2.58688050486759,
-  weightGamma = -17.1347845819659,
-  weightDelta = -7.07609245521541
-  )){
+ def.settings=defaultSettings(designDir)){
   
   modSettings = vector("list")
   
@@ -546,8 +551,8 @@ estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, l
     head.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = head(f.d, n.obs.head))) ##Fit for small d
     tail.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = tail(f.d, n.obs.tail))) ##Fit for large d
     
-    log.f.head <- function(x, head.coef) {head.coef[1] + x*head.coef[2]}
-    log.f.tail <- function(x, tail.coef) {tail.coef[1] + x*tail.coef[2]} ##explicitly stated in case of later change
+    log.f.head <- function(x, head.coef.=head.coef) {head.coef.[1] + x*head.coef.[2]}
+    log.f.tail <- function(x, tail.coef.=tail.coef) {tail.coef.[1] + x*tail.coef.[2]} ##explicitly stated in case of later change
     
   }
   
