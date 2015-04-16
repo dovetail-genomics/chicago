@@ -44,13 +44,13 @@ splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname
   else if (!is.null(filename)) {
     x1 <- read.table(samplefilename, header=TRUE)
   }  
-  x1 <- data.table(x1)
+  if(!is.data.table(x1)){setDT(x1)}
   if (!is.null(colname_dist)) {
     if (is.null(before_dist) & is.null(beyond_dist)) {
       cat("No distance from bait to trim sample was provided...\n")
     }
     else {
-      x1 <- x1[,dist := abs(x1[,get(colname_dist)])]
+      x1 <- x1[,dist := abs(get(colname_dist))]
       if (!is.null(before_dist)) {x1<-x1[dist<=before_dist]}
       if (!is.null(beyond_dist)) {x1<-x1[dist>=beyond_dist]}
     }
@@ -61,7 +61,7 @@ splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname
 }
 
 
-convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TRUE) {
+convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TRUE, rm.MT = FALSE) {
   if (is.null(folder) ) {
     stop("Please provide location for samples")
   }
@@ -75,6 +75,10 @@ convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TR
   for (i in list_frag) {
     i <- paste0(folder,i)
     Feature <- read.table(file=i,sep=sep, header=header,stringsAsFactors=FALSE)
+    chrM <- grep(Feature[,1],pattern="M")
+    if (rm.MT & length(chrM)>0){
+      Feature[-chrM,]->Feature      
+    }
     if(length(grep("chr",Feature[1,1]))==0){
       Feature[,1]=paste0("chr",Feature[,1])
     }
@@ -98,7 +102,7 @@ convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TR
 
 # This function bins results assigns probabilities to bins depending on their distance from bait
 Binning <- function(sign, no_bins, x1_nonsign, distal) {
-  if(!is.data.table(sign)){sign<-data.table(sign)}
+  if(!is.data.table(sign)){setDT(sign)}
   # Bin distances from bait in sign - 100 bins
   if (is.null(sign$dist)) {
     # sign$dist<-abs(sign$distSign)
@@ -117,15 +121,15 @@ Binning <- function(sign, no_bins, x1_nonsign, distal) {
   # bin_reads2 <- data.frame(udbin2=names(bin_reads),bin_reads=as.vector(bin_reads))
   
   # Bin distances from bait in x1_nonsign
-  if(!is.data.table(x1_nonsign)){x1_nonsign<-data.table(x1_nonsign)}
-  # browser()
+  if(!is.data.table(x1_nonsign)){setDT(x1_nonsign)}
+
   if (is.null(x1_nonsign$dist)) {
     x1_nonsign[,dist:=abs(distSign)]
   }
   if (distal) {
     x1_nonsign <- x1_nonsign[dist>=min(dist) & dist<=max(dist),]
   }
-  
+
   x1_nonsign[,distbin3:= cut(dist, breaks=(no_bins))]
   udbin3<-unique(x1_nonsign$distbin3)
   udbin3<-udbin3[order(udbin3)]
@@ -154,42 +158,40 @@ Binning <- function(sign, no_bins, x1_nonsign, distal) {
 }
 
 
-overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd_folder=NULL, position_otherEnd_file =NULL, list_frag, sep="\t", header=TRUE) {
+overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd=NULL, list_frag, sep="\t", header=TRUE) {
   if (is.null(x)) {
     stop("Missing sample")
   }
-  if (is.null(position_otherEnd_file)) {
+  if (is.null(position_otherEnd)) {
     stop("Missing file with other end start and end coordinates")
   }
-  
-  # Get HindIII fragments coordinates and IDs
-  #position_otherEnd <- read.table(position_otherEnd, header=FALSE)
-  #colnames(position_otherEnd)<- c("chr","start","end","ID")
-  
-  HindIII <- convertBedFormat2GR(folder=position_otherEnd_folder, list_frag = c(HindIII=position_otherEnd_file), sep=sep, header=FALSE)[[1]]
+  if (!is.data.table(x)){setDT(x)}
+    
+  HindIII <- convertBedFormat2GR(folder="", list_frag = c(HindIII=position_otherEnd), sep=sep, header=FALSE,rm.MT = T)[[1]]
   
   # Get Features to overlap
-  features <- convertBedFormat2GR(folder=folder, list_frag=list_frag, sep=sep, header=header)
+  features <- convertBedFormat2GR(folder=folder, list_frag=list_frag, sep=sep, header=header,rm.MT = T)
   names(features)<-names(list_frag)
   
   featuresMapped2HindIII<-lapply(features, function(i) {
     i2=subsetByOverlaps(HindIII,i,ignore.strand=TRUE)
-    return(as.data.frame(i2))
+    #return(as.data.frame(i2))
+    i2<-as.data.frame(i2)
+    setDT(i2)
+    setnames(x = i2,old = "Feature...4.ncol.Feature..",new="otherEndID")
+    return(i2)
   })
-  
   n <-names(x)
   for ( i in 1:length(featuresMapped2HindIII)) {
-    x[,ncol(x)+1] <- x$otherEndID %in%  featuresMapped2HindIII[[i]][,ncol(featuresMapped2HindIII[[i]])]
+    x[,names(featuresMapped2HindIII)[i]:= otherEndID %in%  featuresMapped2HindIII[[i]]$otherEndID]
   }
-  names(x)<-c(n,names(featuresMapped2HindIII))
-  return(x)
-  
+  return(x)  
 }
 
 
 drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
   sample_NP <- list()
-  if(!is.data.table(x1_nonsign)){x1_nonsign<-data.table(x1_nonsign)}  
+  if(!is.data.table(x1_nonsign)){setDT(x1_nonsign)}  
   setkey(x1_nonsign,distbin3)
   sample_NP <-  lapply(1:sample_number, function(j) {
     b <- x1_nonsign[,.I[sample(1:length(.I),bin_reads[1],replace=TRUE)],by="distbin3"]
@@ -213,7 +215,6 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 #   x_sign<-as.data.frame(x_sign)
 #   x_sign$dist<-NULL
 #   x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign)],na.rm = T)
-#  browser()
   x_sign[,dist:=NULL]
   x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign),with=FALSE],na.rm = T)
   
@@ -270,8 +271,7 @@ plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 
 peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=NULL, 
                                     beyond_dist=NULL, before_dist=NULL, no_bins, sample_number, folder=NULL, 
-                                    position_otherEnd_folder = NULL,filename=NULL, 
-                                    position_otherEnd_file = NULL,list_frag=NULL, 
+                                    position_otherEnd= NULL,filename=NULL, list_frag=NULL, 
                                     sep="\t", header=TRUE, plot_name=NULL, distal=FALSE, coldist=NULL, 
                                     unique=TRUE, filterB2B=FALSE, b2bcol="isBait2bait", negFraction = 1) {
   # Extract significant interactions
@@ -284,64 +284,59 @@ peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=
     cat("Input is not a CHiCAGO object but a dataframe.\n
         Warning: This will require the explicit specification of parameters that otherwise would be contained\n
         in the CHiCAGO object settings...\n")
-    if (!any(c(is.null(position_otherEnd_folder),is.null(position_otherEnd_file),is.null(colname_dist)))){
+    if (!any(c(is.null(position_otherEnd),is.null(colname_dist)))){
       cat(paste0("All parameters were specified:\n
-                 position_otherEnd_folder = ",position_otherEnd_folder,"\n
-                 position_otherEnd_file = ",position_otherEnd_file,"\n
+                 position_otherEnd= ",position_otherEnd,"\n
                  colname_dist = ",colname_dist,"\n
                  colname_score = ",colname_score,"\n)"))
-      position_otherEnd <- paste0(position_otherEnd_folder,position_otherEnd_file)
     }
     else {
-      if (is.null(position_otherEnd_folder)){
-        stop("position_otherEnd_folder needs to be specified...\n")
-      }
-      if (is.null(position_otherEnd_file)){
-        stop("position_otherEnd_file needs to be specified...\n")
+      if (is.null(position_otherEnd)){
+        stop("position_otherEnd needs to be specified...\n")
       }
       if (is.null(colname_dist)){
         stop("colname_dist needs to be specified...\n")
       }
     } 
+    setDT(x1)
   } else {
     cat("Input is a CHiCAGO object...\n")
     position_otherEnd <- x1@settings$rmapfile
     colname_dist <- x1@settings$distcol
-    x1 <- as.data.frame(x1@x)   
+    x1 = x1@x   
   }
     
   if(filterB2B){
     cat("Filtering out bait2bait interactions...\n")
-    x1 <- x1[! x1[,b2bcol], ]
+    x1 <- x1[b2bcol==FALSE]
   }
   
   #### This part of the code is deprecated ###
   
   if (negFraction<1){
     cat("Taking a fraction of the negative set...\n")
-    x1pos <- x1[x1[,colname_score]>=score,]
-    x1neg <- x1[x1[,colname_score]<score,]
+    x1pos <- x1[colname_score>=score]
+    x1neg <- x1[colname_score<score]
     if(!distal){
       negLen = nrow(x1neg)
-      x1neg <- x1neg[sample(1:negLen, ceiling(negLen*negFraction)),]
+      x1neg <- x1neg[sample(1:negLen, ceiling(negLen*negFraction))]
     }
     else{
-      x1neg <- data.table(x1neg)
       setkeyv(x1neg, c("baitID", coldist))
       pairs = x1neg[, .I[1], by=c("baitID", coldist)]
       pairs$V1=NULL
       samp = pairs[sample(1:nrow(pairs), ceiling(nrow(pairs)*negFraction))]
       setkeyv(samp, c("baitID", coldist))  
       x1neg <- x1neg[samp]	 
-      x1neg = as.data.frame(x1neg)  ### fixed from as.data.table
+      # setDF(x1neg)  ### fixed from as.data.table
     }
     x1 = rbind(x1pos, x1neg)
   }
   
   ######
   
-  cat("Overlap our reads with Features")
-  x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd_folder = "/bi/group/sysgen/CHIC/", position_otherEnd_file = "Digest_Human_HindIII.bed",list_frag = list_frag)
+  cat("Overlap our reads with Features...\n")
+  x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd = position_otherEnd,list_frag = list_frag)
   cat("Separate significant interactions from non-significant interactions...\n")
   x1 <- splitCHiC(x1=x1, filename=filename, threshold=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist)
   if (unique){
