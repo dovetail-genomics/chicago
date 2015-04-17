@@ -110,6 +110,15 @@ if(!chicagoData & (is.na(baitmapfile) | is.na(rmapfile))){
   stop("When --vanilla data frame objects are used instead of chicagoData objects, --baitmap and --digestmap files need to be specified.\n")  
 }
 
+if (!is.na(baitmapfile)){ # check straight away if possible so not to waste people's time
+  if(!file.exists(baitmapfile)){
+    stop(paste("Bait map file", baitmapfile, "not found\n")
+  }
+  if(!file.exists(rmapfile)){
+    stop(paste("Digest map file", rmapfile, "not found\n")
+  }
+}
+
 if(lessThanCutoff){
   cat("Will pick interactions with scores *below* the cutoff\n\n")
 }
@@ -202,12 +211,18 @@ for (i in 1:nrow(input)){
   }
   
   if (chicagoData){
-    # currently not checking for consistency of baitmaps/rmaps 
+    # currently not checking for consistency of baitmaps/rmaps between objects
     if (is.na(baitmapfile)){
       baitmapfile = x@settings[["baitmapfile"]]
+      if(!file.exists(baitmapfile)){
+        stop(paste("Bait map file", baitmapfile, "not found\n")
+      }      
     }
     if (is.na(rmapfile)){
       rmapfile = x@settings[["rmapfile"]]
+      if(!file.exists(rmapfile)){
+        stop(paste("Digest map file", rmapfile, "not found\n")
+      }
     }
     x = x@x
   }
