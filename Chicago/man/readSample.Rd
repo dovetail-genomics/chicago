@@ -18,7 +18,7 @@ The location of an input file FIXME more details!
   \item{cd}{A \code{chicagoData} object.}
 }
 \section{Warning}{
-The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
+The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~

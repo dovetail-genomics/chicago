@@ -34,7 +34,7 @@ If \code{TRUE}, the function \code{f()} will output on the log.scale. Note that 
 }
 }
 \section{Warning}{
-The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
+The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
 \details{
 By default, we look in 75 distance bins, and a cubic fit is used. If \code{method="lm"}, then it is assumed that the distance function consists of two segments. The first \code{n.obs.head} are used to estimate the first segment, and the last \code{n.obs.tail} are used to estimate the second segment.
