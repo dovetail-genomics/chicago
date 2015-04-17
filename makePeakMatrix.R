@@ -4,6 +4,19 @@ library(cluster)
 library(argparser)
 library(Hmisc)
 
+### A great function from http://www.r-bloggers.com/testing-for-valid-variable-names/
+is_valid_variable_name = function(x, allow_reserved = TRUE, unique = FALSE)
+{
+  ok = TRUE
+  max_name_length <- if(getRversion() < "2.13.0") 256L else 10000L
+  if(!allow_reserved){
+    ok[x == "..."] <- FALSE
+    ok[grepl("^\\.{2}[[:digit:]]+$", x)] <- FALSE
+  }
+  ok[x != make.names(x, unique = unique)] <- FALSE
+  ok
+}
+
 cat("\n")
 args = commandArgs(trailingOnly=T)
 spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample names (1st column) and full paths to input Rda files (2nd column)", 
@@ -50,6 +63,12 @@ setnames(bm, c("V1", "V2", "V3", "V4", "V5"), c("baitChr", "baitStart", "baitEnd
 
 input = read.table(namesfile,stringsAsFactors = F)
 names(input) = c("name", "file")
+
+for(nm in input[,"name"]){
+  if (!is_valid_variable_name(nm)){
+    stop("For convenience of using the resulting data table, sample names should follow the naming rules for valid R variables. Please rename them in the names file and restart makePeakMatrix.\n")
+  }
+}
 
 sel = data.table(baitID=numeric(0), otherEndID=numeric(0))
 if(twoPass){
@@ -164,7 +183,7 @@ print(gc(reset = T))
 
 if(!twoPass){
   cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
-  scoreCols = names(z)[3:ncol(z)]
+  scoreCols = names(z)[3:ncol(z)]a
   z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]
   z = z[rmax>=cutoff]
 }
@@ -221,9 +240,14 @@ write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 if (nrow(input)>2){
   cat("Clustering samples based on", sampsize,  "random interactions...\n")
-  
-#   cat("Using continuous signals...\n") 
-  zsamp = z[sample(1:nrow(z), sampsize),]
+  if (sampsize>nrow(x)){
+    cat(paste0("Warning: requested random subset size for clustering (", sampsize, ") was larger than the peak matrix size", nrow(z), 
+". Using the whole matrix\n"))
+    zsamp = z
+  }
+  else{
+    zsamp = z[sample(1:nrow(z), sampsize),]    
+  }
   d = dist(t(zsamp[,12:ncol(zsamp)]))
   h = hclust(d, method=clMethod)
   
@@ -246,4 +270,3 @@ if (nrow(input)>2){
   cat("Clustering not performed as n<=2\n")
 }
 cat("Done!\n")
-
