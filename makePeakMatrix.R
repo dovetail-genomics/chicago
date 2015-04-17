@@ -64,7 +64,7 @@ p = add.argument(p, arg="--peaklist",
                  default=NA, type="numeric")
 
 p = add.argument(p, arg="--rds", help="Load from an RDS archive rather than the default RDa", flag=T)
-p = add.argument(p, arg="--var", help="The name of the variable containing the peaks table in the RDa images", default="x")
+p = add.argument(p, arg="--var", help="The name of the variable containing the chicagoData object or the peak data frame in the RDa images", default="x")
 
 p = add.argument(p, arg="--clustmethod", help = "The clustering method to use (average/ward.D2/complete)", default = "average")
 p = add.argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering", default = 100000)
