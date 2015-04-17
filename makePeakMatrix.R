@@ -183,7 +183,7 @@ print(gc(reset = T))
 
 if(!twoPass){
   cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
-  scoreCols = names(z)[3:ncol(z)]a
+  scoreCols = names(z)[3:ncol(z)]
   z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]
   z = z[rmax>=cutoff]
 }
