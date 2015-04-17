@@ -117,7 +117,7 @@ for (i in 1:nrow(input)){
   setDT(x)
   cat("\t\t\tTotal interactions:", nrow(x), "\n")
 
-  if(twoPass){
+  if(twoPass | !is.na(peaklistfile)){
     setkey(x, baitID, otherEndID)  
     x = x[sel]    
     cat("\t\t\tAfter x[sel]:", nrow(x), "interactions\n")
