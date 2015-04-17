@@ -112,10 +112,10 @@ if(!chicagoData & (is.na(baitmapfile) | is.na(rmapfile))){
 
 if (!is.na(baitmapfile)){ # check straight away if possible so not to waste people's time
   if(!file.exists(baitmapfile)){
-    stop(paste("Bait map file", baitmapfile, "not found\n")
+    stop(paste("Bait map file", baitmapfile, "not found\n"))
   }
   if(!file.exists(rmapfile)){
-    stop(paste("Digest map file", rmapfile, "not found\n")
+    stop(paste("Digest map file", rmapfile, "not found\n"))
   }
 }
 
@@ -215,13 +215,13 @@ for (i in 1:nrow(input)){
     if (is.na(baitmapfile)){
       baitmapfile = x@settings[["baitmapfile"]]
       if(!file.exists(baitmapfile)){
-        stop(paste("Bait map file", baitmapfile, "not found\n")
+        stop(paste("Bait map file", baitmapfile, "not found\n"))
       }      
     }
     if (is.na(rmapfile)){
       rmapfile = x@settings[["rmapfile"]]
       if(!file.exists(rmapfile)){
-        stop(paste("Digest map file", rmapfile, "not found\n")
+        stop(paste("Digest map file", rmapfile, "not found\n"))
       }
     }
     x = x@x
