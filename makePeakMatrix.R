@@ -240,7 +240,7 @@ write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 if (nrow(input)>2){
   cat("Clustering samples based on", sampsize,  "random interactions...\n")
-  if (sampsize>nrow(x)){
+  if (sampsize>nrow(z)){
     cat(paste0("Warning: requested random subset size for clustering (", sampsize, ") was larger than the peak matrix size", nrow(z), 
 ". Using the whole matrix\n"))
     zsamp = z
