@@ -5,7 +5,7 @@
 Normalise Other Ends
 }
 \description{
-Compute \code{s_i} normalisation factors for other ends.
+Compute \code{s_i} normalisation factors for other ends, and normalised counts.
 }
 \usage{
 normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = NULL)
@@ -14,10 +14,10 @@ normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = 
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{Ncol}{
-The name of the column in \code{cd} that contains normalised counts.
+The name of an input column in \code{cd@x} that contains counts normalised by bait (i.e. it is output from \code{\link{normaliseBaits}}.
 }
   \item{normNcol}{
-FIXME%%     ~~Describe \code{normNcol} here~~
+The name of an output column that will contain counts normalised by other ends (in addition to any normalisation already performed on the \code{Ncol} column). Useful for plotting.
 }
   \item{plot}{
 If \code{TRUE}, output a diagnostic plot.
@@ -28,7 +28,7 @@ If \code{TRUE}, output a diagnostic plot.
 The object \code{cd} is updated by reference. Thus, \code{cd} will be altered. See vignette for further information.
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+A \code{chicagoData} object: \code{cd@x} gains new columns \code{s_i}, and normalised output \code{NNboe} (unless the \code{normNcol} parameter is altered).
 }
 \value{
 An object of class \code{chicagoData}.
