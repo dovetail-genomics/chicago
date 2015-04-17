@@ -95,7 +95,7 @@ twoPass = opts[["twopass"]]
 peaklistfile  = opts[["peaklist"]]
 
 rds = opts[["rds"]]
-var = opts[["varname"]]
+var = opts[["var"]]
 
 shouldPrintMem = opts[["printmem"]]
 
