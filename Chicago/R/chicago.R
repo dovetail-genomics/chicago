@@ -1,3 +1,5 @@
+ifnotnull = function(var, res){ if(!is.null(var)){res}}
+
 chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
@@ -9,10 +11,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   message("\n*** Running normaliseOtherEnds...\n")
   cd = normaliseOtherEnds(cd,
-                          outfile=ifelse(is.null(outprefix),
-                                         NULL,
-                                         paste0(outprefix, "_oeNorm.pdf")
-                                      )
+                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
                           )
   
   if(printMemory){
@@ -21,10 +20,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   message("\n*** Running estimateTechnicalNoise...\n")
   cd = estimateTechnicalNoise(cd,
-                              outfile=ifelse(is.null(outprefix),
-                                             NULL,
-                                             paste0(outprefix, "_techNoise.pdf")
-                                             )
+                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
                               )
   
   if(printMemory){
@@ -33,19 +29,16 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   message("\n*** Running estimateDistFun...\n")
   
-  ### Note that f is now saved in cd@params
+  ### Note that f is saved in cd@params
   cd = estimateDistFun(cd,
-                       outfile=ifelse(is.null(outprefix),
-                                      NULL,
-                                      paste0(outprefix, "_distFun.pdf")
-                       )
+                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
   )
 
   if(printMemory){
     print(gc(reset=T))
-  }  
+  }
   
-  ### Note that f is now saved as cd@params$f and  
+  ### Note that f is saved as cd@params$f and  
   ### subset is saved as cd@settings$brownianNoise.subset
   message("\n*** Running estimateBrownianNoise...\n")
   cd = estimateBrownianNoise(cd)
