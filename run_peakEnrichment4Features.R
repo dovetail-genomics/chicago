@@ -37,7 +37,7 @@ Extract <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=N
   return(result)
 }
 
-splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL) {
+.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, beyond_dist=NULL, before_dist=NULL) {
   if (is.null(x1) & is.null(filename)) {
     stop("Please provide file with paired-end reads")
   }
@@ -61,7 +61,7 @@ splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname
 }
 
 
-convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TRUE, rm.MT = FALSE) {
+.convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TRUE, rm.MT = FALSE) {
   if (is.null(folder) ) {
     stop("Please provide location for samples")
   }
@@ -101,7 +101,7 @@ convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=TR
 }
 
 # This function bins results assigns probabilities to bins depending on their distance from bait
-Binning <- function(sign, no_bins, x1_nonsign, distal) {
+.binning <- function(sign, no_bins, x1_nonsign, distal) {
   if(!is.data.table(sign)){setDT(sign)}
   # Bin distances from bait in sign - 100 bins
   if (is.null(sign$dist)) {
@@ -167,10 +167,10 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd=NULL, 
   }
   if (!is.data.table(x)){setDT(x)}
     
-  HindIII <- convertBedFormat2GR(folder="", list_frag = c(HindIII=position_otherEnd), sep=sep, header=FALSE,rm.MT = T)[[1]]
+  HindIII <- .convertBedFormat2GR(folder="", list_frag = c(HindIII=position_otherEnd), sep=sep, header=FALSE,rm.MT = T)[[1]]
   
   # Get Features to overlap
-  features <- convertBedFormat2GR(folder=folder, list_frag=list_frag, sep=sep, header=header,rm.MT = T)
+  features <- .convertBedFormat2GR(folder=folder, list_frag=list_frag, sep=sep, header=header,rm.MT = T)
   names(features)<-names(list_frag)
   
   featuresMapped2HindIII<-lapply(features, function(i) {
@@ -189,7 +189,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, position_otherEnd=NULL, 
 }
 
 
-drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
+.drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
   sample_NP <- list()
   if(!is.data.table(x1_nonsign)){setDT(x1_nonsign)}  
   setkey(x1_nonsign,distbin3)
@@ -211,7 +211,7 @@ drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
   return(sample_NP)
 }
 
-plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
+.plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
 #   x_sign<-as.data.frame(x_sign)
 #   x_sign$dist<-NULL
 #   x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign)],na.rm = T)
@@ -338,17 +338,17 @@ peakEnrichment4Features <- function(x1=NULL, score, colname_score, colname_dist=
   cat("Overlap our reads with Features...\n")
   x1<- overlapFragWithFeatures(x = x1, folder = featureFolder, position_otherEnd = position_otherEnd,list_frag = list_frag)
   cat("Separate significant interactions from non-significant interactions...\n")
-  x1 <- splitCHiC(x1=x1, filename=filename, threshold=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist)
+  x1 <- .splitCHiC(x1=x1, filename=filename, threshold=score, colname_score=colname_score, colname_dist=colname_dist, beyond_dist=beyond_dist, before_dist=before_dist)
   if (unique){
     cat("Removing duplicated other-ends from significant interactions (same will happen with samples)...\n")
     x1[[1]] <- x1[[1]][!duplicated(otherEndID)]
   }
   # Bin non-significant interactions according to distance from bait before drawing random samples
   cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
-  x1[[2]] <- Binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]], distal=distal)
+  x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]], distal=distal)
   # Draw random samples
   cat("Draw random samples...\n")
-  result_3 <- drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+  result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
   cat("Sum number of overlaps with feature in our significant interactions and in our samples...\n")
   result_5<-plotNumberOL(x_sign = x1[[1]], s=result_3, files = list_frag,  plot_name=plot_name)
   return(result_5)
