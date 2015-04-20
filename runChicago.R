@@ -31,7 +31,8 @@ p = add.argument(p, arg="--feature-list",
 p = add.argument(p, arg="--rda", help = "Save the Chicago object as an RDa image (instead of the default RDS)", flag = T)
 p = add.argument(p, arg="--save-df-only", help = "Save only the data part of the Chicago object, as a data frame (for compatibility)", flag = T)
 
-p = add.argument(p, arg="--plot-prox-dist", help = "The distance limit for plotting \"proximal\" examples", default=1e6)
+p = add.argument(p, arg="--examples-prox-dist", help = "The distance limit for plotting \"proximal\" examples", default=1e6)
+p = add.argument(p, arg="--examples-full-range", help = "Also plot examples for the full distance range", flag = T)
 p = add.argument(p, arg="--feat-max-dist", help = "The distance limit for computing enrichment for features", default=NA)
 
 p = add.argument(p, arg="--output-dir", help = "The name of the output directory (can be a full path)", default="<output-prefix>")
@@ -56,7 +57,9 @@ featureList = opts[["feature-list"]]
 isRda = opts[["rda"]]
 isDF = opts[["save-df-only"]]
 
-proxLim = opts[["plot-prox-dist"]]
+proxLim = opts[["examples-prox-dist"]]
+plotFull = opts[["examples-full-range"]]
+
 featDistLim = opts[["feat-max-dist"]]
 
 outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix, opts[["output-prefix"]])
@@ -86,6 +89,8 @@ if(length(inputFiles)>1){
 if(system(paste("mkdir -p", outDir))){
   stop(paste("Couldn't create folder", outDir, "\n"))
 }
+
+curDir = getwd()
 setwd(outDir)
 
 message("\n\nStarting chicagoPipeline...\n")
@@ -111,41 +116,41 @@ if (isDF){
 
 message("\n\nPlotting examples...\n")
 baits=plotBaits(cd, outfile=paste0(outPrefix, "_proxExamples.pdf"), xlim=c(-proxLim,proxLim))
-plotBaits(cd, baits=baits, outfile=paste0(outPrefix, "_examples.pdf"))
+if (plotFull){
+  plotBaits(cd, baits=baits, outfile=paste0(outPrefix, "_examples.pdf"))
+}
 
 message("\n\nExporting peak lists...\n")
 exportResults(cd, outfileprefix=outPrefix, cutoff=cutoff, format = exportFormat, order = exportOrder)
 
-
 message("\n\nSorting output files into folders...\n")
-if(system(paste("mkdir -p", paste0(outDir, "/data")))){
-  stop(paste("Couldn't create folder", paste0(outDir, "/data"), "\n"))  
+if(system("mkdir -p data")){
+  stop("Couldn't create folder data\n")  
 }
-if(system(paste("mkdir -p", paste0(outDir, "/diag_plots")))){
-  stop(paste("Couldn't create folder", paste0(outDir, "/diag_plots"), "\n"))    
+if(system("mkdir -p diag_plots")){
+  stop("Couldn't create folder diag_plots\n")
 }
-if(system(paste("mkdir -p", paste0(outDir, "/examples")))){
-  stop(paste("Couldn't create folder", paste0(outDir, "/examples"), "\n"))      
+if(system("mkdir -p examples")){
+  stop("Couldn't create folder examples\n")      
 }
-if(system(paste("mkdir -p", paste0(outDir, "/enrichment-data")))){
-  stop(paste("Couldn't create folder", paste0(outDir, "/enrichment-data"), "\n"))      
+if(system("mkdir -p enrichment-data")){
+  stop("Couldn't create folder enrichment-data\n")      
 }
 
-system(paste0("mv ", outDir, "/*.txt ", outDir, "/data"))
+system("mv *.txt data/")
 
 if("interBed" %in% exportFormat){
-  system(paste0("mv ", outDir, "/*.ibed ", outDir, "/data"))
+  system("mv *.ibed data/")
 }
 
 if(isRda){
-  system(paste0("mv ", outDir, "/*.RDa ", outDir, "/data"))
-}
-else{
-  system(paste0("mv ", outDir, "/*.Rds ", outDir, "/data"))  
+  system("mv *.RDa data/")
+}else{
+  system("mv *.Rds data/")  
 }
 
-system(paste0("mv ", outDir, "/*xamples.pdf ", outDir, "/examples"))
-system(paste0("mv ", outDir, "/*.pdf ", outDir, "/diag_plots"))       
+system("mv *xamples.pdf examples/")
+system("mv *.pdf diag_plots/")       
 
 if (!is.na(featureFile) | !is.na(featureList)){
   message("\n\nComputing enrichment for features...\n")
@@ -157,8 +162,9 @@ if (!is.na(featureFile) | !is.na(featureList)){
 #                           plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
 #   
 #   write.table(resTable, quote=F, row.names= , col.names=T, file=   paste0(outprefix, "_feature_overlaps_upto1M.txt")) 
-#   system(paste0("mv ", outDir, "/*feature_overlaps*.* ", outfolder, "/enrichment-data"))
+#   system("mv *feature_overlaps*.* enrichment-data/")
 }
 
+setwd(curDir)
 message("All done!\n")
 
