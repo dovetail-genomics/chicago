@@ -1622,12 +1622,12 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
          title = paste0(baitName, " (", title, ")")
     }    
 
-    plot(this$distSign, this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
+    plot(this$distSign, this[,Ncol], xlab="Distance from viewpoint", ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
 
     if(plotBprof){
-	      lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
-        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
+	      lines(this$distSign, this$Bmean, lwd=1, col="darkgrey")
+        lines(this$distSign, this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
               lwd=1, lty=2, col="darkgrey")
     }
   }
