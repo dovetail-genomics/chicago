@@ -1582,7 +1582,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     par(mfrow=c(n, 1))
   }
 
-  setkey(x@x, baitID)
+  setkey(cd@x, baitID)
 
   for(i in 1:n){
 
