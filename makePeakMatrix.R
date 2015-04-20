@@ -35,7 +35,7 @@ cat("\n")
 args = commandArgs(trailingOnly=T)
 spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample names (1st column) and full paths to input Rda files (2nd column)", 
                 "<output-prefix>", "Output file names prefix (can contain path to folders)"),  byrow=T, ncol=2)
-p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda files.", name="Rscript makePeakMatrix.R")
+p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda/Rds files.", name="Rscript makePeakMatrix.R")
 p = add.argument(p, arg=spec[,1], help=spec[,2])
 
 p = add.argument(p, arg="--scorecol", help = "Column name for the scores", default = "score")
