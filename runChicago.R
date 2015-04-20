@@ -123,25 +123,25 @@ if(system(paste("mkdir -p", paste0(outDir, "/diag_plots")))){
 if(system(paste("mkdir -p", paste0(outDir, "/examples")))){
   stop(paste("Couldn't create folder", paste0(outDir, "/examples"), "\n"))      
 }
-if(system(paste("mkdir -p", paste0(outDir, "/enrichment")))){
-  stop(paste("Couldn't create folder", paste0(outDir, "/enrichment"), "\n"))      
+if(system(paste("mkdir -p", paste0(outDir, "/enrichment-data")))){
+  stop(paste("Couldn't create folder", paste0(outDir, "/enrichment-data"), "\n"))      
 }
 
-system(paste0("mv ", outfolder, "/*.txt ", outDir, "/data"))
+system(paste0("mv ", outDir, "/*.txt ", outDir, "/data"))
 
 if("interBed" %in% exportFormat){
-  system(paste0("mv ", outfolder, "/*.ibed ", outDir, "/data"))
+  system(paste0("mv ", outDir, "/*.ibed ", outDir, "/data"))
 }
 
 if(isRda){
-  system(paste0("mv ", outfolder, "/*.RDa ", outDir, "/data"))
+  system(paste0("mv ", outDir, "/*.RDa ", outDir, "/data"))
 }
 else{
-  system(paste0("mv ", outfolder, "/*.Rds ", outDir, "/data"))  
+  system(paste0("mv ", outDir, "/*.Rds ", outDir, "/data"))  
 }
 
-system(paste0("mv ", outfolder, "/*xamples.pdf ", outDir, "/examples"))
-system(paste0("mv ", outfolder, "/*.pdf ", outDir, "/diag_plots"))       
+system(paste0("mv ", outDir, "/*xamples.pdf ", outDir, "/examples"))
+system(paste0("mv ", outDir, "/*.pdf ", outDir, "/diag_plots"))       
 
 if (!is.na(featureFile) | !is.na(featureList)){
   message("Computing enrichment for features...\n")
@@ -152,9 +152,8 @@ if (!is.na(featureFile) | !is.na(featureList)){
 #                           colname_dist="distSign", beyond_dist=0, before_dist=1000000,
 #                           plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
 #   
-#   system(paste("mkdir -p", paste0(outDir, "/overlap_data")))
 #   write.table(resTable, quote=F, row.names= , col.names=T, file=   paste0(outprefix, "_feature_overlaps_upto1M.txt")) 
-#   system(paste0("mv ", outfolder, "/*feature_overlaps*.* ", outfolder, "/overlap_data"))
+#   system(paste0("mv ", outDir, "/*feature_overlaps*.* ", outfolder, "/enrichment-data"))
 }
 
 message("All done!\n")
