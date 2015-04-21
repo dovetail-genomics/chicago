@@ -369,8 +369,8 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     stop("xs must be a data table. If starting from a list of separate samples, use mergeSamples instead\n")
   }
   
-  Ncols = grep("^N\\.(\\d+)", names(xs), value=T)
-  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols))
+  Ncols = grep("^N\\.(\\d+)", names(xs), value=T) ##matches "N.[integer]"
+  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols)) ##collects [integer]s from the above
   n = max(ns)
 
   # message("n = ", n)
@@ -399,6 +399,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   baitMeans = xs[, ntotpb[1],by=baitID]
   s_kjcols = paste0("s_", 1:n, "j")
   for (k in 1:n){
+    ##for each sample, for each bait: take number of reads in proximal region, divide by number of fragments in proximal region (ntotpb)
     baitMeans[[ s_kjcols[k] ]] = xs[,sum(get(Ncols[k]))/ntotpb[1],by=baitID]$V1
   }
   
