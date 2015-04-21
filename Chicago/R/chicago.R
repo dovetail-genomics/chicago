@@ -1,3 +1,17 @@
+ifnotnull = function(var, res){ if(!is.null(var)){res}}
+
+locateFile = function(what, where, pattern){
+  message("Locating ", what, " in ", where, "...")
+  filename = list.files(where, pattern)
+  
+  if (length(filename)!=1){
+    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
+  }
+  
+  message("Found ", filename)
+  file.path(where, filename)
+}
+  
 chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
@@ -9,10 +23,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   message("\n*** Running normaliseOtherEnds...\n")
   cd = normaliseOtherEnds(cd,
-                          outfile=ifelse(is.null(outprefix),
-                                         NULL,
-                                         paste0(outprefix, "_oeNorm.pdf")
-                                      )
+                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
                           )
   
   if(printMemory){
@@ -21,10 +32,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   message("\n*** Running estimateTechnicalNoise...\n")
   cd = estimateTechnicalNoise(cd,
-                              outfile=ifelse(is.null(outprefix),
-                                             NULL,
-                                             paste0(outprefix, "_techNoise.pdf")
-                                             )
+                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
                               )
   
   if(printMemory){
@@ -33,19 +41,16 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   message("\n*** Running estimateDistFun...\n")
   
-  ### Note that f is now saved in cd@params
+  ### Note that f is saved in cd@params
   cd = estimateDistFun(cd,
-                       outfile=ifelse(is.null(outprefix),
-                                      NULL,
-                                      paste0(outprefix, "_distFun.pdf")
-                       )
+                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
   )
 
   if(printMemory){
     print(gc(reset=T))
-  }  
+  }
   
-  ### Note that f is now saved as cd@params$f and  
+  ### Note that f is saved as cd@params$f and  
   ### subset is saved as cd@settings$brownianNoise.subset
   message("\n*** Running estimateBrownianNoise...\n")
   cd = estimateBrownianNoise(cd)
@@ -71,14 +76,14 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   cd
 }
 
-defaultSettings <- function(designDir="")
+defaultSettings <- function()
 {
   list(
-    rmapfile= file.path(designDir, "Digest_Human_HindIII.bed"),
-    baitmapfile= file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"),
-    nperbinfile = file.path(designDir, "Digest_Human_HindIII_NperBin.txt"),
-    nbaitsperbinfile = file.path(designDir, "Digest_Human_HindIII_NbaitsPerBin.txt"),
-    proxOEfile = file.path(designDir, "proxOE_out.txt"),
+    rmapfile= NA,
+    baitmapfile= NA,
+    nperbinfile = NA,
+    nbaitsperbinfile = NA,
+    proxOEfile = NA,
     Ncol = "N",
     baitmapFragIDcol=4,
     baitmapGeneIDcol=5,
@@ -111,7 +116,7 @@ defaultSettings <- function(designDir="")
 ### settings override settings from settingsFile
 ### both override def.settings
 setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
- def.settings=defaultSettings(designDir)){
+ def.settings=defaultSettings()){
   
   modSettings = vector("list")
   
@@ -143,9 +148,28 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     modSettings[[s]] = settings[[s]]
   }
   
-  
   for (s in names(modSettings)){
-      def.settings[[s]] = modSettings[[s]]
+    def.settings[[s]] = modSettings[[s]]
+  }
+  
+  if(is.na(def.settings[["baitmapfile"]])){
+    def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap")
+  }
+  
+  if(is.na(def.settings[["rmapfile"]])){
+    def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap")
+  }
+  
+  if(is.na(def.settings[["nperbinfile"]])){
+    def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb")
+  }
+  
+  if(is.na(def.settings[["nbaitsperbinfile"]])){
+    def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb")
+  }
+  
+  if(is.na(def.settings[["proxOEfile"]])){
+    def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe")
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
@@ -1590,7 +1614,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     par(mfrow=c(n, 1))
   }
 
-  setkey(x@x, baitID)
+  setkey(cd@x, baitID)
 
   for(i in 1:n){
 
@@ -1630,12 +1654,12 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
          title = paste0(baitName, " (", title, ")")
     }    
 
-    plot(this$distSign, this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
+    plot(this$distSign, this[,Ncol], xlab="Distance from viewpoint", ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
 
     if(plotBprof){
-	      lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
-        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
+	      lines(this$distSign, this$Bmean, lwd=1, col="darkgrey")
+        lines(this$distSign, this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
               lwd=1, lty=2, col="darkgrey")
     }
   }
@@ -1645,9 +1669,9 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=NULL, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1]){
+exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1]){
     
-  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
+  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
   if (!all(format %in% c("seqMonk","interBed", "washU"))){

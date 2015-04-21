@@ -8,7 +8,7 @@ Export Results
 Export the results from a \code{chicagoData} object to disk.
 }
 \usage{
-exportResults(cd, outfileprefix, scoreCol = "score", cutoff, b2bcutoff = NULL,
+exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
         format = c("seqMonk", "interBed", "washU"), order = c("position", "score")[1])
 }
 %- maybe also 'usage' for other objects documented here.
