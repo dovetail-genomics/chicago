@@ -76,14 +76,14 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   cd
 }
 
-defaultSettings <- function(designDir="")
+defaultSettings <- function()
 {
   list(
-    rmapfile= file.path(designDir, "design.rmap"),
-    baitmapfile= file.path(designDir, "design.baitmap"),
-    nperbinfile = file.path(designDir, "design.npb"),
-    nbaitsperbinfile = file.path(designDir, "design.nbpb"),
-    proxOEfile = file.path(designDir, "design.poe"),
+    rmapfile= NA,
+    baitmapfile= NA,
+    nperbinfile = NA,
+    nbaitsperbinfile = NA,
+    proxOEfile = NA,
     Ncol = "N",
     baitmapFragIDcol=4,
     baitmapGeneIDcol=5,
@@ -116,7 +116,7 @@ defaultSettings <- function(designDir="")
 ### settings override settings from settingsFile
 ### both override def.settings
 setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
- def.settings=defaultSettings(designDir)){
+ def.settings=defaultSettings()){
   
   modSettings = vector("list")
   
@@ -152,24 +152,24 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     def.settings[[s]] = modSettings[[s]]
   }
   
-  if(!file.exists(def.settings[["baitmapfile"]])){
+  if(is.na(def.settings[["baitmapfile"]])){
     def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap")
   }
   
-  if(!file.exists(def.settings[["rmapfile"]])){
-    def.settings[["rmapfile"]] = locateFile("virtual digest file (<rmapfile>.rmap)", designDir, "\\.rmap")
+  if(is.na(def.settings[["rmapfile"]])){
+    def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap")
   }
   
-  if(!file.exists(def.settings[["nperbinfile"]])){
-    def.settings[["nperbinfile"]] = locateFile("N other ends per bin file (<nperbinfile>.npb)", designDir, "\\.npb")
+  if(is.na(def.settings[["nperbinfile"]])){
+    def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb")
   }
   
-  if(!file.exists(def.settings[["nbaitsperbinfile"]])){
-    def.settings[["nbaitsperbinfile"]] = locateFile("N baits per other end bin file (<nbaitsperbinfile>.nbpb)", designDir, "\\.nbpb")
+  if(is.na(def.settings[["nbaitsperbinfile"]])){
+    def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb")
   }
   
-  if(!file.exists(def.settings[["proxOEfile"]])){
-    def.settings[["proxOEfile"]] = locateFile("proximal other ends file (<proxOEfile>.poe)", designDir, "\\.poe")
+  if(is.na(def.settings[["proxOEfile"]])){
+    def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe")
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
