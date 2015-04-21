@@ -21,8 +21,8 @@ p = add.argument(p, arg="--export-format",
 p = add.argument(p, arg="--export-order", help = "Should the results be ordered by \"score\" or genomic \"position\"?", 
                  default = "position")
 
-p = add.argument(p, arg="--feature-file", 
-                 help = "File with genomic feature coordinates for computing peaks' enrichment over these feature.", 
+p = add.argument(p, arg="--feature-files", 
+                 help = "A comma-separated list of files with genomic feature coordinates for computing peaks' enrichment over these feature.", 
                  default = NA)
 p = add.argument(p, arg="--feature-list", 
                  help = "Same as above but the supplied file contains the feature names and 
@@ -48,10 +48,10 @@ designDir = opts[["design-dir"]]
 printMemory = opts[["print-memory"]]
 
 cutoff = opts[["cutoff"]]
-exportFormat = ifelse(is.na(opts[["export-format"]]), NA, strsplit(opts[["export-format"]], "\\,")[[1]])
+exportFormat = ifelse(is.na(opts[["export-format"]])[1], NA, strsplit(opts[["export-format"]], "\\,")[[1]])
 exportOrder = opts[["export-order"]]
 
-featureFile = opts[["feature-file"]]
+featureFiles = ifelse(is.na(opts[["feature-files"]])[1], NA, strsplit(opts[["feature-files"]], "\\,")[[1]])
 featureList = opts[["feature-list"]]
 
 isRda = opts[["rda"]]
@@ -152,7 +152,7 @@ if(isRda){
 system("mv *xamples.pdf examples/")
 system("mv *.pdf diag_plots/")       
 
-if (!is.na(featureFile) | !is.na(featureList)){
+if (!is.na(featureFiles)[1] | !is.na(featureList)){
   message("\n\nComputing enrichment for features...\n")
 #   **TODO - UPDATE THIS**
 #   peakEnrichment4Features(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
@@ -167,4 +167,3 @@ if (!is.na(featureFile) | !is.na(featureList)){
 
 setwd(curDir)
 message("All done!\n")
-
