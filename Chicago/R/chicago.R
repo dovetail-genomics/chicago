@@ -1637,13 +1637,13 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1]){
+exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU_track","washU_text"), order=c("position", "score")[1]){
     
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
-  if (!all(format %in% c("seqMonk","interBed", "washU"))){
-    stop ("Format must be either seqMonk, interBed or washU (or a vector containing several of these)\n")
+  if (!all(format %in% c("seqMonk","interBed", "washU_track", "washU_text"))){
+    stop ("Format must be either seqMonk, interBed, washU_track or washU_text (or a vector containing several of these)\n")
   }
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
@@ -1727,11 +1727,41 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
                  "N_reads", "score")]
     write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)	
   }
-  if("washU" %in% format){
-   message("Writing out for washU browser...")
+  
+  if("washU_text" %in% format){
+    message("Writing out text file for washU browser upload...")
+    out = out0[,c("bait_chr", "bait_start", "bait_end", 
+                  "otherEnd_chr", "otherEnd_start", "otherEnd_end",
+                  "score")]
+    if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
+    {
+      out$bait_chr <- paste0("chr", out$bait_chr)
+      out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
+    }
+    if(any(out$bait_chr == c("chrMT")))
+    {
+      out <- out[out$bait_chr != "chrMT",]
+    }
+    
+    res = paste0(out$bait_chr, ",", out$bait_start, ",", out$bait_end, "\t", out$otherEnd_chr,",", out$otherEnd_start, ",", out$otherEnd_end, "\t", out$score) 
+    writeLines(res, con=paste0(outfileprefix,"_washU_text.txt"))
+  }
+  
+  if("washU_track" %in% format){
+   message("Writing out track for washU browser...")
    out = out0[,c("bait_chr", "bait_start", "bait_end", 
                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
                  "score")]
+
+   if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
+   {
+     out$bait_chr <- paste0("chr", out$bait_chr)
+     out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
+   }
+   if(any(out$bait_chr == c("chrMT")))
+   {
+     out <- out[out$bait_chr != "chrMT",]
+   }
    
    ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
    setDT(x)
@@ -1751,7 +1781,12 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
          lines
     })
     res = gsub(" ", "", res)
-    writeLines(res, con=paste0(outfileprefix,"_washU.txt"))
+    writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
+   
+   ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
+   ##FIXME better error handling here?
+   system2(paste0("bgzip ", outfileprefix,"_washU_track.txt"))
+   system2(paste0("tabix -p bed ", outfileprefix,"_washU_track.txt.gz"))
    }
   
 }
