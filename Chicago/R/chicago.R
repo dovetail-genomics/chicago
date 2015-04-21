@@ -9,7 +9,7 @@ locateFile = function(what, where, pattern){
   }
   
   message("Found ", filename)
-  filename
+  file.path(where, filename)
 }
   
 chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
