@@ -112,13 +112,13 @@ of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2
 print "Looping through baits..."
 
 #n={}
-for i in range(len(st)):
+for i in xrange(len(st)):
   if not id[i] in bid:
     continue
     
   #n[id[i]] = [0]*int(maxLBrownEst/binsize)
   
-  for j in range(i-1,0,-1):
+  for j in xrange(i-1,0,-1):
    if chr[j] != chr[i]:
     break
    if removeB2B:
@@ -137,7 +137,7 @@ for i in range(len(st)):
    of.write("%d\t%d\t%d\n" % (id[i], id[j], d))
    #n[id[i]][d/binsize] += 1
   
-  for j in range(i+1,len(st),1):
+  for j in xrange(i+1,len(st),1):
    if chr[j] != chr[i]:
     break
    if removeB2B:

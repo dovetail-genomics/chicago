@@ -96,7 +96,7 @@ del oldst
 print "Looping through other ends..."
 
 n={}
-for i in range(len(st)):
+for i in xrange(len(st)):
     
   n[id[i]] = [0]*int(maxLBrownEst/binsize)
   
@@ -105,7 +105,7 @@ for i in range(len(st)):
   else:
     iSt=i-1
 
-  for j in range(iSt,0,-1):
+  for j in xrange(iSt,0,-1):
    if chr[j] != chr[i]:
     break
    d = st[i]+(end[i]-st[i])/2-(st[j]+(end[j]-st[j])/2)
@@ -119,7 +119,7 @@ for i in range(len(st)):
   else:
     iSt=i+1
 
-  for j in range(iSt,len(st),1):
+  for j in xrange(iSt,len(st),1):
    if chr[j] != chr[i]:
     break
    d = st[j]+(end[j]-st[j])/2-(st[i]+(end[i]-st[i])/2)

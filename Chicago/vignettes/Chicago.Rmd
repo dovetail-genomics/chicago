@@ -1,0 +1,5 @@
+# CHiCAGO vignette
+
+## Example workflow
+
+## Note on updating by reference!

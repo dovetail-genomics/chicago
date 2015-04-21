@@ -1,0 +1,10 @@
+export(chicagoPipeline, defaultSettings, estimateBrownianNoise, estimateDistFun, estimateTechnicalNoise, 
+       exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
+       normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment)
+
+import(data.table)
+import(methods)
+importFrom(Delaporte, pdelap)
+importFrom(Hmisc, cut2)
+importFrom(MASS, glm.nb, fitdistr)
+import(matrixStats)
