@@ -1,5 +1,17 @@
 ifnotnull = function(var, res){ if(!is.null(var)){res}}
 
+locateFile = function(what, where, pattern){
+  message("Locating ", what, " in ", where, "...")
+  filename = list.files(where, pattern)
+  
+  if (length(filename)!=1){
+    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
+  }
+  
+  message("Found ", filename)
+  file.path(where, filename)
+}
+  
 chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
@@ -64,14 +76,14 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   cd
 }
 
-defaultSettings <- function(designDir="")
+defaultSettings <- function()
 {
   list(
-    rmapfile= file.path(designDir, "Digest_Human_HindIII.bed"),
-    baitmapfile= file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"),
-    nperbinfile = file.path(designDir, "Digest_Human_HindIII_NperBin.txt"),
-    nbaitsperbinfile = file.path(designDir, "Digest_Human_HindIII_NbaitsPerBin.txt"),
-    proxOEfile = file.path(designDir, "proxOE_out.txt"),
+    rmapfile= NA,
+    baitmapfile= NA,
+    nperbinfile = NA,
+    nbaitsperbinfile = NA,
+    proxOEfile = NA,
     Ncol = "N",
     baitmapFragIDcol=4,
     baitmapGeneIDcol=5,
@@ -104,7 +116,7 @@ defaultSettings <- function(designDir="")
 ### settings override settings from settingsFile
 ### both override def.settings
 setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
- def.settings=defaultSettings(designDir)){
+ def.settings=defaultSettings()){
   
   modSettings = vector("list")
   
@@ -136,9 +148,28 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     modSettings[[s]] = settings[[s]]
   }
   
-  
   for (s in names(modSettings)){
-      def.settings[[s]] = modSettings[[s]]
+    def.settings[[s]] = modSettings[[s]]
+  }
+  
+  if(is.na(def.settings[["baitmapfile"]])){
+    def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap")
+  }
+  
+  if(is.na(def.settings[["rmapfile"]])){
+    def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap")
+  }
+  
+  if(is.na(def.settings[["nperbinfile"]])){
+    def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb")
+  }
+  
+  if(is.na(def.settings[["nbaitsperbinfile"]])){
+    def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb")
+  }
+  
+  if(is.na(def.settings[["proxOEfile"]])){
+    def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe")
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
@@ -362,8 +393,8 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     stop("xs must be a data table. If starting from a list of separate samples, use mergeSamples instead\n")
   }
   
-  Ncols = grep("^N\\.(\\d+)", names(xs), value=T)
-  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols))
+  Ncols = grep("^N\\.(\\d+)", names(xs), value=T) ##matches "N.[integer]"
+  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols)) ##collects [integer]s from the above
   n = max(ns)
 
   # message("n = ", n)
@@ -392,6 +423,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   baitMeans = xs[, ntotpb[1],by=baitID]
   s_kjcols = paste0("s_", 1:n, "j")
   for (k in 1:n){
+    ##for each sample, for each bait: take number of reads in proximal region, divide by number of fragments in proximal region (ntotpb)
     baitMeans[[ s_kjcols[k] ]] = xs[,sum(get(Ncols[k]))/ntotpb[1],by=baitID]$V1
   }
   
@@ -1582,7 +1614,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     par(mfrow=c(n, 1))
   }
 
-  setkey(x@x, baitID)
+  setkey(cd@x, baitID)
 
   for(i in 1:n){
 
@@ -1622,12 +1654,12 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
          title = paste0(baitName, " (", title, ")")
     }    
 
-    plot(this$distSign, this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
+    plot(this$distSign, this[,Ncol], xlab="Distance from viewpoint", ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
 
     if(plotBprof){
-	      lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
-        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
+	      lines(this$distSign, this$Bmean, lwd=1, col="darkgrey")
+        lines(this$distSign, this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
               lwd=1, lty=2, col="darkgrey")
     }
   }
