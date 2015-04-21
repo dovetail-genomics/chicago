@@ -101,7 +101,8 @@ Extract <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=N
 }
 
 # This function bins results assigns probabilities to bins depending on their distance from bait
-.binning <- function(sign, no_bins, x1_nonsign, distal) {
+.binning <- function(sign, no_bins, x1_nonsign) {
+#.binning <- function(sign, no_bins, x1_nonsign, distal) {
   if(!is.data.table(sign)){setDT(sign)}
   # Bin distances from bait in sign - 100 bins
   if (is.null(sign$dist)) {
@@ -126,9 +127,9 @@ Extract <- function(x1=NULL, filename=NULL, score, colname_score, colname_dist=N
   if (is.null(x1_nonsign$dist)) {
     x1_nonsign[,dist:=abs(distSign)]
   }
-  if (distal) {
-    x1_nonsign <- x1_nonsign[dist>=min(dist) & dist<=max(dist),]
-  }
+#   if (distal) {
+#     x1_nonsign <- x1_nonsign[dist>=min(dist) & dist<=max(dist),]
+#   }
 
   x1_nonsign[,distbin3:= cut(dist, breaks=(no_bins))]
   udbin3<-unique(x1_nonsign$distbin3)
