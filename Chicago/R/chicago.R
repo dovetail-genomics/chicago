@@ -1,17 +1,18 @@
-# (c) Mikhail Spivakov, Jonathan Cairns, Paula Freire-Pritchett
+ifnotnull = function(var, res){ if(!is.null(var)){res}}
 
-# Note: when converting into an R package, please also include the package argparser 
-# as "suggested" since it's needed for the standalone scripts
-library(data.table)
-library(matrixStats)
-library(MASS)
-library(Hmisc)
-library(Delaporte)
-
-chicagoData <- setClass("chicagoData", slots=c(x="data.table", params="list", settings="list"))
-
-## Not tested yet in the updated version
-chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
+locateFile = function(what, where, pattern){
+  message("Locating ", what, " in ", where, "...")
+  filename = list.files(where, pattern)
+  
+  if (length(filename)!=1){
+    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
+  }
+  
+  message("Found ", filename)
+  file.path(where, filename)
+}
+  
+chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
 {
   message("\n*** Running normaliseBaits...\n")
   cd = normaliseBaits(cd)
@@ -21,14 +22,18 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   }
   
   message("\n*** Running normaliseOtherEnds...\n")
-  cd = normaliseOtherEnds(cd, outfile=paste0(outprefix, "_oeNorm.pdf"))
+  cd = normaliseOtherEnds(cd,
+                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
+                          )
   
   if(printMemory){
     print(gc(reset=T))
   }
   
   message("\n*** Running estimateTechnicalNoise...\n")
-  cd = estimateTechnicalNoise(cd, outfile=paste0(outprefix, "_techNoise.pdf"))
+  cd = estimateTechnicalNoise(cd,
+                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
+                              )
   
   if(printMemory){
     print(gc(reset=T))
@@ -36,14 +41,16 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   
   message("\n*** Running estimateDistFun...\n")
   
-  ### Note that f is now saved in cd@params
-  cd = estimateDistFun(cd, outfile=paste0(outprefix, "_distFun.pdf"))
-  
+  ### Note that f is saved in cd@params
+  cd = estimateDistFun(cd,
+                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
+  )
+
   if(printMemory){
     print(gc(reset=T))
-  }  
+  }
   
-  ### Note that f is now saved as cd@params$f and  
+  ### Note that f is saved as cd@params$f and  
   ### subset is saved as cd@settings$brownianNoise.subset
   message("\n*** Running estimateBrownianNoise...\n")
   cd = estimateBrownianNoise(cd)
@@ -69,42 +76,47 @@ chicagoPipeline <- function(cd, outprefix, printMemory=FALSE)
   cd
 }
 
+defaultSettings <- function()
+{
+  list(
+    rmapfile= NA,
+    baitmapfile= NA,
+    nperbinfile = NA,
+    nbaitsperbinfile = NA,
+    proxOEfile = NA,
+    Ncol = "N",
+    baitmapFragIDcol=4,
+    baitmapGeneIDcol=5,
+    maxLBrownEst = 1.5e6,
+    minFragLen = 150,
+    maxFragLen = 40000,
+    minNPerBait = 250,
+    binsize=20000,
+    removeAdjacent = TRUE,
+    adjBait2bait=TRUE,
+    tlb.filterTopPercent=0.01, 
+    tlb.minProxOEPerBin=1000, 
+    tlb.minProxB2BPerBin=100,
+    techNoise.minBaitsPerBin=1000, 
+    brownianNoise.subset=1000,
+    brownianNoise.seed=NULL,
+    baitIDcol = "baitID",
+    otherEndIDcol = "otherEndID",
+    otherEndLencol = "otherEndLen", 
+    distcol = "distSign",
+    weightAlpha = 34.1157346557331, ##from macrophage. Remove as default?
+    weightBeta = -2.58688050486759,
+    weightGamma = -17.1347845819659,
+    weightDelta = -7.07609245521541
+  )
+}
+
 ### This is where we now set the defaults
 ### Order of priority:
 ### settings override settings from settingsFile
 ### both override def.settings
 setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
- def.settings=list(
-  rmapfile= file.path(designDir, "Digest_Human_HindIII.bed"),
-  baitmapfile= file.path(designDir, "Digest_Human_HindIII_baits_ID.bed"),
-  nperbinfile = file.path(designDir, "Digest_Human_HindIII_NperBin.txt"),
-  nbaitsperbinfile = file.path(designDir, "Digest_Human_HindIII_NbaitsPerBin.txt"),
-  proxOEfile = file.path(designDir, "proxOE_out.txt"),
-  Ncol = "N",
-  baitmapFragIDcol=4,
-  baitmapGeneIDcol=5,
-  maxLBrownEst = 1.5e6,
-  minFragLen = 150,
-  maxFragLen = 40000,
-  minNPerBait = 250,
-  binsize=20000,
-  removeAdjacent = TRUE,
-  adjBait2bait=TRUE,
-  tlb.filterTopPercent=0.01, 
-  tlb.minProxOEPerBin=1000, 
-  tlb.minProxB2BPerBin=100,
-  techNoise.minBaitsPerBin=1000, 
-  brownianNoise.subset=1000,
-  brownianNoise.seed=NULL,
-  baitIDcol = "baitID",
-  otherEndIDcol = "otherEndID",
-  otherEndLencol = "otherEndLen", 
-  distcol = "distSign",
-  weightAlpha = 34.1157346557331, ##from macrophage. Remove as default?
-  weightBeta = -2.58688050486759,
-  weightGamma = -17.1347845819659,
-  weightDelta = -7.07609245521541
-  )){
+ def.settings=defaultSettings()){
   
   modSettings = vector("list")
   
@@ -136,9 +148,28 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     modSettings[[s]] = settings[[s]]
   }
   
-  
   for (s in names(modSettings)){
-      def.settings[[s]] = modSettings[[s]]
+    def.settings[[s]] = modSettings[[s]]
+  }
+  
+  if(is.na(def.settings[["baitmapfile"]])){
+    def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap")
+  }
+  
+  if(is.na(def.settings[["rmapfile"]])){
+    def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap")
+  }
+  
+  if(is.na(def.settings[["nperbinfile"]])){
+    def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb")
+  }
+  
+  if(is.na(def.settings[["nbaitsperbinfile"]])){
+    def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb")
+  }
+  
+  if(is.na(def.settings[["proxOEfile"]])){
+    def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe")
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
@@ -170,7 +201,7 @@ readSample = function(file, cd){
          (! s$distcol %in% names(x))){
     stop("Named columns baitIDcol = ", s$baitIDcol, ", otherEndIDcol = ", s$otherEndIDcol,
          ", Ncol = ", s$Ncol, ", otherEndLencol = ", s$otherEndLencol, " and distcol = ", s$distcol, 
-         " must be present in the input file. Change these global parameters if names do not macth\n")
+         " must be present in the input file. Change these global parameters if names do not match\n")
   }
   
   setnames(x, s$baitIDcol, "baitID")
@@ -362,8 +393,8 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     stop("xs must be a data table. If starting from a list of separate samples, use mergeSamples instead\n")
   }
   
-  Ncols = grep("^N\\.(\\d+)", names(xs), value=T)
-  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols))
+  Ncols = grep("^N\\.(\\d+)", names(xs), value=T) ##matches "N.[integer]"
+  ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols)) ##collects [integer]s from the above
   n = max(ns)
 
   # message("n = ", n)
@@ -392,6 +423,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   baitMeans = xs[, ntotpb[1],by=baitID]
   s_kjcols = paste0("s_", 1:n, "j")
   for (k in 1:n){
+    ##for each sample, for each bait: take number of reads in proximal region, divide by number of fragments in proximal region (ntotpb)
     baitMeans[[ s_kjcols[k] ]] = xs[,sum(get(Ncols[k]))/ntotpb[1],by=baitID]$V1
   }
   
@@ -508,7 +540,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
 ### I've modified this function so it updates cd@params$f and returns cd.
 ### This way f will be retained along with other params such as s_k and dispersion.
 ### Just need to make sure cd@x doesn't get copied when we do this... 
-estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, outfile=NULL) {
+estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, plot=TRUE, outfile=NULL) {
   
   # Take the "refBinMean" column of the data x as f(d_b)
   # then interpolate & extrapolate to get f(d).
@@ -544,8 +576,8 @@ estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, l
     head.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = head(f.d, n.obs.head))) ##Fit for small d
     tail.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = tail(f.d, n.obs.tail))) ##Fit for large d
     
-    log.f.head <- function(x, head.coef) {head.coef[1] + x*head.coef[2]}
-    log.f.tail <- function(x, tail.coef) {tail.coef[1] + x*tail.coef[2]} ##explicitly stated in case of later change
+    log.f.head <- function(x, head.coef.=head.coef) {head.coef.[1] + x*head.coef.[2]}
+    log.f.tail <- function(x, tail.coef.=tail.coef) {tail.coef.[1] + x*tail.coef.[2]} ##explicitly stated in case of later change
     
   }
   
@@ -591,24 +623,26 @@ estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, l
   } else {
     f <- function(x) exp(log.f(log(x)))
   }
+  if(plot)
+  {
+    if (!is.null(outfile)){ 
+      pdf(outfile)
+    }
+      curve(log.f.obs, obs.min, obs.max,
+            main = paste0("Distance function (points = obs, line = ", method, " fit)"),
+            xlab = "log(distance)",
+            ylab = "log(f(d))")
+      with(f.d, points(log(midpoint), log(refBinMean)))
+    if (!is.null(outfile)){ 
+      dev.off()
+    }
+  }
 
-  if (!is.null(outfile)){ 
-    pdf(outfile)
-  }
-    curve(log.f.obs, obs.min, obs.max,
-          main = paste0("Distance function (points = obs, line = ", method, " fit)"),
-          xlab = "log(distance)",
-          ylab = "log(f(d))")
-    with(f.d, points(log(midpoint), log(refBinMean)))
-  if (!is.null(outfile)){ 
-    dev.off()
-  }
-  
   cd@params$f = f
   cd
 }
 
-estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
+estimateBrownianNoise <- function(cd) {
   ##1) Reinstate zeros
   ##2) Add a "Bmean" column to x, giving expected Brownian noise.
   ##3) Calculate dispersion by regressing against "Bmean", added to x as "dispersion" attribute
@@ -624,8 +658,6 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   if (!is.null(seed)){
     set.seed(seed)
   }
-  
-  if(reEstimateMean) {stop("reEstimateMean=TRUE not implemented yet.")}
   
   siPresent <- "s_i" %in% colnames(cd@x)
   if(siPresent)
@@ -758,14 +790,7 @@ estimateBrownianNoise <- function(cd, distFun, Ncol="N", reEstimateMean=FALSE) {
   
   ##NB Parametrization: var = mu + (mu^2)/dispersion
   cd@params$dispersion <- model$theta
-  
-  if(reEstimateMean)
-  {
-    stop("Not implemented yet")
-    ##Basically you need to grab the means from the x object - reestimating means on xAll doesn't work due to 0 truncation.
-  } else {
-    cd@x <- .estimateBMean(cd@x, cd@params$f)
-  }
+  cd@x <- .estimateBMean(cd@x, cd@params$f)
   cd
 }
 
@@ -966,7 +991,7 @@ getPvals <- function(cd){
   cd
 }
 
-getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, outfile=NULL)
+getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRUE, outfile=NULL)
 {
   ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
   ##Note to self: Algebra is on P96 of my lab notebook.
@@ -995,7 +1020,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=T, 
     x[,score := pmax(- minval - log.q, 0)]
     
   } else {
-    stop("Only method='weightedRelative' available currently.")
+    x[,score := - log.p]
   }
   cd
 }
@@ -1589,7 +1614,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     par(mfrow=c(n, 1))
   }
 
-  setkey(x@x, baitID)
+  setkey(cd@x, baitID)
 
   for(i in 1:n){
 
@@ -1629,12 +1654,12 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
          title = paste0(baitName, " (", title, ")")
     }    
 
-    plot(this$distSign, this[,Ncol], xlab=distcol, ylab=Ncol, main=title, col=cols, pch=pchs, ...)
+    plot(this$distSign, this[,Ncol], xlab="Distance from viewpoint", ylab=Ncol, main=title, col=cols, pch=pchs, ...)
     abline(v=0, col="grey", lwd=1)
 
     if(plotBprof){
-	      lines(this[,distcol], this$Bmean, lwd=1, col="darkgrey")
-        lines(this[,distcol], this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
+	      lines(this$distSign, this$Bmean, lwd=1, col="darkgrey")
+        lines(this$distSign, this$Bmean+1.96*sqrt(this$Bmean+this$Bmean^2/disp), 
               lwd=1, lty=2, col="darkgrey")
     }
   }
@@ -1644,9 +1669,9 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults = function(cd, outfileprefix, scoreCol="score", cutoff, b2bcutoff=NULL, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1]){
+exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU"), order=c("position", "score")[1]){
     
-  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(x))){
+  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
   if (!all(format %in% c("seqMonk","interBed", "washU"))){
