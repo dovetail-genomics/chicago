@@ -7,10 +7,12 @@
 
   j <- 1
   result <- list()
+  mt <- c("chrM","M","chrMT","MT")
   for (i in list_frag) {
     Feature <- read.table(file=i,sep=sep, header=header,stringsAsFactors=FALSE)
-    chrM <- grep(Feature[,1],pattern="M")
-    if (rm.MT & length(chrM)>0){
+      mt <- mt[mt %in% Feature[,1]]
+    if (rm.MT & length(mt)>0){
+      chrM <- grep(Feature[,1],pattern=mt)
       Feature[-chrM,]->Feature      
     }
     if(length(grep("chr",Feature[1,1]))==0){
