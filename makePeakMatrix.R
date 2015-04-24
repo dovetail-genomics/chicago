@@ -1,3 +1,6 @@
+message("***makePeakMatrix.R***\n")
+message("Loading libraries...\n")
+
 library(data.table)
 library(matrixStats)
 library(cluster)
