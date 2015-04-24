@@ -39,7 +39,7 @@
   
   if(!is.null(plot_name)) {
     dev.off()
-    cat(paste0("Plot saved under the name ",plot_name," in your working directory...\n"))
+#     cat(paste0("Plot saved under the name ",plot_name," in your working directory...\n"))
   }
   
   # Return Matrix with Number of overlaps for ou significant interactions dataset and our samples

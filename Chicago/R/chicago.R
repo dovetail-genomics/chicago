@@ -500,7 +500,8 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   
   message("Computing scaling factors...")
   
-  x = .normaliseFragmentSets(x, s = cd@settings, viewpoint="otherEnd", idcol="tlb", Ncol=Ncol, npb = NULL, shrink=FALSE, adjBait2bait=FALSE, refExcludeSuffix="B2B")
+  x = .normaliseFragmentSets(x, s = cd@settings, viewpoint="otherEnd", idcol="tlb", 
+                             Ncol=Ncol, npb = NULL, shrink=FALSE, adjBait2bait=FALSE, refExcludeSuffix="B2B")
   
   setkey(x, tlb)
   x = unique(x) # we don't need any other info than s_i for each tlb and it's one per tlb
@@ -762,7 +763,7 @@ estimateBrownianNoise <- function(cd) {
     if(any(is.na(x$s_i)))
     {
       ##If we don't have any information on a particular other end's s_i then...
-      warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
+#       warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
       x[,s_i := ifelse(is.na(s_i), 1, s_i)]
     }
   }

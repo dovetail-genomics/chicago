@@ -67,7 +67,7 @@ peakEnrichment4Features <- function(x1=NULL, score="score", colname_score, min_d
 #   }
   
   cat("Overlap our reads with Features...\n")
-  x1<- overlapFragWithFeatures(x = x1, position_otherEnd=position_otherEnd, folder = featureFolder, list_frag = list_frag)
+  x1<- overlapFragWithFeatures(x = x1, position_otherEnd=position_otherEnd, folder = folder, list_frag = list_frag)
   cat("Separate significant interactions from non-significant interactions...\n")
   x1 <- .splitCHiC(x1=x1, threshold=score, colname_score=colname_score, colname_dist=colname_dist, min_dist=min_dist, max_dist=max_dist)
   if (unique){

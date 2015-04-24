@@ -1,4 +1,5 @@
 .convertBedFormat2GR <- function(folder=NULL, list_frag=NULL, sep="\t", header=FALSE, rm.MT = FALSE) {
+
   if (is.null(list_frag) ) {
     stop("Please provide list with files of Genomic features to overlap")
   }
@@ -10,7 +11,7 @@
   mt <- c("chrM","M","chrMT","MT")
   for (i in list_frag) {
     Feature <- read.table(file=i,sep=sep, header=header,stringsAsFactors=FALSE)
-      mt <- mt[mt %in% Feature[,1]]
+    mt <- mt[mt %in% Feature[,1]]
     if (rm.MT & length(mt)>0){
       chrM <- grep(Feature[,1],pattern=mt)
       Feature[-chrM,]->Feature      
