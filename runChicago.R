@@ -208,18 +208,28 @@ setwd(curDir)
 
 if (!is.na(featureFiles)[1] | !is.na(featureList)){
   message("\n\nComputing enrichment for features...\n")
-#   **TODO - UPDATE THIS**
-#   peakEnrichment4Features(x1=x[!is.na(x$distSign),], score=12, sample_number=100, no_bins=100, 
-#                           colname_score="score",folder=featureFolder, position_otherEnd_folder=fileDir, 
-#                           list_frag=files, filterB2B=TRUE,
-#                           colname_dist="distSign", beyond_dist=0, before_dist=1000000,
-#                           plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
-#   
-#   write.table(resTable, quote=F, row.names= , col.names=T, file=   paste0(outprefix, "_feature_overlaps_upto1M.txt")) 
-#   setwd(outDir)
-#   if(!moveToFolder("feature_overlaps", "enrichment")){
-#     stop("Couldn't move feature_overlaps files to enrichment folder")
-#   }
+  
+  # enSampleNumber (100 by default)
+  # enMaxDist (can be NULL if whole range; 1e6 by default)
+  # enMinDist (0 by default)
+  # enFeatFolder (can be NULL if full paths are provided)
+  # enFeatFiles (can be a named vector but doesn't have to be) 
+  # enOutputFile
+  
+  noBins = max(5, ceiling(ifelse(is.null(enMaxDist), max(abs(cd@x$distSign), na.rm = T), enMaxDist) - enMinDist)/1e4)
+  
+  enrichments = peakEnrichment4Features(cd, score=cutoff, sample_number=enSampleNumber, no_bins=noBins, 
+                           colname_score="score", folder=enFeatFolder, list_frag=enFeatFiles, 
+                           filterB2B=TRUE, min_dist=enMinDist, max_dist=enMaxDist,
+                           plot_name=paste0(outprefix, "_feature_overlaps_upto_1M.pdf"))
+  
+  enOutputFile = paste0(outPrefix, "_feature_overlaps.txt")
+  cat(paste0("#\tmin_dist=", enMinDist, "\tmax_dist=", ifelse(is.null(enMaxDist), "whole_range", enMaxDist)), file = enOutputFile) 
+  write.table(enrichments, quote=F, row.names= T, col.names=T, file= enOutputFile, append = T) 
+  setwd(outDir)
+  if(!moveToFolder("feature_overlaps", "enrichment_data")){
+     stop("Couldn't move feature_overlaps files to enrichment folder")
+ }
 }
 setwd(curDir)
 message("All done!\n")
