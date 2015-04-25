@@ -2,7 +2,7 @@
 
 if [ $# -lt 3 ]
   then
-    echo "Usage: process_hicup.sh <bamfile> <bait-fragments-with-id-file> <digest-bait-with-id-file> [<output-dir>]"
+    echo "Usage: process_hicup.sh <bamfile> <baitmap-file> <rmap-file> [<output-dir>]"
     exit
 fi
 
