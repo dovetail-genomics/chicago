@@ -1,5 +1,39 @@
 # CHiCAGO vignette
 
+## Introduction
+
+This vignette will walk you through a typical CHiCAGO analysis...
+
+We provide a wrapper to perform this analysis, called *runChicago.R*.
+
+## Input files required
+
+Before you start, you will need: 
+
+1. Five restriction map information files. It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website, otherwise you will need to generate them yourself.
+
+  * Restriction map file (.rmap) - a bed file containing co-ordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
+  * Bait map file (.baitmap) - a bed file containing co-ordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
+  * *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts *countNperBin.py*, *countNbaitsPerBin.py* and *getProxOE.py*. 
+
+2. You will also need your input data, whose files end with *_distSign.txt*. These files can be obtained by running ...?
+
+Examples of these files are given in the extdata folder, as follows...
+
 ## Example workflow
 
-## Note on updating by reference!
+We apply CHiCAGO to the test data as follows:
+
+...
+
+**WARNING:** Many functions in CHiCAGO update by reference, which means that objects can change even when you do not explicitly assign to them.
+To avoid this behaviour, copy the *chicagoData* object first:
+
+y <- copy(x)
+x <- FIXME(x)
+
+##Output
+
+Lots of plots...
+
+peakEnrichment4Features
