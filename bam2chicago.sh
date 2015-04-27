@@ -2,7 +2,7 @@
 
 if [ $# -lt 4 ]
   then
-    echo "Usage: process_chic_single_core.sh <bamfile> <baitmap-file> <digest-rmap-file> <sample-name>"
+    echo "Usage: bam2chicago.sh <bamfile> <baitmap-file> <digest-rmap-file> <sample-name>"
     exit
 fi
 
@@ -44,7 +44,7 @@ awk '{
     for (key in baitOtherEndN){
          print key"\t"baitOtherEndN[key]"\t"baitOtherEndInfo[key];
     }
-}' sample_${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T sample_${samplename} >> sample_${samplename}/${samplename}_bait_otherEnd_N_len_distSign.txt
+}' sample_${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T sample_${samplename} >> sample_${samplename}/${samplename}.chinput
 
 
-echo "Done! The final output file with pooled reads per interaction is sample_${samplename}/${samplename}_bait_otherEnd_N_len_distSign.txt"
+echo "Done! The final output file with pooled reads per interaction is sample_${samplename}/${samplename}.chinput"
