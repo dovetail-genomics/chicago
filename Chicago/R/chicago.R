@@ -153,23 +153,23 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
   }
   
   if(is.na(def.settings[["baitmapfile"]])){
-    def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap")
+    def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap$")
   }
   
   if(is.na(def.settings[["rmapfile"]])){
-    def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap")
+    def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap$")
   }
   
   if(is.na(def.settings[["nperbinfile"]])){
-    def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb")
+    def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb$")
   }
   
   if(is.na(def.settings[["nbaitsperbinfile"]])){
-    def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb")
+    def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb$")
   }
   
   if(is.na(def.settings[["proxOEfile"]])){
-    def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe")
+    def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe$")
   }
   
   cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
