@@ -30,7 +30,11 @@ getScores(cd, method = "weightedRelative",
 The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Weighting is performed using the parameters \code{weightAlpha}, \code{weightBeta}, \code{weightGamma}, \code{weightDelta}. Briefly, this function calculates weights \code{w} that decrease with increasing distance. Then, we construct weighted p-values \code{p/w}. As a result, the significance of long-range interactions is upweighted, and the significance of short-range interactions is downweighted.
+
+Finally, the output score is calculated as \code{-log(p/w) - log(w_max)}, where \code{w_max} is the highest attainable weight, and provided the score is positive (otherwise it is set to 0).
+
+Please see the CHiCAGO paper and its supplementary for full details.
 }
 \value{
 An object of class \code{chicagoData}.

@@ -27,9 +27,9 @@ Each sample gains a normalised count column, that begins with this prefix.
 If \code{mergeMethod == "weightedMean"}, then NcolOut is the weighted mean of the sample-wise counts adjusted by the samples' respective scaling factors \code{s_k}. If \code{mergeMethod == "normMean"}, then sample-specific counts are first normalised by dividing by s_k, and NcolOut is computed as the mean of these normalised counts.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 An object of class \code{chicagoData}.
 }

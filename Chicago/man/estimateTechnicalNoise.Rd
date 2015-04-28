@@ -21,9 +21,9 @@ Logical - if \code{TRUE}, then output a diagnostic plot.
 \section{Warning}{
 The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
-\details{
+%\details{
 
-}
+%}
 \value{
 An object of class \code{chicagoData}, with additional columns "tlb", "tblb", "Tmean".
 }

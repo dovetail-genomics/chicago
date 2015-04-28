@@ -33,9 +33,9 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
   Should output be ordered by position or score?
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 NULL
 }

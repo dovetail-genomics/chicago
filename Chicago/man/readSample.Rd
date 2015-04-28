@@ -20,9 +20,9 @@ The location of an input file FIXME more details!
 \section{Warning}{
 The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 An object of class \code{chicagoData}.
 }
@@ -31,9 +31,9 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,

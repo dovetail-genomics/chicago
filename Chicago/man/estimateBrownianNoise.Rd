@@ -17,9 +17,9 @@ estimateBrownianNoise(cd)
 \section{Warning}{
 The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 An object of class \code{chicagoData}.
 }
