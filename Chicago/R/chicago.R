@@ -118,6 +118,11 @@ defaultSettings <- function()
 setExperiment = function(designDir="", settings=list(), settingsFile=NULL,  
  def.settings=defaultSettings()){
   
+  if(designDir == "" & identical(settings, list()) & is.null(settingsFile) & identical(def.settings, defaultSettings()))
+  {
+    stop("Design not specified. Please specify a design directory or design files.")
+  }
+  
   modSettings = vector("list")
   
   if(!is.null(settingsFile)){

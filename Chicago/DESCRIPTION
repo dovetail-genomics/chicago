@@ -9,4 +9,5 @@ Description: A pipeline for analysing Capture Hi-C data.
 License: Artistic-2.0
 Depends: data.table
 Imports: matrixStats, MASS, Hmisc, Delaporte, methods
-Suggests: argparser
+Suggests: argparser, BiocStyle, knitr, rmarkdown
+VignetteBuilder: knitr
