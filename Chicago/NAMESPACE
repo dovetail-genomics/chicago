@@ -2,7 +2,7 @@ export(chicagoPipeline, defaultSettings, estimateBrownianNoise, estimateDistFun,
        exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
        normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, .binning,
        .convertBedFormat2GR, .drawSamples, .plotNumberOL, .splitCHiC, overlapFragWithFeatures,
-       peakEnrichment4Features)
+       peakEnrichment4Features, chicagoData)
 
 
 import(data.table)
