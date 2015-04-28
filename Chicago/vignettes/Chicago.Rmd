@@ -31,6 +31,11 @@ Before you start, you will need:
 
 Examples of these files are given in the extdata folder, as follows...
 
+```{r}
+dataPath <- system.file("extdata", package="Chicago")
+dir(dataPath)
+```
+
 ## Example workflow
 
 We apply CHiCAGO to the test data as follows. First, we create a blank ``ChicagoData`` object, 

@@ -8,12 +8,12 @@ Default CHiCAGO settings
 A function that gives the default settings used for a CHiCAGO experiment.
 }
 \usage{
-defaultSettings(designDir = "")
+defaultSettings()
 }
 %- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{designDir}{A directory containing the digest information (see below).}
-}
+%\arguments{
+%  \item{designDir}{A directory containing the digest information (see below).}
+%}
 \details{
 
 }
