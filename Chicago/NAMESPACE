@@ -1,7 +1,7 @@
 export(chicagoPipeline, defaultSettings, estimateBrownianNoise, estimateDistFun, estimateTechnicalNoise, 
        exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
        normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, .binning,
-       .convertBedFormat2GR, .drawSamples, .plotNumberOL, .splitCHiC, overlapFragWithFeatures,
+       .readBedList, .drawSamples, .plotNumberOL, .splitCHiC, overlapFragWithFeatures,
        peakEnrichment4Features, chicagoData)
 
 
@@ -11,6 +11,3 @@ importFrom(Delaporte, pdelap)
 importFrom(Hmisc, cut2)
 importFrom(MASS, glm.nb, fitdistr)
 import(matrixStats)
-import(GenomicRanges)
-#import(IRanges)
-#import(S4Vectors)
