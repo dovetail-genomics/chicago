@@ -2,7 +2,7 @@ export(chicagoPipeline, defaultSettings, estimateBrownianNoise, estimateDistFun,
        exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
        normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, .binning,
        .convertBedFormat2GR, .drawSamples, .plotNumberOL, .splitCHiC, overlapFragWithFeatures,
-       peakEnrichment4Features)
+       peakEnrichment4Features, chicagoData)
 
 
 import(data.table)
@@ -12,5 +12,5 @@ importFrom(Hmisc, cut2)
 importFrom(MASS, glm.nb, fitdistr)
 import(matrixStats)
 import(GenomicRanges)
-import(IRanges)
-import(S4Vectors)
+#import(IRanges)
+#import(S4Vectors)

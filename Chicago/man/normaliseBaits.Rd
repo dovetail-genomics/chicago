@@ -32,7 +32,7 @@ Deprecated.
 The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+A \code{chicagoData} object: \code{cd@x} gains a new column \code{s_j}, and normalised output \code{NNb} (unless the \code{normNcol} parameter is altered).
 }
 \value{
 An object of class \code{chicagoData}.

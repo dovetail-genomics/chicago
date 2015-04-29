@@ -22,9 +22,9 @@ readAndMerge(files, cd, ...)
   Further arguments passed to \code{\link{mergeSamples}}.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 An object of class \code{chicagoData}.
 }

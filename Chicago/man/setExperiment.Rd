@@ -9,7 +9,7 @@ Creates a template CHiCAGO experiment object. This should be the first function 
 }
 \usage{
 setExperiment(designDir = "", settings = list(),
-      settingsFile = NULL, def.settings=defaultSettings(designDir))
+      settingsFile = NULL, def.settings=defaultSettings())
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -23,7 +23,7 @@ setExperiment(designDir = "", settings = list(),
   The location of a file containing settings. Each row should contain the name of a setting, followed by whitespace, followed by the value of that setting. Overrides anything specified in \code{def.settings}.
 }
   \item{def.settings}{
-  These are the default settings. Note that \code{designDir} is taken into account when constructing file locations.
+  These are the default settings.
 }
 }
 \details{

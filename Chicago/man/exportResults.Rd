@@ -9,7 +9,7 @@ Export the results from a \code{chicagoData} object to disk.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
-        format = c("seqMonk", "interBed", "washU"), order = c("position", "score")[1])
+        format = c("seqMonk", "interBed", "washU_track", "washU_text"), order = c("position", "score")[1])
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -33,9 +33,9 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
   Should output be ordered by position or score?
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 NULL
 }
