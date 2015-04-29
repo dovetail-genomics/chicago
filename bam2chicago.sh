@@ -2,7 +2,7 @@
 
 if [ $# -lt 4 ]
   then
-    echo "Usage: bam2chicago.sh <bamfile> <baitmap-file> <digest-rmap-file> <sample-name>"
+    echo "Usage: bam2chicago.sh <bamfile> <baitmap-file> <digest-rmap-file> <sample-name> [nodelete]"
     exit
 fi
 
@@ -19,19 +19,20 @@ bamname=`echo ${bam0%\.*}`
 baitfendsid=$2
 digestbed=$3
 samplename=$4
+nodelete=$5
 
-mkdir -p sample_${samplename}
+mkdir -p ${samplename}
 
 echo "Processing sample ${samplename}..."
 echo "Using bam file ${bam}"
 echo "Using bait map file ${baitfendsid}"
 echo "Using fragment map file ${digestbed}"
 
-${processhicup} ${bam} ${baitfendsid} ${digestbed} sample_${samplename}
+${processhicup} ${bam} ${baitfendsid} ${digestbed} ${samplename}
 
 echo "Pooling read pairs..."
 
-echo "baitID	otherEndID	N	otherEndLen	distSign" > sample_${samplename}/${samplename}_bait_otherEnd_N_len_distSign.txt
+echo "baitID	otherEndID	N	otherEndLen	distSign" > ${samplename}/${samplename}_bait_otherEnd_N_len_distSign.txt
 awk '{ 
     if (!baitOtherEndN[$14"\t"$18]){ 
          baitOtherEndN[$14"\t"$18] = 1; 
@@ -44,7 +45,17 @@ awk '{
     for (key in baitOtherEndN){
          print key"\t"baitOtherEndN[key]"\t"baitOtherEndInfo[key];
     }
-}' sample_${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T sample_${samplename} >> sample_${samplename}/${samplename}.chinput
+}' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T ${samplename} >> ${samplename}/${samplename}.chinput
 
+mv ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fless06_withDistSignLen.bedpe ${samplename}/${bamname}_ambiguous_alignments.bedpe
 
-echo "Done! The final output file with pooled reads per interaction is sample_${samplename}/${samplename}.chinput"
+if [ "$nodelete" != "nodelete" ]; then
+	echo "Removing intermediate files..."
+	rm ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
+	rm ${samplename}/${bamname}_mappedToBaits.bedpe
+	rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
+	rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06.bedpe
+	rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe
+fi
+
+echo "Done! The file to be used for Chicago R package input is ${samplename}/${samplename}.chinput"
