@@ -12,22 +12,20 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
     x <- x@x   
   }
   
-  Digest <- .convertBedFormat2GR(folder=NULL, list_frag = c(Digest=position_otherEnd), sep=sep, rm.MT = T)[[1]]
+  Digest <- .readBedList(folder=NULL, list_frag = c(Digest=position_otherEnd), sep=sep, rm.MT = T)[[1]]
+  setnames(Digest, names(Digest)[4], "otherEndID")
   
   # Get Features to overlap
-  features <- .convertBedFormat2GR(folder=folder, list_frag=list_frag, rm.MT = T)
-  names(features)<-names(list_frag)
+  features <- .readBedList(folder=folder, list_frag=list_frag, rm.MT = T)
   
-  featuresMapped2Digest<-lapply(features, function(i) {
-    i2=subsetByOverlaps(Digest,i,ignore.strand=TRUE)
-    i2<-as.data.frame(i2)
-    setDT(i2)
-    setnames(x = i2,old = "Feature...4.ncol.Feature..",new="otherEndID")
-    return(i2)
+  featuresMapped2Digest<-lapply(features, function(feat) {
+    setkeyv(feat, names(feat)[1:3])
+    foverlaps(Digest, feat, by.x=names(Digest)[1:3], by.y=names(feat)[1:3], nomatch = 0, mult = "first") # nomatch = 0 equivalent to merge(..., all=F) 
+                                                                                      # nomatch = NA is equivalent to merge(..., all=T)
   })
   
   for ( i in 1:length(featuresMapped2Digest)) {
-    x[,names(featuresMapped2Digest)[i]:= otherEndID %in%  featuresMapped2Digest[[i]]$otherEndID]
+    x[, names(featuresMapped2Digest)[i]:= otherEndID %in% featuresMapped2Digest[[i]]$otherEndID]
   }
   return(x)  
 }

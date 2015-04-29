@@ -1,13 +1,12 @@
-peakEnrichment4Features <- function(x1=NULL, score="score", colname_score, min_dist=NULL, max_dist=NULL, 
-                                    folder=NULL, list_frag=NULL, sep="\t", filterB2B=TRUE, b2bcol="isBait2bait",  
-                                    unique=TRUE, no_bins, sample_number,
-                                    plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL) {
+peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", list_frag, no_bins, sample_number,
+                                    min_dist=NULL, max_dist=NULL, folder=NULL, sep="\t", filterB2B=TRUE, b2bcol="isBait2bait",  
+                                    unique=TRUE, plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (is.null(colname_score)){
     stop("colname_score needs to be specified...\n")
   }
-  
+    
   # Check if list_frag is a named vector and gives it names if not:
   if(is.null(names(list_frag))){ names(list_frag) = paste0("Feature", 1:length(list_frag)) }
   
