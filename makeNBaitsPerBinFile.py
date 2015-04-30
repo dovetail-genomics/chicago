@@ -176,7 +176,7 @@ for i in xrange(len(st)):
 print "\nWriting out text file..."
 
 of = open(outfile, "wt")
-of.write("#\tmaxLBrownEst=%d\tbinsize=%d\trmapfile=%s\n" % (maxLBrownEst, binsize, rmapfile))
+of.write("#\tmaxLBrownEst=%d\tbinsize=%d\trmapfile=%s\tbaitmapfile=%s\n" % (maxLBrownEst, binsize, rmapfile, baitmapfile))
 for k in sorted(n.keys()):
  of.write("%d\t" % k)
  for i in range(len(n[k])): 

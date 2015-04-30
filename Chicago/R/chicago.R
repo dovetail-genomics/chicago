@@ -1327,35 +1327,35 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   # s is the current chicagoData object's settings list
   
-  message("Reading NperBin file...")
+  message("Reading NPerBin file...")
   header = readLines(s$nperbinfile, n=1)
   params = sapply(sapply(strsplit(header, "\t")[[1]],function(x)strsplit(x,"=")[[1]]), function(x)x[2])
   params = params[2:length(params)]
   names(params) = gsub("(\\S+)=.+", "\\1", names(params))
   minsize = as.numeric(params[["minFragLen"]])
   if (minsize != s$minFragLen){
-    stop("The minFragLen in the NfragPerBin file is not equal to minFragLen defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The minFragLen in the NPerBin file header is not equal to minFragLen defined in experiment settings. Amend either setting (and if needed, generate a new NPerBin file) before running the analysis\n")
   }
   maxsize = as.numeric(params[["maxFragLen"]])
   if (maxsize != s$maxFragLen){
-    stop("The maxFragLen in the NfragPerBin file is not equal to maxFragLen defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The maxFragLen in the NPerBin file header is not equal to maxFragLen defined in experiment settings. Amend either setting (and if needed, generate a new NPerBin file) before running the analysis\n")
   }
   maxl = as.numeric(params[["maxLBrownEst"]])
   if (maxl != s$maxLBrownEst){
-    stop("The maxLBrownEst in the NfragPerBin file is not equal to maxLBrownEst defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The maxLBrownEst in the NPerBin file header is not equal to maxLBrownEst defined in experiment settings. Amend either setting (and if needed, generate a new NPerBin file) before running the analysis\n")
   }
   binsz = as.numeric(params[["binsize"]]) 
   if (binsz != s$binsize){
-    stop("The binsize in the NfragPerBin file is not equal to binsize defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The binsize in the NPerBin file header is not equal to binsize defined in experiment settings. Amend either setting (and if needed, generate a new NPerBin file) before running the analysis\n")
   }  
   if (params[["removeb2b"]]!="True"){
-    stop("The NfragPerBin file must be generated with removeb2b==True\n")
+    stop("The NPerBin file must be generated with removeb2b==True. Please generate a new file.\n")
   }
   if ( (params[["removeAdjacent"]]=="True" & !s$removeAdjacent) | (params[["removeAdjacent"]]!="True" & s$removeAdjacent)  ){
-    stop("The removeAdjacent parameter settings used for generating NfragPerBin file and defined in experiment settings do not match. Amend either setting before running the analysis\n")
+    stop("The removeAdjacent parameter settings used for generating NPerBin file (according to its header) and defined in experiment settings do not match. Amend either setting (and if needed, generate a new NPerBin file) before running the analysis\n")
   }  
   if(basename(params[["rmapfile"]]) != basename(s$rmapfile)){
-    stop("Rmap files used for generating the NfragPerBin file and defined in experiment settings do not match. Amend either setting before running the analysis\n")
+    stop("The .rmap file used for generating the NPerBin file (according to the NPerBin header) and the one defined in experiment settings do not match. Amend either setting (and if needed, generate a new NPerBin file) before running the analysis\n")
   }
   
 ## Not checking this for now as we have a mixup of _baits and _baits_ID files used at different times...
@@ -1381,7 +1381,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   # s is the current chicagoData object's settings list
   
-  message("Reading NbaitsPerBin file...")
+  message("Reading NBaitsPerBin file...")
   header = readLines(s$nbaitsperbinfile, n=1)
   params = sapply(sapply(strsplit(header, "\t")[[1]],function(x)strsplit(x,"=")[[1]]), function(x)x[2])
   params = params[2:length(params)]
@@ -1389,13 +1389,13 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 
   maxl = as.numeric(params[["maxLBrownEst"]])
   if (maxl != s$maxLBrownEst){
-    stop("The maxLBrownEst in the NfragPerBin file is not equal to maxLBrownEst defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The maxLBrownEst in the NBaitsPerBin file header is not equal to maxLBrownEst defined in experiment settings. Amend either setting (and if needed, generate a new NBaitsPerBin file) before running the analysis\n")
   }
 
   # Currently binsize is called bin, but should correct this
   binsz = as.numeric(params[["binsize"]]) 
   if (binsz != s$binsize){
-    stop("The binsize in the NfragPerBin file is not equal to binsize defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The binsize in the NBaitsPerBin file header is not equal to binsize defined in experiment settings. Amend either setting (and if needed, generate a new NBaitsPerBin file) before running the analysis\n")
   }  
   
   # Currently not in the file
@@ -1408,7 +1408,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 #   }  
   
   if(basename(params[["rmapfile"]]) != basename(s$rmapfile)){
-    stop("Rmap files used for generating the NfragPerBin file and defined in experiment settings do not match. Amend either setting before running the analysis\n")
+    stop("The .rmap file used for generating the NBaitsPerBin file (according to the NBaitsPerBin header) and the one defined in experiment settings do not match. Amend either setting (and if needed, generate a new NBaitsPerBin file) before running the analysis\n")
   }
   
   ## Not checking this for now as we have a mixup of _baits and _baits_ID files used at different times...
@@ -1440,28 +1440,28 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   names(params) = gsub("(\\S+)=.+", "\\1", names(params))
   minsize = as.numeric(params[["minFragLen"]])
   if (minsize != s$minFragLen){
-    stop("The minFragLen in the ProxOE file is not equal to minFragLen defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The minFragLen specified in the ProxOE file header is not equal to minFragLen defined in experiment settings. Amend either parameter setting (and if needed, generate a new ProxOE file) before running the analysis\n")
   }
   maxsize = as.numeric(params[["maxFragLen"]])
   if (maxsize != s$maxFragLen){
-    stop("The maxFragLen in the ProxOE file is not equal to maxFragLen defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The maxFragLen specified in the ProxOE file header is not equal to maxFragLen defined in experiment settings. Amend either parameter setting (and if needed, generate a new ProxOE file) before running the analysis\n")
   }
   maxl = as.numeric(params[["maxLBrownEst"]])
   if (maxl != s$maxLBrownEst){
-    stop("The maxLBrownEst in the ProxOE file is not equal to maxLBrownEst defined in experiment settings. Amend either parameter setting before running the analysis\n")
+    stop("The maxLBrownEst specified in the ProxOE file header is not equal to maxLBrownEst defined in experiment settings. Amend either parameter setting (and if needed, generate a new ProxOE file) before running the analysis\n")
   }
   binsz = as.numeric(params[["binsize"]]) 
   if (binsz != s$binsize){
-    stop("The binsize in the ProxOE file is not equal to binsize defined in experiment settigs. Amend either parameter setting before running the analysis\n")
+    stop("The binsize specified in the ProxOE file header is not equal to binsize defined in experiment settigs. Amend either parameter setting (and if needed, generate a new ProxOE file) before running the analysis\n")
   }  
   if (params[["removeb2b"]]!="True"){
-    stop("The ProxOE file must be generated with removeb2b==True\n")
+    stop("The ProxOE file must be generated with removeb2b==True. Please generate a new file.\n")
   }
   if ( (params[["removeAdjacent"]]=="True" & !s$removeAdjacent) | (params[["removeAdjacent"]]!="True" & s$removeAdjacent)  ){
-    stop("The removeAdjacent parameter settings used for generating ProxOE file and defined in experiment settings do not match. Amend either setting before running the analysis\n")
+    stop("The removeAdjacent parameter settings used for generating ProxOE file (according to its header) and defined in experiment settings do not match. Amend either setting (and if needed, generate a new ProxOE file) before running the analysis\n")
   }  
   if(basename(params[["rmapfile"]]) != basename(s$rmapfile)){
-    stop("Rmap files used for generating the ProxOE file and defined in experiment settings do not match. Amend either setting before running the analysis\n")
+    stop("The .rmap files used for generating the ProxOE file (according to the ProxOE header) and the one defined in experiment settings do not match. Amend either setting (and if needed, generate a new ProxOE file) before running the analysis\n")
   }
   ## Not checking this for now as we have a mixup of _baits and _baits_ID files used at different times...
   #   if(basename(params[["baitmapfile"]]) != basename(baitmapfile)){
