@@ -36,7 +36,7 @@ if [ $baitcolno -gt 4 ]; then
 	   echo "It doesn't. So trimming the extra columns and saving the result in ${baitfendsid}_4col.txt..."
            awk '{print $1"\t"$2"\t"$3"\t"$4}' ${baitfendsid} > ${baitfendsid}_4col.txt
     else
-           "Found ${baitfendsid}_4col.txt"
+           echo "Found ${baitfendsid}_4col.txt"
     fi
     baitfendsid=`echo ${baitfendsid}_4col.txt`
 fi
