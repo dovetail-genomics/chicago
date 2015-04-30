@@ -104,7 +104,7 @@ defaultSettings <- function()
     otherEndIDcol = "otherEndID",
     otherEndLencol = "otherEndLen", 
     distcol = "distSign",
-    weightAlpha = 34.1157346557331, ##from macrophage. Remove as default?
+    weightAlpha = 34.1157346557331, 
     weightBeta = -2.58688050486759,
     weightGamma = -17.1347845819659,
     weightDelta = -7.07609245521541
