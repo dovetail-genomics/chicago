@@ -58,13 +58,13 @@ awk 'BEGIN{ OFS="\t" }
 }' ${samplename}/${bamname}_mappedToBaits.bedpe > ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
 
 echo "Intersecting with bait fragments again to produce a list of bait-to-bait interactions that can be used separately; note they will also be retained in the main output..."
-bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid > ${samplename}/${bamname}_bait2bait.bedpe
+bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid > ${samplename}/${samplename}_bait2bait.bedpe
 
 echo "Intersecting with restriction fragments (using min overhang of 0.6)..."
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wao -f 0.6 -b $digestbed > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
 
-echo "Removing reads that failed the min overhang filter (saving separately into ${bamname}_mappedToBaitsBoRAndRFrag_fless06.bedpe)..."
-awk -v fless=${samplename}/${bamname}_ambiguous_reads.bedpe '{
+echo "Removing reads that failed the min overhang filter (saving separately into ${samplename}_ambiguous_reads.bedpe)..."
+awk -v fless=${samplename}/${samplename}_ambiguous_reads.bedpe '{
     if ($0~/\-1\t\-1/){
          print $0 > fless
     } 
@@ -90,7 +90,7 @@ perl -ne '{
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06.bedpe > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe
 
 echo "Pooling read pairs..."
-echo "baitID	otherEndID	N	otherEndLen	distSign" > ${samplename}/${samplename}_bait_otherEnd_N_len_distSign.txt
+echo "baitID	otherEndID	N	otherEndLen	distSign" > ${samplename}/${samplename}.chinput
 awk '{ 
     if (!baitOtherEndN[$14"\t"$18]){ 
          baitOtherEndN[$14"\t"$18] = 1; 
@@ -104,8 +104,6 @@ awk '{
          print key"\t"baitOtherEndN[key]"\t"baitOtherEndInfo[key];
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T ${samplename} >> ${samplename}/${samplename}.chinput
-
-mv ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fless06_withDistSignLen.bedpe ${samplename}/${bamname}_ambiguous_alignments.bedpe
 
 if [ "$nodelete" != "nodelete" ]; then
 	echo "Removing intermediate files..."
