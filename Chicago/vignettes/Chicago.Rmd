@@ -1,0 +1,93 @@
+---
+title: "CHiCAGO Vignette"
+VignetteIndexEntry: 
+output:
+  BiocStyle::html_document:
+    toc: true
+---
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{CHiCAGO Vignette}
+%\VignetteDepends{}
+%\VignetteKeywords{Chicago}
+%\VignettePackage{Chicago}
+-->
+```{r style, echo = FALSE, results = 'asis'}
+BiocStyle::markdown()
+```
+
+## Introduction
+
+This vignette will walk you through a typical CHiCAGO analysis.
+
+We provide a wrapper to perform the analysis, called *runChicago.R*.
+
+## Input files required
+
+Before you start, you will need: 
+
+1. Five restriction map information files. It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website, otherwise you will need to generate them yourself.
+
+    * Restriction map file (.rmap) - a bed file containing co-ordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
+    * Bait map file (.baitmap) - a bed file containing co-ordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
+    * *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts *countNperBin.py*, *countNbaitsPerBin.py* and *getProxOE.py*. 
+
+2. You will also need your input data, whose files end with *_distSign.txt*. These files can be obtained by running ...?
+
+Examples of these files are given in the extdata folder, as follows...
+
+```{r}
+dataPath <- system.file("extdata", package="Chicago")
+dir(dataPath)
+```
+
+## Example workflow
+
+We apply CHiCAGO to the test data as follows. First, we create a blank ``ChicagoData`` object, 
+
+```{r}
+library(Chicago)
+##FIXME
+# cd <- setExperiment()
+```
+
+...
+
+Discussed more in [The ChicagoData object](#link).
+
+## Output
+
+Describe each key plot in turn
+
+```{r}
+#FIXME
+```
+## Peak enrichment for features
+
+``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. You will need additional files to perform this analysis - namely, a .bed file for each feature:
+
+```{r}
+#FIXME
+```
+
+## The ChicagoData object {#cd}
+
+In the above workflow, *cd* is a *ChicagoData* object. It contains three elements:
+
+* ``cd@x`` is a `r CRANpkg("data.table")` (note: not a *data.frame*) that contains information about fragment pairs.
+* ``cd@settings`` is a list of settings, usually set with the setExperiment() function.
+* ``cd@params`` is a list of parameters. This list is populated as the pipeline runs, and CHiCAGO estimates them in turn.
+
+**WARNING:** Many functions in CHiCAGO update ``cd@x`` by reference, which means that ``cd@x`` can change even when you do not explicitly assign to it.
+To avoid this behaviour, copy the *chicagoData* object first:
+
+| cdCopy <- copy(cd)
+| cdCopy <- FIXME(cdCopy)
+| identical(cd, cdCopy)
+
+
+##Session info
+
+```{r}
+sessionInfo()
+```

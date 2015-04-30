@@ -1,7 +1,8 @@
 import getopt
 import sys
 import random
-import cPickle as p
+import fnmatch
+import os
 
 class Unbuffered(object):
    def __init__(self, stream):
@@ -23,20 +24,21 @@ maxLBrownEst = 1.5e6
 binsize = 20000
 removeB2B=True
 removeAdjacent=True
-rmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII.bed"
-baitmapfile = "/bi/home/spivakov/g/CHIC/Digest_Human_HindIII_baits.bed"
-outfile = "/bi/home/spivakov/g/CHIC/proxOE_out.txt"
-#picklefile = "/bi/home/spivakov/g/CHIC/proxOE_out.pickle"
+rmapfile = ""
+baitmapfile = ""
+outfile = ""
+designDir= ""
+
 
 def usage():
-  print "Usage: getProxOE.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEst=%d] [--binsize=%d] [--removeb2b=%r] [--removeAdjacent=%r]\n\t[--rmapfile=%s]\n\t[--baitmapfile=%s]\n\t[--outfile=%s]\n" \
-  % (minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile)
+  print "Usage: python makeProxOEFile.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEst=%d] [--binsize=%d] [--removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=designDir/*.rmap]\n\t[--baitmapfile=designDir/*.baitmap]\n\t[--outfile=designDir/proxOEfile.poe]\n\t[--designDir=.]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output file will be saved as designDir/proxOEfile.poe unless explicitly specified." \
+  % (minFragLen, maxFragLen, maxLBrownEst, binsize)
 
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:rja:b:f:t:o:', \
+  opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:rja:b:f:t:o:d:', \
 ['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', \
-'removeb2b=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile='])
+'removeb2b=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'designDir='])
 except getopt.GetoptError:
   usage()
   sys.exit(120)
@@ -64,6 +66,53 @@ for opt, arg in opts:
     baitmapfile = arg
   elif opt in ('--outfile', '-o'):
     outfile = arg
+  elif opt in ('--designDir', '-d'):
+    designDir = arg
+
+
+if designDir != "":
+  if os.path.isdir(designDir):
+    print "\nUsing designDir %s" % designDir;
+  else:
+    print "\nError: designDir does not exist.\n";
+    usage()
+    sys.exit(1)
+else:
+  designDir = "."
+
+if baitmapfile == "":
+  files = os.listdir(designDir)
+  whichFiles = []
+  for file in files:
+    if fnmatch.fnmatch(file, '*.baitmap'):
+        whichFiles.append(file)
+  if len(whichFiles)==1:
+    baitmapfile=os.path.join(designDir, whichFiles[0])
+    print "Located baitmapfile %s in %s" % (whichFiles[0], designDir)
+  else:
+    print "\nError: could not unambiguously locate baitmapfile in designDir.\n"
+    usage()
+    sys.exit(1)
+
+if rmapfile == "":
+  files = os.listdir(designDir)
+  whichFiles = []
+  for file in files:
+    if fnmatch.fnmatch(file, '*.rmap'):
+        whichFiles.append(file)
+  if len(whichFiles)==1:
+    rmapfile=os.path.join(designDir, whichFiles[0])
+    print "Located rmapfile %s in %s" % (whichFiles[0], designDir)
+  else:
+    print "\nError: could not unambiguously locate baitmapfile in designDir.\n"
+    usage()
+    sys.exit(1)
+
+
+if outfile == "":
+  outfile = os.path.join(designDir, "proxOEfile.poe")
+  print "Output fill be saved as %s\n" % outfile
+
 
 print "Using options:\n\tminFragLen=%d, maxFragLen=%d, maxLBrownEst=%d, binsize=%d, removeb2b=%r, removeAdjacent=%r\n\trmapfile=%s\n\tbaitmapfile=%s\n\toutfile=%s\n" \
 % (minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile, outfile)
@@ -111,14 +160,11 @@ of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2
 
 print "Looping through baits..."
 
-#n={}
-for i in range(len(st)):
+for i in xrange(len(st)):
   if not id[i] in bid:
     continue
     
-  #n[id[i]] = [0]*int(maxLBrownEst/binsize)
-  
-  for j in range(i-1,0,-1):
+  for j in xrange(i-1,0,-1):
    if chr[j] != chr[i]:
     break
    if removeB2B:
@@ -135,9 +181,8 @@ for i in range(len(st)):
    if d>=maxLBrownEst:
     break
    of.write("%d\t%d\t%d\n" % (id[i], id[j], d))
-   #n[id[i]][d/binsize] += 1
   
-  for j in range(i+1,len(st),1):
+  for j in xrange(i+1,len(st),1):
    if chr[j] != chr[i]:
     break
    if removeB2B:
@@ -155,27 +200,9 @@ for i in range(len(st)):
    if d>=maxLBrownEst:
     break
    of.write("%d\t%d\t%d\n" % (id[i], id[j], d))
-   #n[id[i]][d/binsize] += 1
    
   if int(random.uniform(0,100))==1: 
     print "%d " % i
 
-#print "\nWriting out text file..."
+of.close()
 
-#of = open(outfile, "wt")
-#of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
-#(minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile))
-#for k in sorted(n.keys()):
-# of.write("%d\t" % k)
-# for i in range(len(n[k])): 
-#  of.write("%d" % n[k][i])
-#  if i!=len(n[k])-1:
-#   of.write("\t")
-# of.write("\n")
-#of.close()
-
-#if picklefile!=None:
-#  print "Writing out pickle..."
-#  pf = open(picklefile, "wb")
-#  p.dump(n, pf)
-#  pf.close()

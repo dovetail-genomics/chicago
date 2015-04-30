@@ -2,7 +2,7 @@
 
 if [ $# -lt 4 ]
   then
-    echo "Usage: process_chic_single_core.sh <bamfile> <baits-with-fragment-ids-file> <digest-with-fragment-ids-file> <sample-name>"
+    echo "Usage: process_chic_single_core.sh <bamfile> <baitmap-file> <digest-rmap-file> <sample-name>"
     exit
 fi
 

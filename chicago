@@ -13,7 +13,6 @@ use Data::Dumper;
 #Get user-supplied parameters
 #Option variables
 my %config = (
-	basename => '',
 	digestfolder => '',
 	input => '',
 	email => '',
@@ -23,7 +22,6 @@ my %config = (
 );
 
 my $config_result = GetOptions(    #Stores parameters
-    "basename=s"  => \$config{basename},
 	"digestfolder=s" => \$config{digestfolder},
     "input=s"   => \$config{input},
 	"email=s"   => \$config{email},
@@ -147,11 +145,11 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	my $command;
 	if($numberFiles == 1){
-		$command = "R --slave --no-restore-data --args $files[0] $outdir $prefixStep2 $featuresFolder $features $config{digestfolder} $config{basename} $Bin < $Bin/production_line_CHiCAGO2.R";		
+		$command = "Rscript $Bin/runChicago.R --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} $files[0] $prefixStep2";		
 	
 	}else{
-		my $filenameString = join(' ', @files);
-		$command = "R --slave --no-restore-data --args  \%$numberFiles $outdir $prefixStep2 $featuresFolder $features $filenameString $config{digestfolder} $config{basename} $Bin < $Bin/production_line_CHiCAGO2.R";			
+		my $filenameString = join(',', @files);
+		$command = "Rscript $Bin/runChicago.R --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} $filenameString $prefixStep2";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
 		
@@ -232,39 +230,44 @@ sub generateRandomString{
 sub check_parameters{
 	my $parameters_ok = 1;
 	
-	#Determine digest and bait filenames
-	if( hasval($config{basename}) ){
-		$baits = $config{basename} . '_baits_ID.bed';
-		$digest = $config{basename} . '.bed';
-	}else{
-		warn "Please specify a --basename of digest files\n";
-		$parameters_ok = 0;
-	}
-	
 	#Add path to digest and bait filenames
 	if( hasval ($config{digestfolder}) ){	
-		$config{digestfolder} = $config{digestfolder} . '/' unless $config{digestfolder} =~ /\/$/;	
-		$baits = $config{digestfolder} .$baits;
-		$digest = $config{digestfolder} .$digest;
+		$config{digestfolder} = $config{digestfolder} . '/' unless $config{digestfolder} =~ /\/$/;
 	}else{
 		$config{digestfolder} = './';
 		warn "Using current working directory as digest folder\n";
 	}
 	
 	#Check baits exist
-	if(hasval($baits) ){
-		unless(-e $baits){
-			warn "Baits file '$baits' does not exist\n";
-			$parameters_ok = 0;
-		}
+	if (!defined($baits)){ $baits = "" };
+	unless(-e $baits){
+			opendir(DIR, $config{digestfolder}) || die ("Could not open digest dir $config{digestfolder}");
+			my @baitmapfiles = grep(/\.baitmap$/,readdir(DIR));
+			closedir(DIR);
+			if(scalar(@baitmapfiles)==1){
+				warn "Found baits file $baitmapfiles[0] in $config{digestfolder}\n";
+				$baits = $config{digestfolder} . '/' . $baitmapfiles[0];
+			}
+			else{
+				warn "Baits file '$baits' does not exist\n";
+				$parameters_ok = 0;
+			}
 	}
 
 	#Check digest exists
-	if(hasval($digest) ){
-		unless(-e $digest){
-			warn "Digest file '$digest' does not exist\n";
-			$parameters_ok = 0;
-		}
+	if (!defined($digest)){ $digest = "" };
+	unless(-e $digest){
+			opendir(DIR, $config{digestfolder}) || die ("Could not open digest dir $config{digestfolder}");;
+			my @digestfiles = grep(/\.rmap$/,readdir(DIR));
+			closedir(DIR);
+			if(scalar(@digestfiles)==1){
+				warn "Found digest file $digestfiles[0] in $config{digestfolder}\n";
+				$digest = $config{digestfolder} . '/' . $digestfiles[0];
+			}
+			else{
+				warn "Digest file '$digest' does not exist\n";
+				$parameters_ok = 0;
+			}
 	}
 	
 	if(hasval ($config{input}) ){

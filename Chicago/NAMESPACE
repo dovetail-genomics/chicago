@@ -1,0 +1,13 @@
+export(chicagoPipeline, defaultSettings, estimateBrownianNoise, estimateDistFun, estimateTechnicalNoise, 
+       exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
+       normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, .binning,
+       .readBedList, .drawSamples, .plotNumberOL, .splitCHiC, overlapFragWithFeatures,
+       peakEnrichment4Features, chicagoData)
+
+
+import(data.table)
+import(methods)
+importFrom(Delaporte, pdelap)
+importFrom(Hmisc, cut2)
+importFrom(MASS, glm.nb, fitdistr)
+import(matrixStats)
