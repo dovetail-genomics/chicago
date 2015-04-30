@@ -248,14 +248,20 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   return(result)
 }
 
-.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, min_dist=NULL, max_dist=NULL) {
+.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, min_dist=NULL, max_dist=NULL, trans=F) {
   if (is.null(x1) & is.null(filename)) {
     stop("Please provide file with paired-end reads")
   }
   else if (!is.null(filename)) {
     x1 <- read.table(samplefilename, header=TRUE)
   }  
-  if(!is.data.table(x1)){setDT(x1)}
+  if(!is.data.table(x1)){
+    setDT(x1)
+  }
+  if (!trans){
+    cat("Removing trans interactions...\n")
+    x1<-x1[!is.na(get(colname_dist))]
+  }
   if (!is.null(colname_dist)) {
     if (is.null(max_dist) & is.null(min_dist)) {
       cat("No distance from bait to trim sample was provided...\n")
