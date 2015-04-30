@@ -212,6 +212,7 @@ if(!dir.create.ifNotThere("enrichment_data")){
 }
 
 ### TODO: if bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
+### Take into account that unlike other files, there may not be .gz / .gz.tbi created 
 if (!moveToFolder("\\.txt", "data")){
   stop("Couldn't move txt files to data folder\n")
 }
