@@ -137,10 +137,12 @@ del oldst
 
 print "Looping through other ends..."
 
-n={}
+of = open(outfile, "wt")
+of.write("#\tmaxLBrownEst=%d\tbinsize=%d\trmapfile=%s\tbaitmapfile=%s\n" % (maxLBrownEst, binsize, rmapfile, baitmapfile))
+
 for i in xrange(len(st)):
     
-  n[id[i]] = [0]*int(maxLBrownEst/binsize)
+  n = [0]*int(maxLBrownEst/binsize)
   
   if removeAdjacent:
     iSt=i-2
@@ -154,7 +156,7 @@ for i in xrange(len(st)):
    if d>=maxLBrownEst:
     break
    if id[j] in bid:
-    n[id[i]][d/binsize] += 1
+    n[d/binsize] += 1
   
   if removeAdjacent:
     iSt=i+2
@@ -168,20 +170,18 @@ for i in xrange(len(st)):
    if d>=maxLBrownEst:
     break
    if id[j] in bid:
-    n[id[i]][d/binsize] += 1
-   
+    n[d/binsize] += 1
+  
+  of.write("%d\t" % id[i])
+  for k in xrange(len(n)):
+    of.write("%d" % n[k])
+    if k!=len(n)-1:
+      of.write("\t")
+  of.write("\n")
+ 
   if int(random.uniform(0,1000))==1: 
    print "%d " % i,
 
-print "\nWriting out text file..."
-
-of = open(outfile, "wt")
-of.write("#\tmaxLBrownEst=%d\tbinsize=%d\trmapfile=%s\tbaitmapfile=%s\n" % (maxLBrownEst, binsize, rmapfile, baitmapfile))
-for k in sorted(n.keys()):
- of.write("%d\t" % k)
- for i in range(len(n[k])): 
-  of.write("%d" % n[k][i])
-  if i!=len(n[k])-1:
-   of.write("\t")
- of.write("\n")
 of.close()
+
+print "Done!"

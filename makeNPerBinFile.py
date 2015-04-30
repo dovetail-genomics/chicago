@@ -152,14 +152,17 @@ id = [z for (x,y,z) in sorted(zip(oldchr, oldst, id))]
 del oldchr
 del oldst
 
+of = open(outfile, "wt")
+of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
+(minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile))
+
 print "Looping through baits..."
 
-n={}
 for i in xrange(len(st)):
   if not id[i] in bid:
     continue
     
-  n[id[i]] = [0]*int(maxLBrownEst/binsize)
+  n = [0]*int(maxLBrownEst/binsize)
   
   for j in xrange(i-1,0,-1):
    if chr[j] != chr[i]:
@@ -177,7 +180,7 @@ for i in xrange(len(st)):
    d = st[i]+(end[i]-st[i])/2-(st[j]+(end[j]-st[j])/2)
    if d>=maxLBrownEst:
     break
-   n[id[i]][d/binsize] += 1
+   n[d/binsize] += 1
   
   for j in xrange(i+1,len(st),1):
    if chr[j] != chr[i]:
@@ -196,21 +199,18 @@ for i in xrange(len(st)):
    d = st[j]+(end[j]-st[j])/2-(st[i]+(end[i]-st[i])/2)
    if d>=maxLBrownEst:
     break
-   n[id[i]][d/binsize] += 1
-   
+   n[d/binsize] += 1
+    
+  of.write("%d\t" % id[i])
+  for k in xrange(len(n)):
+    of.write("%d" % n[k])
+    if k!=len(n)-1:
+      of.write("\t")
+  of.write("\n")
+  
   if int(random.uniform(0,100))==1: 
    print "%d " % i,
 
-print "\nWriting out text file..."
-
-of = open(outfile, "wt")
-of.write("#\tminFragLen=%d\tmaxFragLen=%d\tmaxLBrownEst=%d\tbinsize=%d\tremoveb2b=%r\tremoveAdjacent=%r\trmapfile=%s\tbaitmapfile=%s\n" % \
-(minFragLen, maxFragLen, maxLBrownEst, binsize, removeB2B, removeAdjacent, rmapfile, baitmapfile))
-for k in sorted(n.keys()):
- of.write("%d\t" % k)
- for i in range(len(n[k])): 
-  of.write("%d" % n[k][i])
-  if i!=len(n[k])-1:
-   of.write("\t")
- of.write("\n")
 of.close()
+
+print "Done!"
