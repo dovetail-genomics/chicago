@@ -923,7 +923,6 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     boxplot(Tmean~tblb, as.data.frame(res), main="Technical noise estimates per bait pool")
     boxplot(Tmean~tlb, as.data.frame(res), main="Technical noise estimates per other end pool")
     if(!is.null(outfile)){dev.off()}
-    par(mfrow=c(1,1))
   }
   
   message("Post-processing the results...")
