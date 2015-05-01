@@ -1,7 +1,6 @@
 export(chicagoPipeline, defaultSettings, estimateBrownianNoise, estimateDistFun, estimateTechnicalNoise, 
        exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
-       normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, .binning,
-       .readBedList, .drawSamples, .plotNumberOL, .splitCHiC, overlapFragWithFeatures,
+       normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, overlapFragWithFeatures,
        peakEnrichment4Features, chicagoData)
 
 

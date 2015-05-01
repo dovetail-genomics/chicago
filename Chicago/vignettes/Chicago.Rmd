@@ -26,7 +26,7 @@ We provide a wrapper to perform the analysis, called *runChicago.R*.
 
 Before you start, you will need: 
 
-1. Five restriction map information files. It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website, otherwise you will need to generate them yourself.
+1. Five restriction map information files. It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website, otherwise you will need to generate them yourself using CHiCTools, also available on our website.
 
     * Restriction map file (.rmap) - a bed file containing co-ordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
     * Bait map file (.baitmap) - a bed file containing co-ordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
@@ -55,13 +55,58 @@ library(Chicago)
 
 Discussed more in [The ChicagoData object](#link).
 
-## Output
+## Output files
+
+You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data.)
+
+Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of -log(adjusted p-value) of 5 is applied.
+
+Summary of output files:
+
+ibed format (ends with ...ibed):
+
+- each row represents an interaction
+- first four columns give information about the chromosome, start, end and name of the bait fragment
+- next four columns give information about the chromosome, start, end and name of the other end that interacts with the bait fragment
+- N\_reads is the number of reads
+- score is as defined above
+
+seqmonk format (ends with ...seqmonk.txt)
+
+- Can be read by seqmonk (http://www.bioinformatics.babraham.ac.uk/projects/seqmonk/)
+- An interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
+- Columns are: chromosome, start, end, name, number of reads, interaction score (see above)
+
+washU\_text format (ends with ...washU\_text.txt)
+
+- FIXME "Got text files instead? Upload them from your computer" link.
+
+washU\_track format (ends with ...washU\_track.txt)
+
+- Can be read by WashU browser (epigenomegateway.wustl.edu)
+- An interaction is represented by two rows, with each representing one of the fragments involved in the interaction. However, the two rows need not be adjacent.
+- First three columns are: chromosome, start, end. Column four is of form [Chr]:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see above). The remaining columns can be ignored.
+
+
+**The data frame x** used to produce these files (one row per interaction) is stored in the .RDa file in the same folder.
+
+The /examples folder contains PDFs with bait profiles for 25 random baits - for full chromosome length and zoomed in to 1Mb, respectively.
+
+**The /overlap_plots folder** contains barplots showing the numbers of "enhancers" overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the "enhancers". Currently these overlaps are computed for interactions within 1 Mb from their respective baits only.
+
+## Output plots
+
+**In the /diag_plots folder**, we currently store diagnostic plots for other end normalisation and technical noise estimation, but more will be added.
+
+
+and various plots in the other subfolders of ./\<results-folder\>. 
 
 Describe each key plot in turn
 
 ```{r}
 #FIXME
 ```
+
 ## Peak enrichment for features
 
 ``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. You will need additional files to perform this analysis - namely, a .bed file for each feature:

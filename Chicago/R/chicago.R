@@ -923,7 +923,6 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     boxplot(Tmean~tblb, as.data.frame(res), main="Technical noise estimates per bait pool")
     boxplot(Tmean~tlb, as.data.frame(res), main="Technical noise estimates per other end pool")
     if(!is.null(outfile)){dev.off()}
-    par(mfrow=c(1,1))
   }
   
   message("Post-processing the results...")
@@ -1010,7 +1009,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(!includeTrans)
   {
-    x <- x[!is.na(x$distSign),] ##Cannot delete row by reference yet?
+    x <- x[is.na(distSign)] ##Cannot delete row by reference yet?
   }
   
   if(method == "weightedRelative")
@@ -1103,8 +1102,11 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
-  chr <- chrMax$chr
-  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
+  chr <- as.character(chrMax$chr)
+  if(any(chr %in% c("MT", "chrMT")))
+  {
+    chr <- chr[chr != "MT"] ##no mitochondria
+  }
   
   avgFragLen <- .getAvgFragLength(cd)
   
