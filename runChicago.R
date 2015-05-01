@@ -105,7 +105,7 @@ outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix_rel, opts[["o
 
 outPrefix = file.path(outDir, outPrefix_rel)
 
-logfile = file(paste0(outPrefix, "_params.txt", "w")
+logfile = file(paste0(outPrefix, "_params.txt", "w"))
 cat("#	runChicago parameters:\n")
 for (arg in opts){
 	cat(paste(arg, opts[[arg]], sep="\t"), file=logfile)
@@ -191,7 +191,7 @@ if (isDF){
   }
 }
 
-logfile = file(paste0(outPrefix, "_params.txt", "a")
+logfile = file(paste0(outPrefix, "_params.txt", "a"))
 cat("#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
 for (s in cd@settings){
         cat(paste(s, cd@settings[[s]], sep="\t"), file=logfile)
