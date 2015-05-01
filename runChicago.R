@@ -105,13 +105,6 @@ outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix_rel, opts[["o
 
 outPrefix = file.path(outDir, outPrefix_rel)
 
-logfile = file(paste0(outPrefix, "_params.txt", "w"))
-cat("#	runChicago parameters:\n")
-for (arg in names(opts)){
-	cat(paste(arg, opts[[arg]], sep="\t"), file=logfile)
-}
-close(logfile)
-
 enSampleNumber = opts[["en-sample-no"]]
 enMaxDist = opts[["en-max-dist"]]
 if (opts[["en-full-range"]]){
@@ -169,6 +162,13 @@ if(!dir.create.ifNotThere(outDir, recursive = T)){
   stop(paste("Couldn't create folder", outDir, "\n"))
 }
 
+logfile = file(paste0(outPrefix, "_params.txt"), "w")
+cat("#  runChicago parameters:\n", file=logfile)
+for (arg in names(opts)){
+        cat(paste(arg, opts[[arg]], sep="\t"), "\n", file=logfile)
+}
+close(logfile)
+
 
 message("\n\nStarting chicagoPipeline...\n")
 cd = chicagoPipeline(cd, outprefix = outPrefix, printMemory = printMemory)
@@ -191,10 +191,10 @@ if (isDF){
   }
 }
 
-logfile = file(paste0(outPrefix, "_params.txt", "a"))
-cat("#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
+logfile = file(paste0(outPrefix, "_params.txt"), "a")
+cat("\n#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
 for (s in names(cd@settings)){
-        cat(paste(s, cd@settings[[s]], sep="\t"), file=logfile)
+        cat(paste(s, cd@settings[[s]], sep="\t"), "\n", file=logfile)
 }
 close(logfile)
 
