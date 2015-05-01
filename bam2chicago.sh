@@ -62,7 +62,8 @@ if [ "$nodelete" != "nodelete" ]; then
 fi
 
 echo "Intersecting with bait fragments again to produce a list of bait-to-bait interactions that can be used separately; note they will also be retained in the main output..."
-bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid > ${samplename}/${bamname}_bait2bait.bedpe
+echo "##	samplename=${samplename}	bamname=${bamname}	baitmapfile=${baitfendsid}	digestfile=${digestbed}" > ${samplename}/${samplename}_bait2bait.bedpe
+bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid >> ${samplename}/${samplename}_bait2bait.bedpe
 
 echo "Intersecting with restriction fragments (using min overhang of 0.6)..."
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wao -f 0.6 -b $digestbed > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
@@ -115,7 +116,8 @@ fi
 
 
 echo "Pooling read pairs..."
-echo "baitID	otherEndID	N	otherEndLen	distSign" > ${samplename}/${bamname}.chinput
+echo "##        samplename=${samplename}        bamname=${bamname}      baitmapfile=${baitfendsid}      digestfile=${digestbed}" > ${samplename}/${samplename}.chinput
+echo "baitID	otherEndID	N	otherEndLen	distSign" >> ${samplename}/${samplename}.chinput
 awk '{ 
     if (!baitOtherEndN[$14"\t"$18]){ 
          baitOtherEndN[$14"\t"$18] = 1; 
@@ -128,10 +130,10 @@ awk '{
     for (key in baitOtherEndN){
          print key"\t"baitOtherEndN[key]"\t"baitOtherEndInfo[key];
     }
-}' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T ${samplename} >> ${samplename}/${bamname}.chinput
+}' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T ${samplename} >> ${samplename}/${samplename}.chinput
 
 if [ "$nodelete" != "nodelete" ]; then
 	rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe
 fi
 
-echo "Done! The file to be used for Chicago R package input is ${samplename}/${bamname}.chinput"
+echo "Done! The file to be used for Chicago R package input is ${samplename}/${samplename}.chinput"

@@ -105,6 +105,13 @@ outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix_rel, opts[["o
 
 outPrefix = file.path(outDir, outPrefix_rel)
 
+logfile = file(paste0(outPrefix, "_params.txt", "w")
+cat("#	runChicago parameters:\n")
+for (arg in opts){
+	cat(paste(arg, opts[[arg]], sep="\t"), file=logfile)
+}
+close(logfile)
+
 enSampleNumber = opts[["en-sample-no"]]
 enMaxDist = opts[["en-max-dist"]]
 if (opts[["en-full-range"]]){
@@ -183,6 +190,13 @@ if (isDF){
     saveRDS(cd, paste0(outPrefix, "_df.Rds"))
   }
 }
+
+logfile = file(paste0(outPrefix, "_params.txt", "a")
+cat("#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
+for (s in cd@settings){
+        cat(paste(s, cd@settings[[s]], sep="\t"), file=logfile)
+}
+close(logfile)
 
 message("\n\nPlotting examples...\n")
 baits=plotBaits(cd, outfile=paste0(outPrefix, "_proxExamples.pdf"), xlim=c(-proxLim,proxLim))
