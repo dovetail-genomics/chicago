@@ -187,7 +187,7 @@ if (isDF){
   if (isRda){ 
     save(cd, file=paste0(outPrefix, ".RDa"))
   }else{
-    saveRDS(cd, paste0(outPrefix, "_df.Rds"))
+    saveRDS(cd, paste0(outPrefix, ".Rds"))
   }
 }
 
