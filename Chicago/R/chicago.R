@@ -1103,7 +1103,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
-  chr <- chrMax$chr
+  chr <- as.character(chrMax$chr)
   if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
   
   avgFragLen <- .getAvgFragLength(cd)
