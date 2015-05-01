@@ -59,7 +59,7 @@ Discussed more in [The ChicagoData object](#link).
 
 You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data.)
 
-Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of –log(adjusted p-value) of 5 is applied.
+Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of -log(adjusted p-value) of 5 is applied.
 
 Summary of output files:
 
@@ -68,7 +68,7 @@ ibed format (ends with ...ibed):
 - each row represents an interaction
 - first four columns give information about the chromosome, start, end and name of the bait fragment
 - next four columns give information about the chromosome, start, end and name of the other end that interacts with the bait fragment
-- N_reads is the number of reads
+- N\_reads is the number of reads
 - score is as defined above
 
 seqmonk format (ends with ...seqmonk.txt)
@@ -92,14 +92,14 @@ washU\_track format (ends with ...washU\_track.txt)
 
 The /examples folder contains PDFs with bait profiles for 25 random baits - for full chromosome length and zoomed in to 1Mb, respectively.
 
-**The /overlap_plots folder** contains barplots showing the numbers of “enhancers” overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the “enhancers”. Currently these overlaps are computed for interactions within 1 Mb from their respective baits only.
+**The /overlap_plots folder** contains barplots showing the numbers of "enhancers" overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the "enhancers". Currently these overlaps are computed for interactions within 1 Mb from their respective baits only.
 
 ## Output plots
 
 **In the /diag_plots folder**, we currently store diagnostic plots for other end normalisation and technical noise estimation, but more will be added.
 
 
-and various plots in the other subfolders of ./<results-folder>. 
+and various plots in the other subfolders of ./\<results-folder\>. 
 
 Describe each key plot in turn
 
