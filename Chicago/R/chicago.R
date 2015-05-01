@@ -1010,7 +1010,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(!includeTrans)
   {
-    x <- x[!is.na(x$distSign),] ##Cannot delete row by reference yet?
+    x <- x[is.na(distSign)] ##Cannot delete row by reference yet?
   }
   
   if(method == "weightedRelative")
