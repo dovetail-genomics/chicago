@@ -4,8 +4,8 @@
 \alias{peakEnrichment4Features}
 \title{Enrichment for Features}
 \usage{
-peakEnrichment4Features(x1 = NULL, score = "score", colname_score,
-  min_dist = NULL, max_dist = NULL, folder = NULL, list_frag = NULL,
+peakEnrichment4Features(x1 = NULL, score = 5, colname_score = "score",
+  min_dist = NULL, max_dist = NULL, folder = NULL, list_frag,
   sep = "\\t", filterB2B = TRUE, b2bcol = "isBait2bait", unique = TRUE,
   no_bins, sample_number, plot_name = NULL, position_otherEnd = NULL,
   colname_dist = NULL)
