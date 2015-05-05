@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ $# -lt 4 ]
   then
     echo "Usage: bam2chicago.sh <bamfile> <baitmap-file> <digest-rmap-file> <sample-name> [nodelete]"
