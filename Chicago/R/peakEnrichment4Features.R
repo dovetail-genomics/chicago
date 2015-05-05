@@ -1,6 +1,7 @@
-peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", list_frag, no_bins, sample_number,
-                                    min_dist=NULL, max_dist=NULL, folder=NULL, sep="\t", filterB2B=TRUE, b2bcol="isBait2bait",  
-                                    unique=TRUE, plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL) {
+peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
+                                    min_dist=NULL, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
+                                    b2bcol="isBait2bait", unique=TRUE, no_bins, sample_number,
+                                    plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL,trans=FALSE) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (is.null(colname_score)){
@@ -41,6 +42,11 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", lis
     x1 <- x1[get(b2bcol)==FALSE]
   }
 
+  if(!trans){
+    cat("Removing trans interactions from analysis...\n")
+    x1 <- x1[!is.na(get(colname_dist))]
+  }
+  
   # negFraction a numeric value indicating that a fraction of non-significant interactions which will be used to draw samples.
   # The default value is 1 in order for the function to use all the non-significant interactions to draw samples. 
   # This parameter is particularly useful when the user wants to query a large interval of distances and
@@ -73,10 +79,8 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", lis
     cat("Removing duplicated other-ends from significant interactions (same will happen with samples)...\n")
     x1[[1]] <- x1[[1]][!duplicated(otherEndID)]
   }
-
   cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
   x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]])
-
   cat("Draw random samples...\n")
   result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
   
@@ -93,6 +97,8 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", lis
   }
   
   sign[,distbin2 := cut(dist, breaks=(no_bins))]
+  # Re-order sign so ensure that the bins between the pools of sign and non-sign interactions will match!
+  sign <- sign[order(dist)]
   
   # Calculate how many other-ends in this bin
   bin_reads2 <- sign[,length(dist), by="distbin2"]
@@ -105,6 +111,8 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", lis
   if (is.null(x1_nonsign$dist)) {
     x1_nonsign[,dist:=abs(distSign)]
   }
+  
+  x1_nonsign <- x1_nonsign[order(dist)]
   
   x1_nonsign[,distbin3:= cut(dist, breaks=(no_bins))]
   udbin3<-unique(x1_nonsign$distbin3)
@@ -122,7 +130,6 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", lis
   
   # Provide correct indexing for non-sign paired-end reads
   x1_nonsign[,i:=seq(1,nrow(x1_nonsign))]
-  sign[,distbin2:=NULL]
   return(x1_nonsign)
 }
 .drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
@@ -176,6 +183,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   return(x)  
 }
 .plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
+  x_sign[,distbin2:=NULL]
   x_sign[,dist:=NULL]
   x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign),with=FALSE],na.rm = T)
   
@@ -216,7 +224,6 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   
   if(!is.null(plot_name)) {
     dev.off()
-#     cat(paste0("Plot saved under the name ",plot_name," in your working directory...\n"))
   }
   
   # Return Matrix with Number of overlaps for ou significant interactions dataset and our samples
@@ -248,20 +255,14 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   return(result)
 }
 
-.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, min_dist=NULL, max_dist=NULL, trans=F) {
+.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, min_dist=NULL, max_dist=NULL) {
   if (is.null(x1) & is.null(filename)) {
     stop("Please provide file with paired-end reads")
   }
   else if (!is.null(filename)) {
     x1 <- read.table(samplefilename, header=TRUE)
   }  
-  if(!is.data.table(x1)){
-    setDT(x1)
-  }
-  if (!trans){
-    cat("Removing trans interactions...\n")
-    x1<-x1[!is.na(get(colname_dist))]
-  }
+  if(!is.data.table(x1)){setDT(x1)}
   if (!is.null(colname_dist)) {
     if (is.null(max_dist) & is.null(min_dist)) {
       cat("No distance from bait to trim sample was provided...\n")
