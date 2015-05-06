@@ -1,6 +1,7 @@
-peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score", list_frag, no_bins, sample_number,
-                                    min_dist=NULL, max_dist=NULL, folder=NULL, sep="\t", filterB2B=TRUE, b2bcol="isBait2bait",  
-                                    unique=TRUE, plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL) {
+peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
+                                    min_dist=NULL, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
+                                    b2bcol="isBait2bait", unique=TRUE, no_bins, sample_number,
+                                    plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (is.null(colname_score)){

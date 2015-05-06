@@ -126,7 +126,6 @@ seqmonk format (ends with ...seqmonk.txt)
 
 washU format (ends with ...washU.txt)
 
-- (We are aware of some issues relating to this output.)
 - Can be read by WashU browser (epigenomegateway.wustl.edu)
 - An interaction is represented by two rows, with each representing one of the fragments involved in the interaction. However, the two rows need not be adjacent.
 - First three columns are: chromosome, start, end. Column four is of form [Chr]:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see above). The remaining columns can be ignored.
@@ -163,9 +162,11 @@ To check what branch you are on, use the command:
 
 $ git branch
 
-(The branch you are on is highlighted with an asterisk: *) To switch to the develop branch for the first time, use the command:
+(The branch you are on is highlighted with an asterisk: *) To switch to the develop branch for the first time, run the following two commands:
 
 $ git checkout --track origin/develop
+
+$ git pull
 
 Thereafter, you can change branch with an easier checkout command:
 
