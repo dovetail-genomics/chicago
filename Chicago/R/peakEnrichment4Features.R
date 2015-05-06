@@ -79,31 +79,63 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
     cat("Removing duplicated other-ends from significant interactions (same will happen with samples)...\n")
     x1[[1]] <- x1[[1]][!duplicated(otherEndID)]
   }
+  #if (plotPeakDensity){
+#     ifelse(abs(x1[[1]]$distSign)>1e6, l<-abs(x1[[1]]$distSign), l<-1e6)
+#     plot(density(abs(x1[[1]]$distSign)),xlim=c(0,l))
+#    ifelse(abs(x1[[1]]$distSign)>1e6, l<-abs(x1[[1]]$distSign), l<-1e6)
+    plot(density(abs(x1[[1]]$distSign)))
+
+  #}
   cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
-  x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]])
+  x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]], min_dist=min_dist, max_dist=max_dist)
   cat("Draw random samples...\n")
   result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
-  
+  #if (plotPeakDensity){
+    j=1
+    for (i in c(1,round(sample_number/2),sample_number)){
+      lines(density(abs(result_3[[i]]$distSign)),col=c("red","magenta","blue")[j])
+      j=j+1
+    }
+  #}
+
   cat("Sum number of overlaps with feature in our significant interactions and in our samples...\n")
   result_5<-.plotNumberOL(x_sign = x1[[1]], s=result_3, files = list_frag,  plot_name=plot_name)
   return(result_5) 
 }
 # This function bins results assigns probabilities to bins depending on their distance from bait
-.binning <- function(sign, no_bins, x1_nonsign) {
+.binning <- function(sign, no_bins, x1_nonsign,min_dist=NULL, max_dist=NULL) {
   if(!is.data.table(sign)){setDT(sign)}
   # Bin distances from bait in sign - 100 bins
+  
   if (is.null(sign$dist)) {
     sign[,dist := abs(distSign)]
   }
   
-  sign[,distbin2 := cut(dist, breaks=(no_bins))]
+  if(is.null(min_dist)){
+    min_dist=min(sign$dist)
+  }
+  
+  if(is.null(max_dist)){
+    max_dist=max(sign$dist)
+  }
+  
+  
+  #sign[,distbin2 := cut(dist, breaks=(no_bins))]
+  sign[,distbin2 := cut(dist, breaks=seq(min_dist,max_dist,length.out=no_bins+1),include.lowest = TRUE)]
   # Re-order sign so ensure that the bins between the pools of sign and non-sign interactions will match!
   sign <- sign[order(dist)]
   
   # Calculate how many other-ends in this bin
+  bin_reads <- data.table(distbin2=factor(x=levels(sign$distbin2),levels=levels(sign$distbin2)),reads=rep(0,length(levels(sign$distbin2))),key="distbin2")
+  
   bin_reads2 <- sign[,length(dist), by="distbin2"]
+  setkey(bin_reads2,distbin2)
+  bin_reads2[bin_reads]->bin_reads2
+  bin_reads2[,bin_reads:=sum(V1,reads,na.rm = T),by=distbin2]
+  bin_reads2[,reads:=NULL]
+  bin_reads2[,V1:=NULL]
+  
   setnames(bin_reads2,"distbin2","udbin2")
-  setnames(bin_reads2,"V1","bin_reads")
   
   # Bin distances from bait in x1_nonsign
   if(!is.data.table(x1_nonsign)){setDT(x1_nonsign)}
@@ -114,11 +146,21 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
   
   x1_nonsign <- x1_nonsign[order(dist)]
   
-  x1_nonsign[,distbin3:= cut(dist, breaks=(no_bins))]
+  if(min(x1_nonsign$dist)<min_dist){
+    x1_nonsign <- x1_nonsign[dist>=min_dist]
+  }
+  
+  if(max(x1_nonsign$dist)>max_dist){
+    x1_nonsign <- x1_nonsign[dist<=max_dist]
+  }
+  
+  
+  x1_nonsign[,distbin3:= cut(dist, breaks=seq(min_dist,max_dist,length.out=no_bins+1),include.lowest=TRUE)]
   udbin3<-unique(x1_nonsign$distbin3)
-  udbin3<-udbin3[order(udbin3)]
   
   bin_reads2[,distbin3:=udbin3]
+  
+  print(bin_reads2)
   
   # Assign to each bin, how many other-ends should be sampled
   setkey(x1_nonsign, distbin3)
