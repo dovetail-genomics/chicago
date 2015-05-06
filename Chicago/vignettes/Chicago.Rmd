@@ -79,7 +79,9 @@ seqmonk format (ends with ...seqmonk.txt)
 
 washU\_text format (ends with ...washU\_text.txt)
 
-- FIXME "Got text files instead? Upload them from your computer" link.
+- Can be read by WashU browser (epigenomegateway.wustl.edu)
+- Upload via the "Got text files instead? Upload them from your computer" link.
+- FIXME
 
 washU\_track format (ends with ...washU\_track.txt)
 
