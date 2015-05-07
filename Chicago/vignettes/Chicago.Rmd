@@ -22,6 +22,10 @@ This vignette will walk you through a typical CHiCAGO analysis.
 
 We provide a wrapper to perform the analysis, called *runChicago.R*.
 
+WARNING: The data set used in this tutorial is only a small part of a real data set. Do not use any of the input data in your own analysis.
+
+We will be releasing a companion data package that has a fully executable workflow.
+
 ## Input files required
 
 Before you start, you will need: 
@@ -32,28 +36,54 @@ Before you start, you will need:
     * Bait map file (.baitmap) - a bed file containing co-ordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
     * *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts *countNperBin.py*, *countNbaitsPerBin.py* and *getProxOE.py*. 
 
-2. You will also need your input data, whose files end with *_distSign.txt*. These files can be obtained by running ...?
-
-Examples of these files are given in the extdata folder, as follows...
+Examples of these files are provided in the package, as follows. Do not use these files in your analysis!
 
 ```{r}
 dataPath <- system.file("extdata", package="Chicago")
-dir(dataPath)
+testDesignDir <- file.path(dataPath, "unitTestDesign")
+dir(testDesignDir)
+```
+
+2. You will also need your input data files, whose names typically end with *_distSign.txt*. These files can be obtained by running ...?
+
+```{r}
+testDataPath <- file.path(dataPath, "unitTestData")
+files <- c(
+    file.path(testDataPath, "unitTest_mESC_rep1_step1_distSign.txt"),
+    file.path(testDataPath, "unitTest_mESC_rep2_step1_distSign.txt")
+  )
+files
 ```
 
 ## Example workflow
 
-We apply CHiCAGO to the test data as follows. First, we create a blank ``ChicagoData`` object, 
+We apply CHiCAGO to the test data as follows. First, we create a blank ``ChicagoData`` object, and we tell it where the design files are. (If we want to change any settings, we can do that here.)
 
-```{r}
+```{r, message=FALSE}
 library(Chicago)
-##FIXME
-# cd <- setExperiment()
+
+cd <- setExperiment(designDir = testDesignDir)
 ```
 
-...
+The properties of ``ChicagoData`` objects are discussed more in [The ChicagoData object](#link).
 
-Discussed more in [The ChicagoData object](#link).
+Next, we read in the samples:
+
+```{r, message=FALSE}
+cd <- readAndMerge(files=files, cd=cd)
+```
+
+Finally, we run the pipeline. Note that this command will fail on the example data set, because we don't have enough data. A pre-analysed data set is provided in the next section.
+
+```{r, eval=FALSE}
+cd <- chicagoPipeline(cd)
+```
+
+``chicagoPipeline()`` produces a number of plots. You can save these to disk by setting the ``outprefix`` argument.
+
+For use in the next section, we load a pre-analysed data set as follows:
+
+
 
 ## Output files
 
