@@ -799,7 +799,7 @@ estimateBrownianNoise <- function(cd) {
   
   ##2) Calculate Bmeans
   ##----------------
-  x <- .estimateBMean(x, distFun=cd@params$f)
+  x <- .estimateBMean(x, distFunParams=cd@params$distFunParams)
   
   ##3)Fit model
   ##---------
@@ -811,21 +811,21 @@ estimateBrownianNoise <- function(cd) {
   
   ##NB Parametrization: var = mu + (mu^2)/dispersion
   cd@params$dispersion <- model$theta
-  cd@x <- .estimateBMean(cd@x, cd@params$f)
+  cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams)
   cd
 }
 
-.estimateBMean = function(x, distFun) {
+.estimateBMean = function(x, distFunParams) {
   
   ##Adds a "Bmean" vector to a data.table x, giving expected value of Brownian noise.
   ##NB updates by reference
   
   if("s_i" %in% colnames(x))
   {
-    x[, Bmean:=s_j*s_i*distFun(abs(distSign))]
+    x[, Bmean:=s_j*s_i*.distFun(abs(distSign), distFunParams)]
   } else {
     warning("s_i factors NOT found in .estimateBMean - variance will increase, estimating means anyway...")
-    x[, Bmean:=s_j*distFun(abs(distSign))]
+    x[, Bmean:=s_j*.distFun(abs(distSign), distFunParams)]
   }
   ##distcol == NA for trans-pairs. Thus set Bmean = 0.
   x[is.na(distSign), Bmean:=0]
