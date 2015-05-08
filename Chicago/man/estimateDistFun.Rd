@@ -36,7 +36,7 @@ Choice of method: "cubic" is currently the only allowed option, which fits a cub
 %The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 %}
 \details{
-By default, we look in 75 distance bins, and a cubic fit is used. For distances that lie outside of the bin boundaries, it is assumed that the function is log-linear, with continuity of \code{f} and \code{f'} on the log-scale. %If \code{method="lm"}, then it is assumed that the distance function consists of two segments. The first \code{n.obs.head} are used to estimate the first segment, and the last \code{n.obs.tail} are used to estimate the second segment.
+By default, we look in 75 distance bins, and a cubic fit is used. For distances that lie outside of the bin boundaries, it is assumed that the function is log-linear, with continuity of \code{f} and its first derivative on the log-scale. %If \code{method="lm"}, then it is assumed that the distance function consists of two segments. The first \code{n.obs.head} are used to estimate the first segment, and the last \code{n.obs.tail} are used to estimate the second segment.
 }
 \value{
 An object of class \code{chicagoData}, with the parameters of the distance function present as cd@params$distFunParams.
