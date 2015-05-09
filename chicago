@@ -20,6 +20,7 @@ my %config = (
 	help => '',
 	hold_jid => '',
 	config => '',
+	settings => ''
 );
 
 my $config_result = GetOptions(    #Stores parameters
@@ -28,7 +29,8 @@ my $config_result = GetOptions(    #Stores parameters
 	"email=s"   => \$config{email},
 	"help"   => \$config{help},
 	"hold_jid=s" => \$config{hold_jid},
-	"config=s"   => \$config{config}
+	"config=s"   => \$config{config},
+        "settings=s" => \$config{settings}
 	);
 
 die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
@@ -130,12 +132,18 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	
 	my $command;
+
+	my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder}";
+	if (hasval($config{settings})){
+		$params .= " --settings-file $config{settings}";
+	}
+
 	if($numberFiles == 1){
-		$command = "Rscript $Bin/runChicago.R --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} $files[0] $prefixStep2";		
+		$command = "Rscript $Bin/runChicago.R $params $files[0] $prefixStep2";		
 	
 	}else{
 		my $filenameString = join(',', @files);
-		$command = "Rscript $Bin/runChicago.R --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} $filenameString $prefixStep2";			
+		$command = "Rscript $Bin/runChicago.R $params $filenameString $prefixStep2";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
 		
