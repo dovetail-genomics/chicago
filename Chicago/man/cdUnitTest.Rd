@@ -18,7 +18,9 @@ This data set is used for unit testing - it is too small to run all of the steps
 \references{
 %%  ~~ possibly secondary sources and usages ~~
 }
-\code{\link{chicagoData}}
+\seealso{
+  \code{\link{chicagoData}}
+}
 \examples{
 data(cdUnitTest)
 ## maybe str(cdUnitTest) ; plot(cdUnitTest) ...
