@@ -8,7 +8,7 @@ peakEnrichment4Features(x1 = NULL, score = 5, colname_score = "score",
   min_dist = NULL, max_dist = NULL, folder = NULL, list_frag,
   sep = "\\t", filterB2B = TRUE, b2bcol = "isBait2bait", unique = TRUE,
   no_bins, sample_number, plot_name = NULL, position_otherEnd = NULL,
-  colname_dist = NULL)
+  colname_dist = NULL,trans=FALSE, plotPeakDensity=FALSE)
 }
 \arguments{
 \item{x1}{a \code{\link{chicagoData}} object or a data table (\code{\link{data.table}}) containining other end IDs.}
@@ -53,6 +53,11 @@ and the corresponding IDs. The coordinates should be "chromosome", "start" and "
 
 \item{colname_dist}{the name of the column which contains the distances between bait and other end.
 \code{colname_dist} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
+
+\item{trans}{a logical value indicating whether the enrichment is to be computed for trans interactions. If this parameter is set to \code{TRUE}, cis interactions are disregarded from the analysis.}
+
+\item{plotPeakDensity}{a logical value indicating whether to plot the density of interactions with distance. Setting this parameter to \code{TRUE} only applies to cis interactions.}
+
 }
 \value{
 a data frame containing columns for the number of overlaps for each feature in our significant interactions,
