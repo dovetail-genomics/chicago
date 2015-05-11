@@ -49,12 +49,10 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{chicagoPipeline}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function(FIXME) {FIXME}
+data(cdUnitTest)
+  \dontrun{
+    exportResults(cd, outfileprefix = "unitTestOutput")
+  }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

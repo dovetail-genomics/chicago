@@ -37,12 +37,15 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{chicagoPipeline}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+data(cdUnitTest)
 
-## The function is currently defined as
-function(FIXME) {FIXME}
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+rmapfileLoc <- file.path(designDir, "unitTest.rmap")
+baitmapfileLoc <- file.path(designDir, "unitTest.rmap")
+cdUnitTest <- modifySettings(cd = cdUnitTest, list(rmapfile=rmapfileLoc, baitmapfile=baitmapfileLoc))
+
+cdUnitTest <- estimateTechnicalNoise(cdUnitTest)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
