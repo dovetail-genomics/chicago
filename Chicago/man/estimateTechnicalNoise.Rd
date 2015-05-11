@@ -42,7 +42,7 @@ data(cdUnitTest)
 ##modifications to cdUnitTest, ensuring it uses correct design directory
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
 rmapfileLoc <- file.path(designDir, "unitTest.rmap")
-baitmapfileLoc <- file.path(designDir, "unitTest.rmap")
+baitmapfileLoc <- file.path(designDir, "unitTest.baitmap")
 cdUnitTest <- modifySettings(cd = cdUnitTest, list(rmapfile=rmapfileLoc, baitmapfile=baitmapfileLoc))
 
 cdUnitTest <- estimateTechnicalNoise(cdUnitTest)

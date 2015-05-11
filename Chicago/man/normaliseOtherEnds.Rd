@@ -43,64 +43,19 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 %}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##FIXME: example can be run by loading data package if it is installed, once it exists
 
-## The function is currently defined as
-function (cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, 
-    outfile = NULL) 
-{
-    cd@x = .addTLB(cd)
-    x = cd@x[abs(distSign) <= cd@settings$maxLBrownEst & is.na(distSign) == 
-        F]
-    message("Computing total bait counts...")
-    nbpb = .readNbaitsPBfile(s = cd@settings)
-    setkey(nbpb, otherEndID)
-    setkey(x, otherEndID)
-    nbpb = nbpb[x]
-    setkeyv(nbpb, c("otherEndID", "distbin"))
-    nbpb = unique(nbpb)
-    nbpbSum = nbpb[, sum(get(paste0("bin", as.integer(distbin)))), 
-        by = c("tlb", "distbin")]
-    setkeyv(nbpbSum, c("tlb", "distbin"))
-    setkeyv(x, c("tlb", "distbin"))
-    x = nbpbSum[x]
-    setnames(x, "V1", "ntot")
-    message("Computing scaling factors...")
-    x = .normaliseFragmentSets(x, s = cd@settings, viewpoint = "otherEnd", 
-        idcol = "tlb", Ncol = Ncol, npb = NULL, shrink = FALSE, 
-        adjBait2bait = FALSE, refExcludeSuffix = "B2B")
-    setkey(x, tlb)
-    x = unique(x)
-    set(x, NULL, "NNb", NULL)
-    set(x, NULL, "distbin", NULL)
-    set(x, NULL, "ntot", NULL)
-    if (plot) {
-        if (!is.null(outfile)) {
-            pdf(outfile)
-        }
-        with(x, barplot(s_i, names.arg = tlb, col = sapply(tlb, 
-            function(x) ifelse(length(grep("B2B", x)), "darkblue", 
-                "red")), xlab = "tlb", ylab = "s_i"))
-        legend("topleft", legend = c("non-B2B", "B2B"), fill = c("red", 
-            "darkblue"))
-        if (!is.null(outfile)) {
-            dev.off()
-        }
-    }
-    message("Computing normalised counts...")
-    setkey(cd@x, tlb)
-    cd@x = merge(cd@x, x, all.x = T, by = "tlb")
-    set(cd@x, which(is.na(cd@x$s_i)), "s_i", 1)
-    cd@x[, `:=`((normNcol), pmax(1, round(get(Ncol)/s_i)))]
-    message("Post-processing...")
-    setkey(cd@x, baitID, otherEndID)
-    othercols = names(cd@x)[!names(cd@x) \%in\% c("baitID", "otherEndID", 
-        "distbin", Ncol, normNcol)]
-    setcolorder(cd@x, c("baitID", "otherEndID", "distbin", othercols, 
-        Ncol, normNcol))
-    cd
+data(cdUnitTest)
+
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+new.settings <- paste0(file.path(designDir, "unitTest"), c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe"))
+new.settings <- as.list(new.settings)
+names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
+cdUnitTest <- modifySettings(cd = cdUnitTest, new.settings)
+
+  \dontrun{
+  cdUnitTest <- normaliseOtherEnds(cdUnitTest)
   }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -30,6 +30,9 @@ The new columns contain logical values indicating whether there was an overlap o
 \description{
 This function checks which other-ends from a \code{\link{chicagoData}} object overlap with a set of genomic features.
 }
+\examples{
+FIXME <- function(FIXME)
+}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }

@@ -30,19 +30,15 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{defaultSettings}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
 
-## The function is currently defined as
-function (cd, settings) 
-{
-    message("Warning: settings are not checked for consistency with the previous ones.")
-    for (s in names(settings)) {
-        cd@settings[[s]] = settings[[s]]
-    }
-    cd
-  }
+cd <- setExperiment(designDir)
+
+##Suppose I want to increase the zone in which Brownian noise is assumed to dominate - by default, 1500000:
+print(cd@settings$maxLBrownEst)
+
+cd <- modifySettings(cd, list(maxLBrownEst = 3000000L))
+print(cd@settings$maxLBrownEst)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

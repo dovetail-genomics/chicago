@@ -51,7 +51,7 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \examples{
 data(cdUnitTest)
   \dontrun{
-    exportResults(cd, outfileprefix = "unitTestOutput")
+    exportResults(cdUnitTest, outfileprefix = "unitTestOutput")
   }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

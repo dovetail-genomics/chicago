@@ -52,36 +52,15 @@ Jonathan Cairns
 \code{\link{chicagoPipeline}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+data(cdUnitTest)
 
-## The function is currently defined as
-function (cd, method = "weightedRelative", includeTrans = TRUE, 
-    plot = T, outfile = NULL) 
-{
-    x <- cd@x
-    set <- cd@settings
-    avgFragLen <- .getAvgFragLength(cd)
-    if (!method \%in\% c("unweighted", "weightedRelative")) {
-        stop("method=", method, " not recognized.")
-    }
-    if (!includeTrans) {
-        x <- x[!is.na(x$distSign), ]
-    }
-    if (method == "weightedRelative") {
-        message("Calculating p-value weights...")
-        x[, `:=`(log.w, .getWeights(abs(x$distSign), cd, includeTrans = includeTrans))]
-        x[, `:=`(log.q, log.p - log.w)]
-        message("Calculating scores...")
-        minval <- .getWeights(0, cd, includeTrans = includeTrans)
-        x[, `:=`(score, pmax(-minval - log.q, 0))]
-    }
-    else {
-        stop("Only method='weightedRelative' available currently.")
-    }
-    cd
-  }
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+rmapfileLoc <- file.path(designDir, "unitTest.rmap")
+baitmapfileLoc <- file.path(designDir, "unitTest.baitmap")
+cdUnitTest <- modifySettings(cd = cdUnitTest, list(rmapfile=rmapfileLoc, baitmapfile=baitmapfileLoc))
+
+cdUnitTest <- getScores(cdUnitTest)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

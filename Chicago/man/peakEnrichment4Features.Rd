@@ -67,11 +67,13 @@ this function samples different sets of interactions from the non-significant po
 Results are returned in a table and plotted in a barplot.
 The difference between the results for the set of significant interactions and the random samples can be used as a measure of the
 enrichment for genomic features.
-Samples have the same size as the number of signifcant interactions called. Moreover, they follow the same distribution of distances between
+Samples have the same size as the number of significant interactions called. Moreover, they follow the same distribution of distances between
 bait and other-end. This is achieved by binning this distribution and drawing interactions per bin, according to the numbers observed in
 the significant set.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-
+\examples{
+FIXME <- function(FIXME)
+}
