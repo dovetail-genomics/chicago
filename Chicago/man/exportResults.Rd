@@ -9,7 +9,7 @@ Export the results from a \code{chicagoData} object to disk.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
-        format = c("seqMonk", "interBed", "washU_track", "washU_text"), order = c("position", "score")[1])
+        format = c("seqMonk", "interBed", "washU_text"), order = c("position", "score")[1])
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,6 +28,8 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
 }
   \item{format}{
   The file format(s) to output. If a multiple formats are supplied as a vector, then all of these formats will be outputted.
+
+  Supported formats are: "seqMonk", "interBed", "washU_text" and, for advanced users, "washU_track".
 }
   \item{order}{
   Should output be ordered by position or score?
