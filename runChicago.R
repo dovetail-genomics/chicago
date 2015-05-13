@@ -20,7 +20,7 @@ dir.create.ifNotThere = function(path, ...){
   }
 }
 
-moveToFolder = function(pattern, where){
+moveToFolder = function(pattern, wherez){
   files = list.files(".", pattern)
   if (!length(files)){
     message("No files found matching the pattern ", pattern)
@@ -225,8 +225,6 @@ if(!dir.create.ifNotThere("enrichment_data")){
   stop("Couldn't create folder enrichment_data\n")      
 }
 
-### TODO: if bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
-### Take into account that unlike other files, there may not be .gz / .gz.tbi created 
 if (!moveToFolder("\\.txt", "data")){
   stop("Couldn't move txt files to data folder\n")
 }
@@ -236,6 +234,19 @@ if("interBed" %in% exportFormat){
     stop("Couldn't move ibed files to data folder\n")
   }
 }
+
+### If bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
+### Unlike other files, there may not be .gz / .gz.tbi created.
+
+if("washU_track" %in% exportFormat){
+  if(!moveToFolder("\\.txt.gz", "data")){
+    message("Couldn't move .txt.gz files (washU track) to data folder\n")
+  }
+  if(!moveToFolder("\\.txt.gz.tbi", "data")){
+    message("Couldn't move .txt.gz.tbi files (washU track) to data folder\n")
+  }
+}
+
 
 if(isRda){
   if(!moveToFolder("\\.RDa", "data")){
