@@ -1692,8 +1692,8 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU_track","washU_text"), order=c("position", "score")[1]){
-    
+exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU_track","washU_text"), order=c("position", "score")[1]){
+  
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
@@ -1713,7 +1713,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   
   message("Reading the bait map file...")
   baitmap = fread(cd@settings$baitmapfile)
-
+  
   setnames(baitmap, "V1", "baitChr")
   setnames(baitmap, "V2", "baitStart")
   setnames(baitmap, "V3", "baitEnd")
@@ -1721,7 +1721,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   setnames(baitmap, cd@settings$baitmapGeneIDcol, "promID")
   
   message("Preparing the output table...")
-
+  
   if (is.null(b2bcutoff)){
     x = cd@x[ get(scoreCol)>=cutoff ]
   }
@@ -1729,7 +1729,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
     x = cd@x[ (isBait2bait==T & get(scoreCol)>=b2bcutoff ) | 
                 ( isBait2bait==F & get(scoreCol)>=cutoff )]
   }
-
+  
   x = x[, c("baitID", "otherEndID", "N", scoreCol), with=F]
   
   setkey(x, otherEndID)
@@ -1740,10 +1740,10 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   
   setkey(baitmap, baitID)  
   x = merge(x, baitmap, by="baitID", allow.cartesian = T)
-        
+  
   # note that baitmapGeneIDcol has been renamed into "promID" above 
   bm2 = baitmap[,c ("baitID", "promID"), with=F]
-
+  
   setDF(x)
   setDF(bm2)
   
@@ -1757,7 +1757,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   
   out$N_reads [ is.na(out$N_reads) ] = 0
   out$score = round(out$score,2)
-
+  
   if (order=="position"){
     out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
   }
@@ -1765,26 +1765,26 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
     out = out[order(out$score, decreasing=T), ]
   }
   out0=out
-   
+  
   if ("seqMonk" %in% format){
     message("Writing out for seqMonk...")
     out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
     
     out$newLineOEChr = paste("\n",out[,"otherEnd_chr"], sep="")    
     out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
-  
+    
     write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
-  }	
+  }  
   if ("interBed" %in% format){
     message("Writing out interBed...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
-                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
-                 "N_reads", "score")]
-    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)	
+                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
+                  "N_reads", "score")]
+    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)  
   }
   
   if("washU_text" %in% format){
-    message("Writing out text file for washU browser upload...")
+    message("Writing out text file for WashU browser upload...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", 
                   "otherEnd_chr", "otherEnd_start", "otherEnd_end",
                   "score")]
@@ -1803,47 +1803,58 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   }
   
   if("washU_track" %in% format){
-   message("Writing out track for washU browser...")
-   out = out0[,c("bait_chr", "bait_start", "bait_end", 
-                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
-                 "score")]
-
-   if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
-   {
-     out$bait_chr <- paste0("chr", out$bait_chr)
-     out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
-   }
-   if(any(out$bait_chr == c("chrMT")))
-   {
-     out <- out[out$bait_chr != "chrMT",]
-   }
-   
-   ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
-   setDT(x)
-   setkey(x, baitID, otherEndID)
-   x$ReversedInteractionScore <- x[J(x$otherEndID, x$baitID), get(scoreCol)]
-   sel <- x[,get(scoreCol)] > x$ReversedInteractionScore
-   sel <- ifelse(is.na(sel), TRUE, sel) ##"FALSE" entries in sel should correspond to minima
-   setDF(x)
-   x$ReversedInteractionScore <- NULL
-   out <- out[sel,]
-   
-   out$i = seq(1,nrow(out)*2,2)
-   res = apply(out,1,function(x){
+    message("Writing out track for WashU browser...")
+    out = out0[,c("bait_chr", "bait_start", "bait_end", 
+                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
+                  "score")]
+    
+    if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
+    {
+      out$bait_chr <- paste0("chr", out$bait_chr)
+      out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
+    }
+    if(any(out$bait_chr == c("chrMT")))
+    {
+      out <- out[out$bait_chr != "chrMT",]
+    }
+    
+    ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
+    setDT(x)
+    setkey(x, baitID, otherEndID)
+    x$ReversedInteractionScore <- x[J(x$otherEndID, x$baitID), get(scoreCol)]
+    sel <- x[,get(scoreCol)] > x$ReversedInteractionScore
+    sel <- ifelse(is.na(sel), TRUE, sel) ##"FALSE" entries in sel should correspond to minima
+    setDF(x)
+    x$ReversedInteractionScore <- NULL
+    out <- out[sel,]
+    
+    out$i = seq(1,nrow(out)*2,2)
+    appendOut <- out[,c("otherEnd_chr", "otherEnd_start", "otherEnd_end", "bait_chr", "bait_start", "bait_end", "otherEnd_name", "score", "i")]
+    names(appendOut) <- names(out)
+    out <- rbind(out, appendOut)
+    sel <- order(out$bait_chr, out$bait_start)
+    out <- out[sel,]
+    
+    res = apply(out,1,function(x){
       lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
-      lines = paste0(lines,  "\n",
-        paste0(x["otherEnd_chr"], "\t", x["otherEnd_start"], "\t", x["otherEnd_end"], "\t", x["bait_chr"],":", x["bait_start"], "-", x["bait_end"], ",", x["score"],"\t", as.numeric(x["i"])+1, "\t", "."))
-         lines
+      lines
     })
     res = gsub(" ", "", res)
     writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
-   
-   ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-   ##FIXME better error handling here?
-   system2(paste0("bgzip ", outfileprefix,"_washU_track.txt"))
-   system2(paste0("tabix -p bed ", outfileprefix,"_washU_track.txt.gz"))
-   }
-  
+    
+    ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
+    ##FIXME better error handling here?
+    exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
+    exitcode2 <- 1
+    if(exitcode1 == 0)
+    {
+      exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
+    }
+    if(exitcode1 != 0 | exitcode2 != 0)
+    {
+      warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
+    }
+  }
 }
 
 wb2b = function(oeID, s, baitmap=NULL){

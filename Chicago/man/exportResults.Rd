@@ -33,9 +33,15 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
   Should output be ordered by position or score?
 }
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
+\details{
+Important notes on the washU formats: Most users will prefer "washU_text" output to "washU_track" output. The "washU_text" output can be uploaded to the washU browser directly. To do this, open the browser, select "Add custom tracks", and use the "Got text files instead? Upload them from your computer" link near the bottom of the page.
+
+The "washU_track" output needs to be hosted elsewhere. You can then link the browser to the data via the "Interaction - pairwise interaction" button on the "Add custom tracks" page.
+
+If you get the warning "WashU Browser track format could not be finalized due to absence of bgzip or tabix", this could be because you have not installed SAMtools and htslib. You can check with system2("tabix") and system2("bgzip"). Sometimes RStudio has issues with reading \code{$PATH} - you can check this with \code{system2("echo", "$PATH")}.
+
+If all else fails, and you need "washU_track" output, then you can manually perform the final steps yourself by running: \code{bgzip <outfileprefix>_washU_track.txt} and \code{tabix -p bed <outfileprefix>.txt.gz}.
+}
 \value{
 NULL
 }
@@ -50,6 +56,14 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 \examples{
 data(cdUnitTest)
+
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+new.settings <- paste0(file.path(designDir, "unitTest"), c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe"))
+new.settings <- as.list(new.settings)
+names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
+cdUnitTest <- modifySettings(cd = cdUnitTest, new.settings)
+
   \dontrun{
     exportResults(cdUnitTest, outfileprefix = "unitTestOutput")
   }
