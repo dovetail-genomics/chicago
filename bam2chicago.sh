@@ -9,8 +9,8 @@ if [ $# -lt 4 ]
 fi
 
 command -v bedtools >/dev/null 2>&1 || { echo >&2 "Error: Cannot execute bedtools. Check that it's installed and added to PATH. Aborting."; exit 1; }
-command -v awk >/dev/null 2>&1 || { echo >&2 "Error: Cannot execute awk. Aboring."; exit 1; }
-command -v perl >/dev/null 2>&1 || { echo >&2 "Error: Cannot execute perl. Aboring."; exit 1; }
+command -v awk >/dev/null 2>&1 || { echo >&2 "Error: Cannot execute awk. Aborting."; exit 1; }
+command -v perl >/dev/null 2>&1 || { echo >&2 "Error: Cannot execute perl. Aborting."; exit 1; }
 
 #SCRIPT=$(readlink -f $0)
 #pipelinedir=`dirname $SCRIPT`
