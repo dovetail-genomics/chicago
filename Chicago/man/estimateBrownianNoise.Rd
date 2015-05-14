@@ -33,9 +33,21 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{chicagoPipeline}}
 }
 \examples{
-function(FIXME) {FIXME}
+
+data(cdUnitTest)
+
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+new.settings <- paste0(file.path(designDir, "unitTest"), c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe"))
+new.settings <- as.list(new.settings)
+names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
+cdUnitTest <- modifySettings(cd = cdUnitTest, new.settings)
+
+##make cdUnitTest use the full subset of baits
+cdUnitTest <- modifySettings(cd = cdUnitTest, list(brownianNoise.subset=NA))
+
+cdUnitTest <- estimateBrownianNoise(cdUnitTest)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
+
 \keyword{ ~kwd1 }
 \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

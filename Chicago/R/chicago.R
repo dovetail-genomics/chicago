@@ -692,7 +692,7 @@ estimateBrownianNoise <- function(cd) {
   ##Pre-filtering: get subset of data, store as x
   ##---------------------------------------------
   
-  if(!is.null(subset))
+  if(!is.na(subset))
   {
     if(!class(subset) %in% c("numeric","integer")) {stop("'subset' must be an integer.")}
     
@@ -733,7 +733,7 @@ estimateBrownianNoise <- function(cd) {
   ##1B) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
   ##   censored bait2bait pairs (etc...) already taken care of in pre-computation of ProxOE.  
   
-  if(!is.null(subset)) {
+  if(!is.na(subset)) {
     ## if we chose a subset of baits, restrict to that (none of these should be censored)
     sel.baits <- sel.sub
   } else {
