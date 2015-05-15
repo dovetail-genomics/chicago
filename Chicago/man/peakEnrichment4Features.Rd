@@ -5,7 +5,7 @@
 \title{Enrichment for Features}
 \usage{
 peakEnrichment4Features(x1 = NULL, score = 5, colname_score = "score",
-  min_dist = NULL, max_dist = NULL, folder = NULL, list_frag,
+  min_dist = 0, max_dist = NULL, folder = NULL, list_frag,
   sep = "\\t", filterB2B = TRUE, b2bcol = "isBait2bait", unique = TRUE,
   no_bins, sample_number, plot_name = NULL, position_otherEnd = NULL,
   colname_dist = NULL,trans=FALSE, plotPeakDensity=FALSE)
@@ -17,10 +17,11 @@ peakEnrichment4Features(x1 = NULL, score = 5, colname_score = "score",
 
 \item{colname_score}{the name of the column which contains the score values which establish the level of significance of each interaction.}
 
-\item{min_dist}{the minimum distance from bait required in the query.
-This parameter is particularly useful when the user only wants to look at cis distal interactions (very far from bait).}
+\item{min_dist}{the minimum distance from bait required in the query. If this parameter is
+set to \code{NULL} and \code{trans} is set to \code{TRUE}, cis interactions are disregarded from the analysis.
+This parameter is also useful when the user only wants to look at cis distal interactions (very far from bait).}
 
-\item{max_dist}{the minimum distance from bait required in the query.
+\item{max_dist}{the maximum distance from bait required in the query.
 This parameter is particularly useful when the user only wants to look at cis proximal interactions (interactions surrounding the bait).}
 
 \item{folder}{the name of the folder where the files containing the features of interest are stored.}
@@ -54,7 +55,8 @@ and the corresponding IDs. The coordinates should be "chromosome", "start" and "
 \item{colname_dist}{the name of the column which contains the distances between bait and other end.
 \code{colname_dist} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
 
-\item{trans}{a logical value indicating whether the enrichment is to be computed for trans interactions. If this parameter is set to \code{TRUE}, cis interactions are disregarded from the analysis.}
+\item{trans}{a logical value indicating whether the enrichment is to be computed for trans interactions. 
+If this parameter is set to \code{TRUE} and \code{min_dist} is set to \code{NULL}, cis interactions are disregarded from the analysis.}
 
 \item{plotPeakDensity}{a logical value indicating whether to plot the density of interactions with distance. Setting this parameter to \code{TRUE} only applies to cis interactions.}
 

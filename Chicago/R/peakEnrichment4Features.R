@@ -1,5 +1,5 @@
 peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
-                                    min_dist=NULL, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
+                                    min_dist=0, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
                                     b2bcol="isBait2bait", unique=TRUE, no_bins, sample_number,
                                     plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL,trans=FALSE, plotPeakDensity=FALSE) {
   # Extract significant interactions
@@ -7,7 +7,7 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
   if (is.null(colname_score)){
     stop("colname_score needs to be specified...\n")
   }
-    
+  
   # Check if list_frag is a named vector and gives it names if not:
   if(is.null(names(list_frag))){ names(list_frag) = paste0("Feature", 1:length(list_frag)) }
   
@@ -30,27 +30,31 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
       }
     } 
     setDT(x1)
-    } else {
-      cat("Input is a CHiCAGO object...\n")
-      position_otherEnd <- x1@settings$rmapfile
-      colname_dist <- "distSign"
-      x1 = x1@x   
-    }
+  } else {
+    cat("Input is a CHiCAGO object...\n")
+    position_otherEnd <- x1@settings$rmapfile
+    colname_dist <- "distSign"
+    x1 = x1@x   
+  }
   
   if(filterB2B){
     cat("Filtering out bait2bait interactions...\n")
     x1 <- x1[get(b2bcol)==FALSE]
   }
-
+  
   if(!trans){
     cat("Removing trans interactions from analysis...\n")
     x1 <- x1[!is.na(get(colname_dist))]
     
   } else {
-    cat("Enrichment for features computed for trans interactions only...\n")
-    x1 <- x1[is.na(get(colname_dist))]
+    if(is.null(min_dist)){
+      cat("Enrichment for features computed for trans interactions only...\n")
+      x1 <- x1[is.na(get(colname_dist))]
+    } else {
+      cat("Enrichment for features computed for trans and cis interactions...\n")
+    }
   }
-    
+  
   cat("Overlap our reads with Features...\n")
   x1<- overlapFragWithFeatures(x = x1, position_otherEnd=position_otherEnd, folder = folder, list_frag = list_frag)
   cat("Separate significant interactions from non-significant interactions...\n")
@@ -64,24 +68,50 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
     cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
     x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]], min_dist=min_dist, max_dist=max_dist)
     cat("Draw random samples...\n")
-    if (plotPeakDensity){
-
-    plot(density(abs(x1[[1]]$distSign)))
+    if (plotPeakDensity){     
+      plot(density(abs(x1[[1]]$distSign)))
     }
     result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
     if (plotPeakDensity){
-    j=1
-    for (i in c(1,round(sample_number/2),sample_number)){
-      lines(density(abs(result_3[[i]]$distSign)),col=c("red","magenta","blue")[j])
-      j=j+1
+      j=1
+      for (i in c(1,round(sample_number/2),sample_number)){
+        lines(density(abs(result_3[[i]]$distSign)),col=c("red","magenta","blue")[j])
+        j=j+1
+      }
+    }   
+  } 
+  else {
+    if(is.null(min_dist)){
+      x1[[2]][,distbin3:="trans"]
+      x1[[2]][,bin_reads:=nrow(x1[[1]])]
+      result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+    } else {
+      cat("")
+      # trans
+      x1[[3]] <- x1[[2]][is.na(x1[[2]]$distSign)]
+      x1[[3]][,distbin3:="trans"]
+      x1[[3]][,bin_reads:=nrow(x1[[1]][is.na(x1[[1]]$distSign)])] # We want the same number as significant trans-interactions.   
+      
+      # cis
+      x1[[4]] <- .binning(sign=x1[[1]][!is.na(x1[[1]]$distSign)], no_bins=no_bins, x1_nonsign=x1[[2]][!is.na(x1[[2]]$distSign)], min_dist=min_dist, max_dist=max_dist)
+      
+      # combine trans and cis
+      x1[[2]] <- rbind(x1[[3]],x1[[4]][,names(x1[[3]]),with=FALSE])
+      x1[[3]] <- NULL
+      x1[[4]] <- NULL
+      
+      if (plotPeakDensity){     
+        plot(density(abs(x1[[1]][!is.na(x1[[1]]$distSign)]$distSign)))
+      }
+      result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+      if (plotPeakDensity){
+        j=1
+        for (i in c(1,round(sample_number/2),sample_number)){
+          lines(density(abs(result_3[[i]][!is.na(result_3[[i]]$distSign)]$distSign)),col=c("red","magenta","blue")[j])
+          j=j+1
+        }
+      }   
     }
-    }
-    
-    
-  } else {
-    x1[[2]][,distbin3:="trans"]
-    x1[[2]][,bin_reads:=nrow(x1[[1]])]
-    result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
     
   }
   
@@ -296,15 +326,16 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   else if (!is.null(filename)) {
     x1 <- read.table(samplefilename, header=TRUE)
   }  
+  if (is.null(min_dist)){min_dist=0}
   if(!is.data.table(x1)){setDT(x1)}
   if (!is.null(colname_dist)) {
-    if ((is.null(max_dist) & is.null(min_dist)) | trans) {
-      cat("Either no distance from bait to trim sample was provided or this function is being run for trans interactions...\n")
+    if (is.null(max_dist) & min_dist==0) {
+      cat("No distance from bait to trim sample was provided...\n")
     }
     else {
       x1 <- x1[,dist := abs(get(colname_dist))]
       if (!is.null(max_dist)) {x1<-x1[dist<=max_dist]}
-      if (!is.null(min_dist)) {x1<-x1[dist>=min_dist]}
+      if (!(min_dist==0)) {x1<-x1[dist>=min_dist]}
     }
   }
   result <- list(x1[get(colname_score)>=threshold],

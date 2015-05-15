@@ -81,7 +81,11 @@ p = add.argument(p, arg="--en-max-dist", help = "The upper distance limit for co
 p = add.argument(p, arg="--en-full-range", help = "Assess the enrichment for features for the full distance range (can be very slow!)", flag = T)
 p = add.argument(p, arg="--en-sample-no", help = "The number of negative samples for computing enrichment for features", default=100)
 
+p = add.argument(p, arg="--features-only", help = "Re-run feature enrichment analysis with Chicago output files. With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.",  flag = T)
+
 opts = parse.args(p, args)
+
+featuresOnly = opts[["features-only"]]
 
 inputFiles = strsplit(opts[["<input-files>"]], "\\,")[[1]]
 outPrefix_rel = opts[["<output-prefix>"]]
@@ -92,7 +96,12 @@ designDir = opts[["design-dir"]]
 printMemory = opts[["print-memory"]]
 
 cutoff = opts[["cutoff"]]
-exportFormat = ifelse(is.na(opts[["export-format"]])[1], NA, strsplit(opts[["export-format"]], "\\,")[[1]])
+
+exportFormat = NA
+if(!is.na(opts[["export-format"]])[1]){
+   exportFormat = strsplit(opts[["export-format"]], "\\,")[[1]]
+}
+
 exportOrder = opts[["export-order"]]
 
 isRda = opts[["rda"]]
@@ -135,104 +144,127 @@ if(!is.na(enFeatList)){
   names(enFeatFiles) = unlist(featList[,1])
 }
 
-if(is.na(settingsFile)){
-  settingsFile = NULL
+if(!featuresOnly){
+
+  if(is.na(settingsFile)){
+    settingsFile = NULL
+  }
+  
+  if (!all(exportFormat %in% c("seqMonk", "interBed", "washU_text", "washU_track"))) {
+    stop("--exportFormat must be either seqMonk, interBed, washU_text or washU_track (or a comma-separated combination of these)\n")
+  }
+  if (!exportOrder %in% c("position", "score")) {
+    stop("--exportOrder must be either position (default) or score\n")
+  }
+  
+  message("Setting the experiment...\n")
+  cd = setExperiment(designDir = designDir, settingsFile = settingsFile)
+
+
+  if(length(inputFiles)>1){
+    message("\nReading input files...\n")
+    cd = readAndMerge(inputFiles, cd)
+  }else{
+    message("\n")
+    cd = readSample(inputFiles, cd)
+  }
 }
-
-if (!all(exportFormat %in% c("seqMonk", "interBed", "washU_text", "washU_track"))) {
-  stop("--exportFormat must be either seqMonk, interBed, washU_text or washU_track (or a comma-separated combination of these)\n")
-}
-if (!exportOrder %in% c("position", "score")) {
-  stop("--exportOrder must be either position (default) or score\n")
-}
-
-message("Setting the experiment...\n")
-cd = setExperiment(designDir = designDir, settingsFile = settingsFile)
-
-
-if(length(inputFiles)>1){
-  message("\nReading input files...\n")
-  cd = readAndMerge(inputFiles, cd)
-}else{
-  message("\n")
-  cd = readSample(inputFiles, cd)
-}
-
+  
 if(!dir.create.ifNotThere(outDir, recursive = T)){
   stop(paste("Couldn't create folder", outDir, "\n"))
 }
 
-logfile = file(paste0(outPrefix, "_params.txt"), "w")
-cat("#  runChicago parameters:\n", file=logfile)
-for (arg in names(opts)){
-        cat(paste(arg, opts[[arg]], sep="\t"), "\n", file=logfile)
-}
-close(logfile)
-
-
-message("\n\nStarting chicagoPipeline...\n")
-cd = chicagoPipeline(cd, outprefix = outPrefix, printMemory = printMemory)
-
-if (isDF){
-  message("\n\nSaving the image of Chicago output as a data frame...\n")
-  y = cd@x
-  setDF(y)
-  if (isRda){ 
-    save(y, file=paste0(outPrefix, "_df.RDa"))
-  }else{
-    saveRDS(y, paste0(outPrefix, "_df.Rds"))
+if(!featuresOnly){
+  logfile = file(paste0(outPrefix, "_params.txt"), "w")
+  cat("#  runChicago parameters:\n", file=logfile)
+  for (arg in names(opts)){
+          cat(paste(arg, opts[[arg]], sep="\t"), "\n", file=logfile)
   }
+  close(logfile)
 }else{
-  message("\n\nSaving the Chicago object...\n")
-  if (isRda){ 
-    save(cd, file=paste0(outPrefix, ".RDa"))
-  }else{
-    saveRDS(cd, paste0(outPrefix, ".Rds"))
+  logfile = file(paste0(outPrefix, "_params.txt"), "a")
+  cat("#  runChicago featuresOnly parameters:\n", file=logfile)
+  for (arg in names(opts)){
+    cat(paste(arg, opts[[arg]], sep="\t"), "\n", file=logfile)
   }
+  close(logfile)
 }
 
-logfile = file(paste0(outPrefix, "_params.txt"), "a")
-cat("\n#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
-for (s in names(cd@settings)){
-        cat(paste(s, cd@settings[[s]], sep="\t"), "\n", file=logfile)
+if (!featuresOnly){
+  message("\n\nStarting chicagoPipeline...\n")
+  cd = chicagoPipeline(cd, outprefix = outPrefix, printMemory = printMemory)
+  
+  if (isDF){
+    message("\n\nSaving the image of Chicago output as a data frame...\n")
+    y = cd@x
+    setDF(y)
+    if (isRda){ 
+      save(y, file=paste0(outPrefix, "_df.RDa"))
+    }else{
+      saveRDS(y, paste0(outPrefix, "_df.Rds"))
+    }
+  }else{
+    message("\n\nSaving the Chicago object...\n")
+    if (isRda){ 
+      save(cd, file=paste0(outPrefix, ".RDa"))
+    }else{
+      saveRDS(cd, paste0(outPrefix, ".Rds"))
+    }
+  }
+  
+  logfile = file(paste0(outPrefix, "_params.txt"), "a")
+  cat("\n#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
+  for (s in names(cd@settings)){
+          cat(paste(s, cd@settings[[s]], sep="\t"), "\n", file=logfile)
+  }
+  close(logfile)
+  
+  message("\n\nPlotting examples...\n")
+  baits=plotBaits(cd, outfile=paste0(outPrefix, "_proxExamples.pdf"), xlim=c(-proxLim,proxLim))
+  if (plotFull){
+    plotBaits(cd, baits=baits, outfile=paste0(outPrefix, "_examples.pdf"))
+  }
+  
+  message("\n\nExporting peak lists...\n")
+  print(exportFormat)
+  exportResults(cd, outfileprefix=outPrefix, cutoff=cutoff, format = exportFormat, order = exportOrder)
+  
+  message("\n\nSorting output files into folders...\n")
 }
-close(logfile)
-
-message("\n\nPlotting examples...\n")
-baits=plotBaits(cd, outfile=paste0(outPrefix, "_proxExamples.pdf"), xlim=c(-proxLim,proxLim))
-if (plotFull){
-  plotBaits(cd, baits=baits, outfile=paste0(outPrefix, "_examples.pdf"))
-}
-
-message("\n\nExporting peak lists...\n")
-exportResults(cd, outfileprefix=outPrefix, cutoff=cutoff, format = exportFormat, order = exportOrder)
-
-message("\n\nSorting output files into folders...\n")
 
 curDir = getwd()
 setwd(outDir)
 
+
 if(!dir.create.ifNotThere("data")){
   stop("Couldn't create folder data\n")  
 }
-if(!dir.create.ifNotThere("diag_plots")){
-  stop("Couldn't create folder diag_plots\n")
-}
-if(!dir.create.ifNotThere("examples")){
-  stop("Couldn't create folder examples\n")      
-}
-if(!dir.create.ifNotThere("enrichment_data")){
-  stop("Couldn't create folder enrichment_data\n")      
-}
 
+<<<<<<< HEAD
+=======
+if(!featuresOnly){
+  if(!dir.create.ifNotThere("diag_plots")){
+    stop("Couldn't create folder diag_plots\n")
+  }
+  if(!dir.create.ifNotThere("examples")){
+    stop("Couldn't create folder examples\n")      
+  }
+}
+  
+### TODO: if bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
+### Take into account that unlike other files, there may not be .gz / .gz.tbi created 
+>>>>>>> featuresOnly
 if (!moveToFolder("\\.txt", "data")){
   stop("Couldn't move txt files to data folder\n")
 }
 
-if("interBed" %in% exportFormat){
-  if(!moveToFolder("\\.ibed", "data")){
-    stop("Couldn't move ibed files to data folder\n")
+if(!featuresOnly){
+  if("interBed" %in% exportFormat){
+    if(!moveToFolder("\\.ibed", "data")){
+      stop("Couldn't move ibed files to data folder\n")
+    }
   }
+<<<<<<< HEAD
 }
 
 ### If bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
@@ -251,22 +283,42 @@ if("washU_track" %in% exportFormat){
 if(isRda){
   if(!moveToFolder("\\.RDa", "data")){
     stop("Couldn't move the RDa file to data folder\n")
+=======
+  
+  if(isRda){
+    if(!moveToFolder("\\.RDa", "data")){
+      stop("Couldn't move the RDa file to data folder\n")
+    }
+  }else{
+    if(!moveToFolder("\\.Rds", "data")){
+      stop("Couldn't move the Rds file to data folder\n")
+    }
+>>>>>>> featuresOnly
   }
-}else{
-  if(!moveToFolder("\\.Rds", "data")){
-    stop("Couldn't move the Rds file to data folder\n")
+  
+  if(!moveToFolder("xamples\\.pdf", "examples")){
+    stop("Couldn't move pdf file(s) to example folder\n")
+  }
+  
+  if(!moveToFolder("\\.pdf", "diag_plots")){
+    stop("Couldn't move pdf files to diag_plots folder\n")
   }
 }
 
-if(!moveToFolder("xamples\\.pdf", "examples")){
-  stop("Couldn't move pdf file(s) to example folder\n")
-}
-
-if(!moveToFolder("\\.pdf", "diag_plots")){
-  stop("Couldn't move pdf files to diag_plots folder\n")
+if(!dir.create.ifNotThere("enrichment_data")){
+  stop("Couldn't create folder enrichment_data\n")      
 }
 
 setwd(curDir)
+
+if(featuresOnly){
+  if (inputFiles[1]=="-"){
+    dataPath = file.path(outDir, "data")
+    cd = readRDS(file.path(dataPath, paste0(outPrefix_rel, ".Rds")))
+  }else{
+    cd = readRDS(inputFiles[1])
+  }
+}
 
 if (computeEnrichment){
   message("\n\nComputing enrichment for features...\n")
@@ -280,13 +332,32 @@ if (computeEnrichment){
   
   
   noBins = max(5, ceiling(ifelse(is.null(enMaxDist), max(abs(cd@x$distSign), na.rm = T), enMaxDist) - enMinDist)/1e4)
-
+  
+  plot_name = paste0(outPrefix, "_feature_overlaps.pdf")
+  i=0
+  raw.name = file.path(file.path(outDir, "enrichment_data"), paste0(outPrefix_rel, "_feature_overlaps.pdf"))
+  # NB: since the file is getting moved post-hoc, the location we are checking is different from plot_name 
+  while(file.exists(raw.name)){
+    i = i+1
+    plot_name = paste0(outPrefix, "_feature_overlaps", i, ".pdf")
+    raw.name = file.path(file.path(outDir, "enrichment_data"), paste0(outPrefix_rel, "_feature_overlaps", i, ".pdf"))
+  }
+  
+  if(i){
+    message("Existing enrichment data found, so the data for this run will be saved as ", outPrefix_rel, "_feature_overlaps", i)  
+  }
+  
   enrichments = peakEnrichment4Features(cd, score=cutoff, sample_number=enSampleNumber, no_bins=noBins, 
                            colname_score="score", folder=enFeatFolder, list_frag=enFeatFiles, 
                            filterB2B=TRUE, min_dist=enMinDist, max_dist=enMaxDist,
-                           plot_name=paste0(outPrefix, "_feature_overlaps.pdf"))
+                           plot_name=plot_name)
+  
   
   enOutputFile = paste0(outPrefix, "_feature_overlaps.txt")
+  if(i){
+    enOutputFile = paste0(outPrefix, "_feature_overlaps", i, ".txt")    
+  }
+
   cat(paste0("#\tmin_dist=", enMinDist, "\tmax_dist=", ifelse(is.null(enMaxDist), "whole_range", enMaxDist), "\n"), file = enOutputFile) 
   suppressWarnings(write.table(enrichments, quote=F, row.names= T, col.names=T, file= enOutputFile, append = T))
   setwd(outDir)
@@ -294,5 +365,9 @@ if (computeEnrichment){
      stop("Couldn't move feature_overlaps files to enrichment folder")
  }
 }
-setwd(curDir)
+
+
+if (!featuresOnly) { 
+  setwd(curDir)
+}
 message("All done!\n")

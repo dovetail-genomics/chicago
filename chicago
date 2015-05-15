@@ -133,7 +133,7 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	my $command;
 
-	my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder}";
+	my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
 	if (hasval($config{settings})){
 		$params .= " --settings-file $config{settings}";
 	}
