@@ -76,10 +76,11 @@ p = add.argument(p, arg="--en-feat-folder",
                  help = "The folder, in which all feature files are located (if provided, --en-feature-file(s) don't need to list the full path)", 
                  default=NA)
 
-p = add.argument(p, arg="--en-min-dist", help = "The lower distance limit for computing enrichment for features", default=0)
+p = add.argument(p, arg="--en-min-dist", help = "The lower distance limit for computing enrichment for features", default="0")
 p = add.argument(p, arg="--en-max-dist", help = "The upper distance limit for computing enrichment for features", default=1e6)
-p = add.argument(p, arg="--en-full-range", help = "Assess the enrichment for features for the full distance range (can be very slow!)", flag = T)
+p = add.argument(p, arg="--en-full-cis-range", help = "Assess the enrichment for features for the full distance range [same chromosome only; use --en-trans in addition to include trans-interactions] (can be very slow!)", flag = T)
 p = add.argument(p, arg="--en-sample-no", help = "The number of negative samples for computing enrichment for features", default=100)
+p = add.argument(p, arg="--en-trans", help = "Include trans-interactions into enrichment analysis", flag=T)
 
 p = add.argument(p, arg="--features-only", help = "Re-run feature enrichment analysis with Chicago output files. With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.",  flag = T)
 
@@ -116,15 +117,31 @@ outPrefix = file.path(outDir, outPrefix_rel)
 
 enSampleNumber = opts[["en-sample-no"]]
 enMaxDist = opts[["en-max-dist"]]
-if (opts[["en-full-range"]]){
+if (opts[["en-full-cis-range"]]){
   enMaxDist = NULL
-  message("Warning: --en-full-range selected. Feature enrichment computation will be very slow\n")
+  message("Warning: --en-full-cis-range selected. Feature enrichment computation will be very slow\n")
 }
 enMinDist = opts[["en-min-dist"]]
+enTrans = opts[["en-trans"]]
+
+if (enMinDist == "NULL" & enTrans){
+  message("Running enrichment analysis for trans interactions only.")
+  enMinDist = NULL
+  enMaxDist = NULL
+}else{
+  enMinDist = as.numeric(enMinDist)
+}
+
 enFeatFolder = opts[["en-feat-folder"]]
 enFeatFiles = opts[["en-feat-files"]]
 enFeatList = opts[["en-feat-list"]]
 
+
+if(enTrans & !is.null(enMaxDist) & !is.null(enMinDist)){
+  message("\nWarning: --en-trans specificed together with --en-max-dist and --en-min-dist (possibly keeping the default values), which was likely not intended. Running the enrichment analysis for the full range. To test trans only, rerun with --en-min-dist NULL.\n")
+  enMaxDist = NULL
+}
+  
 computeEnrichment = 1
 if(is.na(enFeatFiles) & is.na(enFeatList)){
   message("Warning: neither --en-feat-files nor --en-feat-list provided. Feature enrichments will not be computed\n")
@@ -334,8 +351,10 @@ if (computeEnrichment){
     message("Existing enrichment data found, so the data for this run will be saved as ", outPrefix_rel, "_feature_overlaps", i)  
   }
   
+  message("maxdist=",enMaxDist, "mindist=", enMinDist, "trans=", enTrans)
+  
   enrichments = peakEnrichment4Features(cd, score=cutoff, sample_number=enSampleNumber, no_bins=noBins, 
-                           colname_score="score", folder=enFeatFolder, list_frag=enFeatFiles, 
+                           colname_score="score", folder=enFeatFolder, list_frag=enFeatFiles, trans=enTrans,
                            filterB2B=TRUE, min_dist=enMinDist, max_dist=enMaxDist,
                            plot_name=plot_name)
   
