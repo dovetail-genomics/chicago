@@ -99,7 +99,7 @@ defaultSettings <- function()
     tlb.minProxB2BPerBin=100,
     techNoise.minBaitsPerBin=1000, 
     brownianNoise.subset=1000,
-    brownianNoise.seed=NULL,
+    brownianNoise.seed=NA,
     baitIDcol = "baitID",
     otherEndIDcol = "otherEndID",
     otherEndLencol = "otherEndLen", 
@@ -676,7 +676,7 @@ estimateBrownianNoise <- function(cd) {
   seed = s$brownianNoise.seed
   maxLBrownEst = s$maxLBrownEst
   
-  if (!is.null(seed)){
+  if (!is.na(seed)){
     set.seed(seed)
   }
   
