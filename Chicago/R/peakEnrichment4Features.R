@@ -96,7 +96,7 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
       x1[[4]] <- .binning(sign=x1[[1]][!is.na(x1[[1]]$distSign)], no_bins=no_bins, x1_nonsign=x1[[2]][!is.na(x1[[2]]$distSign)], min_dist=min_dist, max_dist=max_dist)
       
       # combine trans and cis
-      x1[[2]] <- rbind(x1[[3]],x1[[4]][,names(x1[[3]]),with=FALSE])
+      x1[[2]] <- rbindlist(list(x1[[3]],x1[[4]][,names(x1[[3]]),with=FALSE]))
       x1[[3]] <- NULL
       x1[[4]] <- NULL
       
@@ -279,6 +279,10 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   
   data <- cbind(x_sign, result3)
   d <- as.matrix(data[,c(1,2)])
+  
+  if(any(!d)){
+    message("Some (or all) overlaps are zero - warnings will be generated.")
+  }
   
   toplot <- barplot(t(d), beside=TRUE, main = "Number of interactions in our samples that map to a GF", col=c("lightyellow","lightblue"),
                     legend = c("Significant Reads", "Random Samples"), names.arg=rownames(data), ylab = c("Number of Overlaps with Feature") )

@@ -20,7 +20,7 @@ dir.create.ifNotThere = function(path, ...){
   }
 }
 
-moveToFolder = function(pattern, wherez){
+moveToFolder = function(pattern, where){
   files = list.files(".", pattern)
   if (!length(files)){
     message("No files found matching the pattern ", pattern)
@@ -240,8 +240,6 @@ if(!dir.create.ifNotThere("data")){
   stop("Couldn't create folder data\n")  
 }
 
-<<<<<<< HEAD
-=======
 if(!featuresOnly){
   if(!dir.create.ifNotThere("diag_plots")){
     stop("Couldn't create folder diag_plots\n")
@@ -253,7 +251,6 @@ if(!featuresOnly){
   
 ### TODO: if bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
 ### Take into account that unlike other files, there may not be .gz / .gz.tbi created 
->>>>>>> featuresOnly
 if (!moveToFolder("\\.txt", "data")){
   stop("Couldn't move txt files to data folder\n")
 }
@@ -264,27 +261,18 @@ if(!featuresOnly){
       stop("Couldn't move ibed files to data folder\n")
     }
   }
-<<<<<<< HEAD
-}
 
-### If bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
-### Unlike other files, there may not be .gz / .gz.tbi created.
-
-if("washU_track" %in% exportFormat){
-  if(!moveToFolder("\\.txt.gz", "data")){
-    message("Couldn't move .txt.gz files (washU track) to data folder\n")
+  ### If bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
+  ### Unlike other files, there may not be .gz / .gz.tbi created.
+  if("washU_track" %in% exportFormat){
+    if(!moveToFolder("\\.txt.gz", "data")){
+      message("Couldn't move .txt.gz files (washU track) to data folder\n")
+    }
+    if(!moveToFolder("\\.txt.gz.tbi", "data")){
+      message("Couldn't move .txt.gz.tbi files (washU track) to data folder\n")
+    }
   }
-  if(!moveToFolder("\\.txt.gz.tbi", "data")){
-    message("Couldn't move .txt.gz.tbi files (washU track) to data folder\n")
-  }
-}
 
-
-if(isRda){
-  if(!moveToFolder("\\.RDa", "data")){
-    stop("Couldn't move the RDa file to data folder\n")
-=======
-  
   if(isRda){
     if(!moveToFolder("\\.RDa", "data")){
       stop("Couldn't move the RDa file to data folder\n")
@@ -293,7 +281,6 @@ if(isRda){
     if(!moveToFolder("\\.Rds", "data")){
       stop("Couldn't move the Rds file to data folder\n")
     }
->>>>>>> featuresOnly
   }
   
   if(!moveToFolder("xamples\\.pdf", "examples")){
