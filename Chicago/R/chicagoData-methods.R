@@ -20,7 +20,7 @@ setMethod("show", "chicagoData",
             cat('An object of class "chicagoData"\n')
             cat("Slot 'x':\n")
             show(object@x)
-            describeVec(object@params, "params")
-            describeVec(object@settings, "settings")
+            describeVec(object@params, 'Slot "params"')
+            describeVec(object@settings, 'Slot "settings"')
           }
 )
