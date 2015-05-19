@@ -9,7 +9,8 @@ Export the results from a \code{chicagoData} object to disk.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
-        format = c("seqMonk", "interBed", "washU_text"), order = c("position", "score")[1])
+        format = c("seqMonk", "interBed", "washU_text"),
+        order = c("position", "score")[1])
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -61,7 +62,8 @@ data(cdUnitTest)
 
 ##modifications to cdUnitTest, ensuring it uses correct design directory
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
-new.settings <- paste0(file.path(designDir, "unitTest"), c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe"))
+extensions <- c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe")
+new.settings <- paste0(file.path(designDir, "unitTest"), extensions)
 new.settings <- as.list(new.settings)
 names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
 cdUnitTest <- modifySettings(cd = cdUnitTest, new.settings)
