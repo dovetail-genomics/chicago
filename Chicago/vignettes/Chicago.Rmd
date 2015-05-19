@@ -118,7 +118,7 @@ washU\_text format (ends with ...washU\_text.txt)
 
 ## Output plots
 
-Describe each key plot in turn
+(NB: Update once data package is ready)
 
 ```{r}
 #FIXME
@@ -146,6 +146,7 @@ head(cdUnitTest@x, 2)
 ```
 
 Columns:
+
 * baitID: ID of baited fragment
 * otherEndID: ID of other end fragment
 * s_j: bait-specific scaling factor (Brownian noise)
@@ -156,14 +157,15 @@ Columns:
 * N: Merged count (see ``?mergeSamples``).
 * refBinMean: Can be ignored. (see ``?normaliseBaits``)
 * s_i: other end-specific scaling factor (Brownian noise)
-* NNb: "N normalised for baits"; FIXME
-* NNboe: "N normalised for baits and other ends"; FIXME
-* tlb: 
+* NNb: "N normalised for baits", a count scaled up by accounting for $s_j$. May be useful for visualization.
+* NNboe: "N normalised for baits and other ends"; may be useful for visualization.
+* tlb: Class of other end, based on the number of fragments on other chromosomes that have read pairs.
+* tblb: As tlb, for the bait fragment.
 * Tmean: Expected count from technical noise.
-* Bmean: Expected count from Brownian noise.
-* log.p: 
-* log.w: 
-* log.q: 
+* Bmean: Expected count from Brownian noise. (Thus, the expected count under the null hypothesis is Tmean + Bmean.)
+* log.p: p-value associated with fragment pair, on log-scale.
+* log.w: p-value weight, on log-scale.
+* log.q: weighted p-value, on log-scale.
 * score: Final CHiCAGO score.
 
 **WARNING:** Many functions in CHiCAGO update ``cd@x`` by reference, which means that ``cd@x`` can change even when you do not explicitly assign to it.
