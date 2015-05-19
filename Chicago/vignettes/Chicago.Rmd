@@ -151,13 +151,13 @@ Columns:
 * otherEndID: ID of other end fragment
 * s_j: bait-specific scaling factor (Brownian noise)
 * otherEndLen: The length of the other end fragment
-* distSign: The distance from the baited fragment to the other end fragment. (NA for trans interactions.)
+* distSign: The distance from the baited fragment to the other end fragment. Positive and negative values indicate that the other end is, respectively, $5'$ and $3'$ of the baited fragment. NA indicates a trans interactions.
 * isBait2Bait: TRUE if the other end fragment is also a baited fragment
 * N.1, N.2: Normalized counts (see ``?mergeSamples``).
 * N: Merged count (see ``?mergeSamples``).
 * refBinMean: Can be ignored. (see ``?normaliseBaits``)
 * s_i: other end-specific scaling factor (Brownian noise)
-* NNb: "N normalised for baits", a count scaled up by accounting for $s_j$. May be useful for visualization.
+* NNb: "N normalised for baits", a count scaled up by accounting for s_j. May be useful for visualization.
 * NNboe: "N normalised for baits and other ends"; may be useful for visualization.
 * tlb: Class of other end, based on the number of fragments on other chromosomes that have read pairs.
 * tblb: As tlb, for the bait fragment.
