@@ -183,10 +183,13 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
 modifySettings = function(cd, settings){
   
   message("Warning: settings are not checked for consistency with the previous ones.")
-  
+    
   for (s in names(settings)){
     cd@settings[[s]] = settings[[s]]
   }
+
+  ##test validity of new object
+  validObject(cd)
   
   cd
 }
