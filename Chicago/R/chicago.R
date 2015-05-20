@@ -1793,9 +1793,10 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       out$bait_chr <- paste0("chr", out$bait_chr)
       out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
     }
-    if(any(out$bait_chr == c("chrMT")))
+    sel <- tolower(out$bait_chr) == c("chrmt") ##Mitochondrial
+    if(any(sel))
     {
-      out <- out[out$bait_chr != "chrMT",]
+      out <- out[!sel,]
     }
     
     res = paste0(out$bait_chr, ",", out$bait_start, ",", out$bait_end, "\t", out$otherEnd_chr,",", out$otherEnd_start, ",", out$otherEnd_end, "\t", out$score) 
