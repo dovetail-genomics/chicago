@@ -230,10 +230,14 @@ if (!featuresOnly){
   }
   
   logfile = file(paste0(outPrefix, "_params.txt"), "a")
-  cat("\n#  chicago pipeline settings (chicagoData@settings):\n", file=logfile)
+  sink(logfile, append=T)
+  cat("\n#  chicago pipeline settings (chicagoData@settings):\n")
   for (s in names(cd@settings)){
-          cat(paste(s, cd@settings[[s]], sep="\t"), "\n", file=logfile)
+          cat(paste(s, cd@settings[[s]], sep="\t"), "\n")
   }
+  cat("\n#  sessionInfo()\n")
+  print(sessionInfo())
+  sink(NULL)
   close(logfile)
   
   message("\n\nPlotting examples...\n")
@@ -243,7 +247,6 @@ if (!featuresOnly){
   }
   
   message("\n\nExporting peak lists...\n")
-  print(exportFormat)
   exportResults(cd, outfileprefix=outPrefix, cutoff=cutoff, format = exportFormat, order = exportOrder)
   
   message("\n\nSorting output files into folders...\n")
@@ -266,8 +269,6 @@ if(!featuresOnly){
   }
 }
   
-### TODO: if bgzip and tabix index files are going to be produced in washU-track mode, move them too. 
-### Take into account that unlike other files, there may not be .gz / .gz.tbi created 
 if (!moveToFolder("\\.txt", "data")){
   stop("Couldn't move txt files to data folder\n")
 }
@@ -351,8 +352,6 @@ if (computeEnrichment){
     message("Existing enrichment data found, so the data for this run will be saved as ", outPrefix_rel, "_feature_overlaps", i)  
   }
   
-  message("maxdist=",enMaxDist, "mindist=", enMinDist, "trans=", enTrans)
-  
   enrichments = peakEnrichment4Features(cd, score=cutoff, sample_number=enSampleNumber, no_bins=noBins, 
                            colname_score="score", folder=enFeatFolder, list_frag=enFeatFiles, trans=enTrans,
                            filterB2B=TRUE, min_dist=enMinDist, max_dist=enMaxDist,
@@ -364,7 +363,7 @@ if (computeEnrichment){
     enOutputFile = paste0(outPrefix, "_feature_overlaps", i, ".txt")    
   }
 
-  cat(paste0("#\tmin_dist=", enMinDist, "\tmax_dist=", ifelse(is.null(enMaxDist), "whole_range", enMaxDist), "\n"), file = enOutputFile) 
+  cat(paste0("#\tmin_dist=", enMinDist, "\tmax_dist=", ifelse(is.null(enMaxDist), "whole_range", enMaxDist), "\ttrans=", enTrans, "\n"), file = enOutputFile) 
   suppressWarnings(write.table(enrichments, quote=F, row.names= T, col.names=T, file= enOutputFile, append = T))
   setwd(outDir)
   if(!moveToFolder("feature_overlaps", "enrichment_data")){
