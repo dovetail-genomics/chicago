@@ -20,9 +20,9 @@ Alternatively, you can use standard R tools to only install the Chicago and/or P
 Please refer to the Chicago package vignette for more information. 
 
 Chicago is developed and maintained by:
-- Jonathan Cairns 
-- Paula Freire Pritchett
-- Steven Wingett
-- Mikhail Spivakov ([spivakov@babraham.ac.uk](mailto:spivakov@babraham.ac.uk)).
+* Jonathan Cairns 
+* Paula Freire Pritchett
+* Steven Wingett
+* Mikhail Spivakov ([spivakov@babraham.ac.uk](mailto:spivakov@babraham.ac.uk))
 
-We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk)), Cambridge UK.
+We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk), Cambridge UK.
