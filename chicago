@@ -67,7 +67,7 @@ foreach my $array (@inputData){
 		if(hasval ($config{hold_jid}) ){
 			$step1_jid_string = "-hold_jid $config{hold_jid}";
 		}		
-		my $command = "$Bin/bam2chicago.sh $inputFile $baits $digest $prefix1";
+		my $command = "$Bin/chicagoTools/bam2chicago.sh $inputFile $baits $digest $prefix1";
 		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -pe cores 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email} $step1_jid_string";
 		
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
@@ -139,11 +139,11 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	}
 
 	if($numberFiles == 1){
-		$command = "Rscript $Bin/runChicago.R $params $files[0] $prefixStep2";		
+		$command = "Rscript $Bin/chicagoTools/runChicago.R $params $files[0] $prefixStep2";		
 	
 	}else{
 		my $filenameString = join(',', @files);
-		$command = "Rscript $Bin/runChicago.R $params $filenameString $prefixStep2";			
+		$command = "Rscript $Bin/chicagoTools/runChicago.R $params $filenameString $prefixStep2";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
 		
