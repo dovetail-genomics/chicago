@@ -1,0 +1,11 @@
+Package: PCHiCdata
+Type: Package
+Title: Promoter Capture data
+Version: 0.1
+Date: 2015-05-22
+Author: Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett, Steven Wingett
+Maintainer: Paula Freire-Pritchett <paula.freire-pritchett@babraham.ac.uk>
+Description: Promoter Capture data conveniently packaged for consumption by R users. Data includes interactions detected for chromosomes 20 and 21 in GM12878 cells and for chromosomes 18 and 19 in mESC.
+License: Babraham Institute
+Depends: R (>= 3.1.2), Chicago
+LazyData: true
