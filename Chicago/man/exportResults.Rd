@@ -41,7 +41,7 @@ Important notes on the washU formats: Most users will prefer "washU_text" output
 
 The "washU_track" output needs to be hosted elsewhere. You can then link the browser to the data via the "Interaction - pairwise interaction" button on the "Add custom tracks" page.
 
-If you get the warning "WashU Browser track format could not be finalized due to absence of bgzip or tabix", this could be because you have not installed SAMtools and htslib. You can check with system2("tabix") and system2("bgzip"). Sometimes RStudio has issues with reading \code{$PATH} - you can check this with \code{system2("echo", "$PATH")}.
+If you get the warning "WashU Browser track format could not be finalized due to absence of bgzip or tabix", this could be because you have not installed SAMtools and htslib. You can check with system2("tabix") and system2("bgzip"). Sometimes RStudio has issues with reading \code{$PATH} - you can check this with \code{system2("echo", "$PATH")}. Consider running the command in R, outside of RStudio, to fix this problem.
 
 If all else fails, and you need "washU_track" output, then you can manually perform the final steps yourself by running: \code{bgzip <outfileprefix>_washU_track.txt} and \code{tabix -p bed <outfileprefix>.txt.gz}.
 }
