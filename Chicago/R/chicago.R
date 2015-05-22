@@ -1801,10 +1801,10 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     }
     
     ##Remove mitochondrial DNA
-    sel <- tolower(out$bait_chr) == c("chrmt")
-    if(any(sel))
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
     {
-      out <- out[!sel,]
+      out <- out[!selMT,]
     }
 
     ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
@@ -1815,6 +1815,8 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     sel <- ifelse(is.na(sel), TRUE, sel) ##"FALSE" entries in sel should correspond to minima
     setDF(x)
     x$ReversedInteractionScore <- NULL
+
+    sel <- sel[!selMT] ##remove mitochondrial interactions (still present in x)
     out <- out[sel,]
     
     if("washU_text" %in% format)
