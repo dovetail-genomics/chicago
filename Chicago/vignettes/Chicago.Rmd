@@ -20,23 +20,23 @@ BiocStyle::markdown()
 
 This vignette will walk you through a typical CHiCAGO analysis.
 
-We provide a wrapper to perform the analysis, called *runChicago.R*.
+A wrapper to perform the analysis, called *runChicago.R*, can be found on our website: [FIXME URL].
 
-WARNING: The data set used in this tutorial is only a small part of a real data set. Do not use any of the input data in your own analysis.
-
-We will be releasing a companion data package that has a fully executable workflow.
+WARNING: The data set used in this tutorial is only a small part of a real data set. Do not use any of the input data in your own analysis. We will release a companion data package that has a fully executable workflow.
 
 ## Input files required
 
 Before you start, you will need: 
 
-1. Five restriction map information files. It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website, otherwise you will need to generate them yourself using CHiCTools, also available on our website.
+1. Five restriction map information files:
 
-    * Restriction map file (.rmap) - a bed file containing co-ordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
-    * Bait map file (.baitmap) - a bed file containing co-ordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
-    * *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts *countNperBin.py*, *countNbaitsPerBin.py* and *getProxOE.py*. 
+- Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
+- Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
+- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts *countNperBin.py*, *countNbaitsPerBin.py* and *getProxOE.py*. 
 
-Examples of these files are provided in the package, as follows. Do not use these files in your analysis!
+It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website [FIXME URL], otherwise you will need to generate them yourself using CHiCTools, also available on our website.
+
+Examples of these files are also provided in the package, as follows. Do not use these files in your analysis!
 
 ```{r}
 dataPath <- system.file("extdata", package="Chicago")
@@ -44,20 +44,21 @@ testDesignDir <- file.path(dataPath, "unitTestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files, whose names typically end with *_distSign.txt*. These files can be obtained by running ...?
+2. You will also need your input data files. These files can be obtained by running bam2chicago.sh, available from our website [FIXME URL]. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
 testDataPath <- file.path(dataPath, "unitTestData")
+dir(testDataPath)
+
 files <- c(
-    file.path(testDataPath, "unitTest_mESC_rep1_step1_distSign.txt"),
-    file.path(testDataPath, "unitTest_mESC_rep2_step1_distSign.txt")
+    file.path(testDataPath, "unitTest_mESC_rep1.chinput"),
+    file.path(testDataPath, "unitTest_mESC_rep2.chinput")
   )
-files
 ```
 
 ## Example workflow
 
-We apply CHiCAGO to the test data as follows. First, we create a blank ``ChicagoData`` object, and we tell it where the design files are. (If we want to change any settings, we can do that here.)
+We run CHiCAGO on the test data as follows. First, we create a blank ``ChicagoData`` object, and we tell it where the design files are. (If we want to change any other settings, we would do that here.)
 
 ```{r, message=FALSE}
 library(Chicago)
@@ -83,7 +84,9 @@ cd <- chicagoPipeline(cd)
 
 For use in the next section, we load a pre-analysed data set as follows:
 
-
+```{r}
+data(cdUnitTest)
+```
 
 ## Output files
 
@@ -111,29 +114,11 @@ washU\_text format (ends with ...washU\_text.txt)
 
 - Can be read by WashU browser (epigenomegateway.wustl.edu)
 - Upload via the "Got text files instead? Upload them from your computer" link.
-- FIXME
-
-washU\_track format (ends with ...washU\_track.txt)
-
-- Can be read by WashU browser (epigenomegateway.wustl.edu)
-- An interaction is represented by two rows, with each representing one of the fragments involved in the interaction. However, the two rows need not be adjacent.
-- First three columns are: chromosome, start, end. Column four is of form [Chr]:[Start]-[End],[Score], which gives the genomic coordinates of the interacting fragment, and the interaction score (see above). The remaining columns can be ignored.
-
-
-**The data frame x** used to produce these files (one row per interaction) is stored in the .RDa file in the same folder.
-
-The /examples folder contains PDFs with bait profiles for 25 random baits - for full chromosome length and zoomed in to 1Mb, respectively.
-
-**The /overlap_plots folder** contains barplots showing the numbers of "enhancers" overlapping with genomic features of choice (yellow bars) versus the expected numbers computed using randomly sampled fragments chosen such that their distribution of distances from promoters matches that for the "enhancers". Currently these overlaps are computed for interactions within 1 Mb from their respective baits only.
+- Note - Advanced users may wish to export to washU\_track format instead. See the help page for ``exportResults()``.
 
 ## Output plots
 
-**In the /diag_plots folder**, we currently store diagnostic plots for other end normalisation and technical noise estimation, but more will be added.
-
-
-and various plots in the other subfolders of ./\<results-folder\>. 
-
-Describe each key plot in turn
+(NB: Update once data package is ready)
 
 ```{r}
 #FIXME
@@ -155,13 +140,43 @@ In the above workflow, *cd* is a *ChicagoData* object. It contains three element
 * ``cd@settings`` is a list of settings, usually set with the setExperiment() function.
 * ``cd@params`` is a list of parameters. This list is populated as the pipeline runs, and CHiCAGO estimates them in turn.
 
+A closer look at ``cd@x``:
+```{r}
+head(cdUnitTest@x, 2)
+```
+
+Columns:
+
+* baitID: ID of baited fragment
+* otherEndID: ID of other end fragment
+* s_j: bait-specific scaling factor (Brownian noise)
+* otherEndLen: The length of the other end fragment
+* distSign: The distance from the baited fragment to the other end fragment. Positive and negative values indicate that the other end is, respectively, $5'$ and $3'$ of the baited fragment. NA indicates a trans interactions.
+* isBait2Bait: TRUE if the other end fragment is also a baited fragment
+* N.1, N.2: Normalized counts (see ``?mergeSamples``).
+* N: Merged count (see ``?mergeSamples``).
+* refBinMean: Can be ignored. (see ``?normaliseBaits``)
+* s_i: other end-specific scaling factor (Brownian noise)
+* NNb: "N normalised for baits", a count scaled up by accounting for s_j. May be useful for visualization.
+* NNboe: "N normalised for baits and other ends"; may be useful for visualization.
+* tlb: Class of other end, based on the number of fragments on other chromosomes that have read pairs.
+* tblb: As tlb, for the bait fragment.
+* Tmean: Expected count from technical noise.
+* Bmean: Expected count from Brownian noise. (Thus, the expected count under the null hypothesis is Tmean + Bmean.)
+* log.p: p-value associated with fragment pair, on log-scale.
+* log.w: p-value weight, on log-scale.
+* log.q: weighted p-value, on log-scale.
+* score: Final CHiCAGO score.
+
 **WARNING:** Many functions in CHiCAGO update ``cd@x`` by reference, which means that ``cd@x`` can change even when you do not explicitly assign to it.
 To avoid this behaviour, copy the *chicagoData* object first:
 
-| cdCopy <- copy(cd)
-| cdCopy <- FIXME(cdCopy)
-| identical(cd, cdCopy)
+```{r}
+cdCopy <- cdUnitTest
+cdCopy@x <- copy(cdUnitTest@x)
+```
 
+We will provide an explicit function to do this in due course.
 
 ##Session info
 

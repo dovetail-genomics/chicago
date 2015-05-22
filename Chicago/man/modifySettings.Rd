@@ -34,7 +34,8 @@ designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesig
 
 cd <- setExperiment(designDir)
 
-##Suppose I want to increase the zone in which Brownian noise is assumed to dominate - by default, 1500000:
+##Suppose I want to increase the zone in which Brownian noise is assumed to dominate
+##(by default, 1500000):
 print(cd@settings$maxLBrownEst)
 
 cd <- modifySettings(cd, list(maxLBrownEst = 3000000L))

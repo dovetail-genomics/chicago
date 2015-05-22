@@ -5,24 +5,21 @@
 ChicagoData object for unit testing
 }
 \description{
-This data set is used for unit testing - it is too small to run all of the steps of CHiCAGO. For a toy data set that is large enough, please see the package FIXME.
+This data set is used for unit testing - it is too small to run all of the steps of CHiCAGO. For a toy data set that is large enough, please see the data package. (Note that cdUnitTest is a subset of those data.)
 }
 \usage{data("cdUnitTest")}
 
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+The data are derived from mouse ESCs.%%  ~~ If necessary, more details than the __description__ above ~~
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
-%%  ~~ possibly secondary sources and usages ~~
+Schoenfelder, S. et al. "The pluripotent regulatory circuitry connecting promoters to their long-range interacting elements." Genome research 25.4 (2015): 582-597.
 }
 \seealso{
   \code{\link{chicagoData}}
 }
 \examples{
 data(cdUnitTest)
-## maybe str(cdUnitTest) ; plot(cdUnitTest) ...
+print(cdUnitTest)
 }
 \keyword{datasets}

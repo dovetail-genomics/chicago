@@ -99,7 +99,7 @@ defaultSettings <- function()
     tlb.minProxB2BPerBin=100,
     techNoise.minBaitsPerBin=1000, 
     brownianNoise.subset=1000,
-    brownianNoise.seed=NULL,
+    brownianNoise.seed=NA,
     baitIDcol = "baitID",
     otherEndIDcol = "otherEndID",
     otherEndLencol = "otherEndLen", 
@@ -183,10 +183,13 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
 modifySettings = function(cd, settings){
   
   message("Warning: settings are not checked for consistency with the previous ones.")
-  
+    
   for (s in names(settings)){
     cd@settings[[s]] = settings[[s]]
   }
+
+  ##test validity of new object
+  validObject(cd)
   
   cd
 }
@@ -676,7 +679,7 @@ estimateBrownianNoise <- function(cd) {
   seed = s$brownianNoise.seed
   maxLBrownEst = s$maxLBrownEst
   
-  if (!is.null(seed)){
+  if (!is.na(seed)){
     set.seed(seed)
   }
   
@@ -1783,27 +1786,10 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)  
   }
   
-  if("washU_text" %in% format){
-    message("Writing out text file for WashU browser upload...")
-    out = out0[,c("bait_chr", "bait_start", "bait_end", 
-                  "otherEnd_chr", "otherEnd_start", "otherEnd_end",
-                  "score")]
-    if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
-    {
-      out$bait_chr <- paste0("chr", out$bait_chr)
-      out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
-    }
-    if(any(out$bait_chr == c("chrMT")))
-    {
-      out <- out[out$bait_chr != "chrMT",]
-    }
+  if(any(c("washU_text", "washU_track") %in% format)){
+    message("Preprocessing for WashU outputs...")
+    ##WashU formats
     
-    res = paste0(out$bait_chr, ",", out$bait_start, ",", out$bait_end, "\t", out$otherEnd_chr,",", out$otherEnd_start, ",", out$otherEnd_end, "\t", out$score) 
-    writeLines(res, con=paste0(outfileprefix,"_washU_text.txt"))
-  }
-  
-  if("washU_track" %in% format){
-    message("Writing out track for WashU browser...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", 
                   "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
                   "score")]
@@ -1813,11 +1799,14 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       out$bait_chr <- paste0("chr", out$bait_chr)
       out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
     }
-    if(any(out$bait_chr == c("chrMT")))
-    {
-      out <- out[out$bait_chr != "chrMT",]
-    }
     
+    ##Remove mitochondrial DNA
+    sel <- tolower(out$bait_chr) == c("chrmt")
+    if(any(sel))
+    {
+      out <- out[!sel,]
+    }
+
     ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
     setDT(x)
     setkey(x, baitID, otherEndID)
@@ -1828,31 +1817,43 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     x$ReversedInteractionScore <- NULL
     out <- out[sel,]
     
-    out$i = seq(1,nrow(out)*2,2)
-    appendOut <- out[,c("otherEnd_chr", "otherEnd_start", "otherEnd_end", "bait_chr", "bait_start", "bait_end", "otherEnd_name", "score", "i")]
-    names(appendOut) <- names(out)
-    out <- rbind(out, appendOut)
-    sel <- order(out$bait_chr, out$bait_start)
-    out <- out[sel,]
-    
-    res = apply(out,1,function(x){
-      lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
-      lines
-    })
-    res = gsub(" ", "", res)
-    writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
-    
-    ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-    ##FIXME better error handling here?
-    exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
-    exitcode2 <- 1
-    if(exitcode1 == 0)
+    if("washU_text" %in% format)
     {
-      exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
+      message("Writing out text file for WashU browser upload...")
+      res = paste0(out$bait_chr, ",", out$bait_start, ",", out$bait_end, "\t", out$otherEnd_chr,",", out$otherEnd_start, ",", out$otherEnd_end, "\t", out$score) 
+      writeLines(res, con=paste0(outfileprefix,"_washU_text.txt"))
     }
-    if(exitcode1 != 0 | exitcode2 != 0)
+    
+    if("washU_track" %in% format)
     {
-      warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
+      message("Writing out track for WashU browser...")
+    
+      ##this format requires a duplicate of each row, with bait/otherEnd reversed
+      out$i = seq(1,nrow(out)*2,2)
+      appendOut <- out[,c("otherEnd_chr", "otherEnd_start", "otherEnd_end", "bait_chr", "bait_start", "bait_end", "otherEnd_name", "score", "i")]
+      names(appendOut) <- names(out)
+      out <- rbind(out, appendOut)
+      sel <- order(out$bait_chr, out$bait_start)
+      out <- out[sel,]
+      
+      res = apply(out,1,function(x){
+        lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
+        lines
+      })
+      res = gsub(" ", "", res)
+      writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
+      
+      ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
+      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
+      exitcode2 <- 1
+      if(exitcode1 == 0)
+      {
+        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
+      }
+      if(exitcode1 != 0 | exitcode2 != 0)
+      {
+        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
+      }
     }
   }
 }
