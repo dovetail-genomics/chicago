@@ -1,5 +1,7 @@
 **This is the repo for the second version of CHiCAGO capture-HiC peak calling pipeline** 
 
+** this file will be updated soon **
+
 Currently CHiCAGOv2 is still under development (the remaining issues are listed here: https://bitbucket.org/chic_snp/chicagov2/issues?status=new&status=open), so below are just some very rough instructions on how to install and run the pipeline in its current form.
 
 Preparing restriction enzyme-specific resource files
