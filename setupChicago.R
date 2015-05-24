@@ -1,10 +1,17 @@
-message("\nRscript setupChicago.R [--path=<chicago-package-path>] --rlib=<r-lib-dir> --bin=<scripts-target-dir>\n\nChicago and dependencies installation script")
 args = commandArgs(trailingOnly = TRUE)
+
+message("\nRscript setupChicago.R [--help] [--path=<Chicago-package-path>] [--data-path=<PCHiCdata-package-path>] [--rlib=<r-lib-dir>] [--bin=<chicagoTools-target-dir>]\n\nChicago and dependencies installation script")
 
 pathLoc = grep("\\-\\-path\\=", args)
 path = NULL
 if (length(pathLoc)==1){
   path = gsub("\\-\\-path\\=", "", args[pathLoc])
+}
+
+dataPathLoc = grep("\\-\\-data\\-path\\=", args)
+dataPath = NULL
+if (length(dataPathLoc)==1){
+  dataPath = gsub("\\-\\-data\\-path\\=", "", args[dataPathLoc])
 }
 
 rlibLoc = grep("\\-\\-rlib\\=", args)
@@ -36,7 +43,6 @@ if (!length(path)){
     }else{
       stop("Could not unambiguously locate Chicago package, please provide as argument.\n")
     }
-  
   }
 }else{
   if (file.exists(path)){
@@ -45,6 +51,29 @@ if (!length(path)){
     stop("Could not locate Chicago R package. Check the --path argument.\n")
   }
 }
+
+if(!length(dataPath)){
+  if (file.exists("PCHiCdata") & file.info("PCHiCdata")$isdir){
+    message("Found uncompressed PCHiCdata folder in the current location.")
+    dataLoc = "PCHiCdata"
+  }else{
+    chicagoDataFiles = list.files(pattern = "PCHiCdata")
+    chicagoDataTarGz = grep("\\.tar\\.gz$", chicagoDataFiles)
+    if(length(chicagoDataTarGz == 1)){
+      message("Found compressed PCHiCdata package in the current location.")
+      dataLoc = chicagoDataFiles[chicagoDataTarGz]
+    }else{
+      stop("Could not unambiguously locate PCHiCdata package, please provide as argument.\n")
+    }
+  }
+}else{
+  if (file.exists(dataPath)){
+    dataLoc = path
+  }else{
+    stop("Could not locate PCHiCdata R package. Check the --data-path argument.\n")
+  }
+}
+
 
 if (length(rlib)){
   if (!file.exists(rlib) | !file.info(rlib)$isdir){
@@ -120,7 +149,9 @@ if(! "matrixStats" %in% rownames(installed.packages())){
 message("\nInstalling Chicago R package...\n")
 install.packages(pkgs = loc, repos=NULL, lib=rlib)
 
-#TODO: install data package
+message("\nInstalling PCHiCdata package...\n")
+install.packages(pkgs = dataLoc, repos=NULL, lib=rlib)
+
 
 if(!is.null(bin)){
   message("\nInstalling chicagoTools...\n")

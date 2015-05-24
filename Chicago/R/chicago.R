@@ -123,6 +123,22 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     stop("Design not specified. Please specify a design directory or design files.")
   }
   
+  def.settings = .updateSettings(designDir, settings, settingsFile, def.settings) 
+  cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
+}
+
+modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL){
+  
+  message("Warning: settings are not checked for consistency with the original ones.")
+  cd@settings = .updateSettings(designDir, settings, settingsFile, def.settings=cd@settings, updateDesign=TRUE)   
+
+  ##test validity of new object
+  validObject(cd)
+  
+  cd
+}
+
+.updateSettings = function(designDir, settings, settingsFile, def.settings, updateDesign=FALSE){
   modSettings = vector("list")
   
   if(!is.null(settingsFile)){
@@ -157,41 +173,27 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     def.settings[[s]] = modSettings[[s]]
   }
   
-  if(is.na(def.settings[["baitmapfile"]])){
+  if(is.na(def.settings[["baitmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap$")
   }
   
-  if(is.na(def.settings[["rmapfile"]])){
+  if(is.na(def.settings[["rmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap$")
   }
   
-  if(is.na(def.settings[["nperbinfile"]])){
+  if(is.na(def.settings[["nperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb$")
   }
   
-  if(is.na(def.settings[["nbaitsperbinfile"]])){
+  if(is.na(def.settings[["nbaitsperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb$")
   }
   
-  if(is.na(def.settings[["proxOEfile"]])){
+  if(is.na(def.settings[["proxOEfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe$")
   }
-  
-  cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
-}
 
-modifySettings = function(cd, settings){
-  
-  message("Warning: settings are not checked for consistency with the previous ones.")
-    
-  for (s in names(settings)){
-    cd@settings[[s]] = settings[[s]]
-  }
-
-  ##test validity of new object
-  validObject(cd)
-  
-  cd
+  def.settings
 }
 
 readSample = function(file, cd){
