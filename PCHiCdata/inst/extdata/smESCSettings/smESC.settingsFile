@@ -1,0 +1,5 @@
+tlb.minProxOEPerBin	200
+tlb.minProxB2BPerBin	10
+techNoise.minBaitsPerBin	200
+brownianNoise.subset	500
+
