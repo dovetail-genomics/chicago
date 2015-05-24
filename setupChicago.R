@@ -87,12 +87,10 @@ if (length(rlib)){
 
 if (length(bin)){
   if (!file.exists(bin) | !file.info(bin)$isdir){
-    message("Creating chicagoTools target directory at ", bin)
-    if (!dir.create(file.path(bin,"chicagoTools"))){
-      stop("Could not create chicagoTools target directory.\n")
-    }
-  }else{
-    message("Installing chicagoTools to directory: ", bin)
+    stop("The path for installing chicagoTools does not exist.\n")
+  }
+  if (!dir.create(file.path(bin,"chicagoTools"))){
+    stop("Could not create chicagoTools target directory.\n")
   }
 }else{
   message("chicagoTools will be retained at their original location")
@@ -146,21 +144,21 @@ if(! "matrixStats" %in% rownames(installed.packages())){
   install.packages(pkgs = "matrixStats", lib=rlib, repos = "http://cran.rstudio.com")  
 }
 
-message("\nInstalling Chicago R package...\n")
-install.packages(pkgs = loc, repos=NULL, lib=rlib)
+#message("\nInstalling Chicago R package...\n")
+#install.packages(pkgs = loc, repos=NULL, lib=rlib)
 
-message("\nInstalling PCHiCdata package...\n")
-install.packages(pkgs = dataLoc, repos=NULL, lib=rlib)
+#message("\nInstalling PCHiCdata package...\n")
+#install.packages(pkgs = dataLoc, repos=NULL, lib=rlib)
 
 
 if(!is.null(bin)){
   message("\nInstalling chicagoTools...\n")
   binct = file.path(bin, "chicagoTools")
-  for (f in list.files(path="chicagoTools", pattern = ".sh$")){
+  for (f in list.files(path="chicagoTools", pattern = ".sh$", full.names=T)){
     file.copy(f, binct)
     Sys.chmod(file.path(binct, f), "770")
   }
-  for (f in list.files(path="chicagoTools", pattern = "(.R$)|(.py$)")){
+  for (f in list.files(path="chicagoTools", pattern = "(.R$)|(.py$)|(.Rmd$)", full.names=T)){
     file.copy(f, binct)
     #Sys.chmod(file.path(binct, f), "770")
   }
