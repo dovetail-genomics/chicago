@@ -1,4 +1,4 @@
-message("\nRscript setupChicago.R --path=<chicago-package-path> --rlib=<r-lib-dir> --bin=<scripts-target-dir>\n\nChicago and dependencies installation script")
+message("\nRscript setupChicago.R [--path=<chicago-package-path>] --rlib=<r-lib-dir> --bin=<scripts-target-dir>\n\nChicago and dependencies installation script")
 args = commandArgs(trailingOnly = TRUE)
 
 pathLoc = grep("\\-\\-path\\=", args)
@@ -42,7 +42,7 @@ if (!length(path)){
   if (file.exists(path)){
     loc = path
   }else{
-    stop("Could not locate the R package. Check the --path argument.\n")
+    stop("Could not locate Chicago R package. Check the --path argument.\n")
   }
 }
 
@@ -50,19 +50,23 @@ if (length(rlib)){
   if (!file.exists(rlib) | !file.info(rlib)$isdir){
     stop("The specified R library directory does not exist.\n")
   }else{
-    message("Installing R package and dependencies to directory: ", rlib)
+    message("Installing Chicago R package and dependencies to directory: ", rlib)
   }
+}else{
+  message("Installing Chicago R package and dependencies to the default directory ", .libPaths()[1])
 }
 
 if (length(bin)){
   if (!file.exists(bin) | !file.info(bin)$isdir){
-    message("Creating the scripts target directory...")
-    if (!dir.create(bin)){
-      stop("Coud not create scripts target directory.\n")
+    message("Creating chicagoTools target directory at ", bin)
+    if (!dir.create(file.path(bin,"chicagoTools"))){
+      stop("Could not create chicagoTools target directory.\n")
     }
   }else{
-    message("Installing Chicago scripts to directory: ", bin)
+    message("Installing chicagoTools to directory: ", bin)
   }
+}else{
+  message("chicagoTools will be retained at their original location")
 }
 
 message("\nInstalling dependencies if needed...\n")
@@ -116,15 +120,18 @@ if(! "matrixStats" %in% rownames(installed.packages())){
 message("\nInstalling Chicago R package...\n")
 install.packages(pkgs = loc, repos=NULL, lib=rlib)
 
+#TODO: install data package
+
 if(!is.null(bin)){
-  message("\nInstalling Chicago scripts...\n")
-  for (f in list.files(pattern = ".sh$")){
-    file.copy(f, bin)
-    Sys.chmod(file.path(bin, f), "770")
+  message("\nInstalling chicagoTools...\n")
+  binct = file.path(bin, "chicagoTools")
+  for (f in list.files(path="chicagoTools", pattern = ".sh$")){
+    file.copy(f, binct)
+    Sys.chmod(file.path(binct, f), "770")
   }
-  for (f in list.files(pattern = "(.R$)|(.py$)|(chicago)")){
-    file.copy(f, bin)
-    Sys.chmod(file.path(bin, f), "770")
+  for (f in list.files(path="chicagoTools", pattern = "(.R$)|(.py$)")){
+    file.copy(f, binct)
+    #Sys.chmod(file.path(binct, f), "770")
   }
 }
 
