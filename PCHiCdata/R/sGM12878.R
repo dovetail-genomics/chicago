@@ -14,9 +14,6 @@
 #' data(sGM12878)
 #' ##modifications to sGM12878, ensuring it uses correct design directory
 #' designDir <- file.path(system.file("extdata", package="PCHiCdata"), "hg19TestDesign")
-#' new.settings <- paste0(file.path(designDir, "hg19_chr20and21"), c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe"))
-#' new.settings <- as.list(new.settings)
-#' names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
-#' sGM12878 <- modifySettings(cd = sGM12878, new.settings)
+#' sGM12878 <- modifySettings(cd = sGM12878, designDir = designDir)
 #' 
 "sGM12878"

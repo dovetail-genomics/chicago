@@ -8,15 +8,17 @@ Modify Settings
 Modify the settings in a \code{chicagoData} object.
 }
 \usage{
-modifySettings(cd, settings)
+modifySettings(cd, designDir=NULL, settings=list(), settingsFile=NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
-  \item{settings}{A named list.}
+  \item{designDir}{The new location of the design directory, e.g "~/resources/path" or NULL if not modified.}
+  \item{settings}{A named list containing settings to modify.}
+  \item{settingsFile}{The location of a file containing settings or NULL if not provided. Each row should contain the name of a setting, followed by whitespace, followed by the value of that setting.}
 }
 \details{
-\code{cd}'s settings are updated. Setting \code{names(settings)[1]} is set to (settings)[[1]], and so on. For a list of available settings, see \code{\link{defaultSettings}}.
+\code{cd}'s settings are updated. For a list of available settings, see \code{\link{defaultSettings}}.  
 }
 \value{
 An object of class \code{chicagoData}.
@@ -27,7 +29,7 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{defaultSettings}}
+\code{\link{setExperiment}}, \code{\link{defaultSettings}}
 }
 \examples{
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
@@ -38,7 +40,7 @@ cd <- setExperiment(designDir)
 ##(by default, 1500000):
 print(cd@settings$maxLBrownEst)
 
-cd <- modifySettings(cd, list(maxLBrownEst = 3000000L))
+cd <- modifySettings(cd, settings=list(maxLBrownEst = 3000000L))
 print(cd@settings$maxLBrownEst)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

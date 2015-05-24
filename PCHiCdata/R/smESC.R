@@ -15,9 +15,5 @@
 #' data(smESC)
 #' ##modifications to smESC, ensuring it uses correct design directory
 #' designDir <- file.path(system.file("extdata", package="PCHiCdata"), "mm9TestDesign")
-#' new.settings <- paste0(file.path(designDir, "mm9_chr18and19"), c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe"))
-#' new.settings <- as.list(new.settings)
-#' names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
-#' smESC <- modifySettings(cd = smESC, new.settings)
-#' 
+#' smESC <- modifySettings(cd = smESC, designDir = designDir)
 "smESC"
