@@ -10,7 +10,7 @@ Export the results from a \code{chicagoData} object to disk.
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
         format = c("seqMonk", "interBed", "washU_text"),
-        order = c("position", "score")[1])
+        order = c("position", "score")[1], removeMT=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,6 +34,9 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
 }
   \item{order}{
   Should output be ordered by position or score?
+}
+  \item{removeMT}{
+  Logical. If \code{TRUE}, remove any interactions involving mitochondrial DNA from the output.
 }
 }
 \details{

@@ -1697,7 +1697,8 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU_text"), order=c("position", "score")[1]){
+exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                          format=c("seqMonk","interBed","washU_text"), order=c("position", "score")[1], removeMT=TRUE){
   
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
@@ -1707,6 +1708,9 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   }
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
+  }
+  if (! removeMT %in% c(TRUE,FALSE)){
+    stop("removeMT must be TRUE or FALSE")
   }
   
   message("Reading the restriction map file...")
@@ -1769,6 +1773,17 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   if (order=="score"){
     out = out[order(out$score, decreasing=T), ]
   }
+  
+  if(removeMT)
+  {
+    ##Remove mitochondrial DNA
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
+    {
+      out <- out[!selMT,]
+    }
+  }
+  
   out0=out
   
   if ("seqMonk" %in% format){
@@ -1802,13 +1817,6 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
     }
     
-    ##Remove mitochondrial DNA
-    selMT <- tolower(out$bait_chr) == c("chrmt")
-    if(any(selMT))
-    {
-      out <- out[!selMT,]
-    }
-
     ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
     setDT(x)
     setkey(x, baitID, otherEndID)
@@ -1818,7 +1826,10 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     setDF(x)
     x$ReversedInteractionScore <- NULL
 
-    sel <- sel[!selMT] ##remove mitochondrial interactions (still present in x)
+    if(removeMT)
+    {
+      sel <- sel[!selMT] ##re-remove mitochondrial interactions (still present in x)
+    }
     out <- out[sel,]
     
     if("washU_text" %in% format)
