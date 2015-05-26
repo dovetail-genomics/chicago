@@ -49,11 +49,7 @@ data(cdUnitTest)
 
 ##modifications to cdUnitTest, ensuring it uses correct design directory
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
-extensions <- c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe")
-new.settings <- paste0(file.path(designDir, "unitTest"), extensions)
-new.settings <- as.list(new.settings)
-names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
-cdUnitTest <- modifySettings(cd = cdUnitTest, new.settings)
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 
   \dontrun{
   cdUnitTest <- normaliseOtherEnds(cdUnitTest)
