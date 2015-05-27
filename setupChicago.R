@@ -1,3 +1,8 @@
+if(getRversion() < "3.1.2")
+{
+  stop("Requires R version > 3.1.2. Please follow download instructions at http://cran.r-project.org/")
+}
+
 args = commandArgs(trailingOnly = TRUE)
 
 message("\nRscript setupChicago.R [--help] [--path=<Chicago-package-path>] [--data-path=<PCHiCdata-package-path>] [--rlib=<r-lib-dir>] [--bin=<chicagoTools-target-dir>]\n\nChicago and dependencies installation script")
@@ -144,11 +149,11 @@ if(! "matrixStats" %in% rownames(installed.packages())){
   install.packages(pkgs = "matrixStats", lib=rlib, repos = "http://cran.rstudio.com")  
 }
 
-#message("\nInstalling Chicago R package...\n")
-#install.packages(pkgs = loc, repos=NULL, lib=rlib)
+message("\nInstalling Chicago R package...\n")
+install.packages(pkgs = loc, repos=NULL, lib=rlib)
 
-#message("\nInstalling PCHiCdata package...\n")
-#install.packages(pkgs = dataLoc, repos=NULL, lib=rlib)
+message("\nInstalling PCHiCdata package...\n")
+install.packages(pkgs = dataLoc, repos=NULL, lib=rlib)
 
 
 if(!is.null(bin)){
