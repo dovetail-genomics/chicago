@@ -29,7 +29,25 @@ The new columns contain logical values indicating whether there was an overlap o
 This function checks which other-ends from a \code{\link{chicagoData}} object overlap with a set of genomic features.
 }
 \examples{
-FIXME <- function(FIXME)
+data(cdUnitTest)
+
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
+
+##get the unit test ChIP tracks
+dataPath <- system.file("extdata", package="Chicago")
+ChIPdir <- file.path(dataPath, "unitTestChIP")
+dir(ChIPdir)
+
+##get a list of the unit test ChIP tracks
+featuresFile <- file.path(ChIPdir, "featuresmESC.txt")
+featuresTable <- read.delim(featuresFile, header=FALSE, as.is=TRUE)
+featuresList <- as.list(featuresTable$V2)
+names(featuresList) <- featuresTable$V1
+
+##test for overlap
+overlapFragWithFeatures(cdUnitTest, folder=ChIPdir, list_frag = featuresList)
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
