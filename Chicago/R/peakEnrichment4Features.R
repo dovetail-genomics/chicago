@@ -1,13 +1,13 @@
 peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
-                                    min_dist=NULL, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
+                                    min_dist=0, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
                                     b2bcol="isBait2bait", unique=TRUE, no_bins, sample_number,
-                                    plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL) {
+                                    plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL,trans=FALSE, plotPeakDensity=FALSE) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (is.null(colname_score)){
     stop("colname_score needs to be specified...\n")
   }
-    
+  
   # Check if list_frag is a named vector and gives it names if not:
   if(is.null(names(list_frag))){ names(list_frag) = paste0("Feature", 1:length(list_frag)) }
   
@@ -30,75 +30,130 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
       }
     } 
     setDT(x1)
-    } else {
-      cat("Input is a CHiCAGO object...\n")
-      position_otherEnd <- x1@settings$rmapfile
-      colname_dist <- "distSign"
-      x1 = x1@x   
-    }
+  } else {
+    cat("Input is a CHiCAGO object...\n")
+    position_otherEnd <- x1@settings$rmapfile
+    colname_dist <- "distSign"
+    x1 = x1@x   
+  }
   
   if(filterB2B){
     cat("Filtering out bait2bait interactions...\n")
     x1 <- x1[get(b2bcol)==FALSE]
   }
-
-  # negFraction a numeric value indicating that a fraction of non-significant interactions which will be used to draw samples.
-  # The default value is 1 in order for the function to use all the non-significant interactions to draw samples. 
-  # This parameter is particularly useful when the user wants to query a large interval of distances and
-  # the number of non-significant interactions is very large.
-  # By setting this parameter to a value smaller than one, the user may reduce the computing time of this function.
-#   if (negFraction<1){
-#     cat("Taking a fraction of the negative set...\n")
-#     x1pos <- x1[colname_score>=score]
-#     x1neg <- x1[colname_score<score]
-#     if(!distal){
-#       negLen = nrow(x1neg)
-#       x1neg <- x1neg[sample(1:negLen, ceiling(negLen*negFraction))]
-#     }
-#     else{
-#       setkeyv(x1neg, c("baitID", "distSign"))
-#       pairs = x1neg[, .I[1], by=c("baitID", "distSign")]
-#       pairs$V1=NULL
-#       samp = pairs[sample(1:nrow(pairs), ceiling(nrow(pairs)*negFraction))]
-#       setkeyv(samp, c("baitID", "distSign"))  
-#       x1neg <- x1neg[samp]   
-#     }
-#     x1 = rbind(x1pos, x1neg)
-#   }
+  
+  if(!trans){
+    cat("Removing trans interactions from analysis...\n")
+    x1 <- x1[!is.na(get(colname_dist))]
+    
+  } else {
+    if(is.null(min_dist)){
+      cat("Enrichment for features computed for trans interactions only...\n")
+      x1 <- x1[is.na(get(colname_dist))]
+    } else {
+      cat("Enrichment for features computed for trans and cis interactions...\n")
+    }
+  }
   
   cat("Overlap our reads with Features...\n")
   x1<- overlapFragWithFeatures(x = x1, position_otherEnd=position_otherEnd, folder = folder, list_frag = list_frag)
   cat("Separate significant interactions from non-significant interactions...\n")
-  x1 <- .splitCHiC(x1=x1, threshold=score, colname_score=colname_score, colname_dist=colname_dist, min_dist=min_dist, max_dist=max_dist)
+  x1 <- .splitCHiC(x1=x1, threshold=score, colname_score=colname_score, colname_dist=colname_dist, min_dist=min_dist, max_dist=max_dist, trans=trans)
   if (unique){
     cat("Removing duplicated other-ends from significant interactions (same will happen with samples)...\n")
     x1[[1]] <- x1[[1]][!duplicated(otherEndID)]
   }
-
-  cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
-  x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]])
-
-  cat("Draw random samples...\n")
-  result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+  
+  if (!trans) {
+    cat("Bin non-significant interactions according to distance from bait before drawing random samples...\n")
+    x1[[2]] <- .binning(sign=x1[[1]], no_bins=no_bins, x1_nonsign=x1[[2]], min_dist=min_dist, max_dist=max_dist)
+    cat("Draw random samples...\n")
+    if (plotPeakDensity){     
+      plot(density(abs(x1[[1]]$distSign)))
+    }
+    result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+    if (plotPeakDensity){
+      j=1
+      for (i in c(1,round(sample_number/2),sample_number)){
+        lines(density(abs(result_3[[i]]$distSign)),col=c("red","magenta","blue")[j])
+        j=j+1
+      }
+    }   
+  } 
+  else {
+    if(is.null(min_dist)){
+      x1[[2]][,distbin3:="trans"]
+      x1[[2]][,bin_reads:=nrow(x1[[1]])]
+      result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+    } else {
+      cat("")
+      # trans
+      x1[[3]] <- x1[[2]][is.na(x1[[2]]$distSign)]
+      x1[[3]][,distbin3:="trans"]
+      x1[[3]][,bin_reads:=nrow(x1[[1]][is.na(x1[[1]]$distSign)])] # We want the same number as significant trans-interactions.   
+      
+      # cis
+      x1[[4]] <- .binning(sign=x1[[1]][!is.na(x1[[1]]$distSign)], no_bins=no_bins, x1_nonsign=x1[[2]][!is.na(x1[[2]]$distSign)], min_dist=min_dist, max_dist=max_dist)
+      
+      # combine trans and cis
+      x1[[2]] <- rbindlist(list(x1[[3]],x1[[4]][,names(x1[[3]]),with=FALSE]))
+      x1[[3]] <- NULL
+      x1[[4]] <- NULL
+      
+      if (plotPeakDensity){     
+        plot(density(abs(x1[[1]][!is.na(x1[[1]]$distSign)]$distSign)))
+      }
+      result_3 <- .drawSamples(x1_nonsign=x1[[2]], sample_number=sample_number,unique = unique)
+      if (plotPeakDensity){
+        j=1
+        for (i in c(1,round(sample_number/2),sample_number)){
+          lines(density(abs(result_3[[i]][!is.na(result_3[[i]]$distSign)]$distSign)),col=c("red","magenta","blue")[j])
+          j=j+1
+        }
+      }   
+    }
+    
+  }
   
   cat("Sum number of overlaps with feature in our significant interactions and in our samples...\n")
   result_5<-.plotNumberOL(x_sign = x1[[1]], s=result_3, files = list_frag,  plot_name=plot_name)
   return(result_5) 
 }
 # This function bins results assigns probabilities to bins depending on their distance from bait
-.binning <- function(sign, no_bins, x1_nonsign) {
+.binning <- function(sign, no_bins, x1_nonsign,min_dist=NULL, max_dist=NULL) {
   if(!is.data.table(sign)){setDT(sign)}
   # Bin distances from bait in sign - 100 bins
+  
   if (is.null(sign$dist)) {
     sign[,dist := abs(distSign)]
   }
   
-  sign[,distbin2 := cut(dist, breaks=(no_bins))]
+  if(is.null(min_dist)){
+    min_dist=min(sign$dist)
+  }
+  
+  if(is.null(max_dist)){
+    max_dist=max(sign$dist)
+  }
+  
+  
+  #sign[,distbin2 := cut(dist, breaks=(no_bins))]
+  sign[,distbin2 := cut(dist, breaks=seq(min_dist,max_dist,length.out=no_bins+1),include.lowest = TRUE)]
+  # Re-order sign so ensure that the bins between the pools of sign and non-sign interactions will match!
+  sign <- sign[order(dist)]
   
   # Calculate how many other-ends in this bin
+  bin_reads <- data.table(distbin2=factor(x=levels(sign$distbin2),levels=levels(sign$distbin2)),reads=rep(0,length(levels(sign$distbin2))),key="distbin2")
+  
   bin_reads2 <- sign[,length(dist), by="distbin2"]
+  setkey(bin_reads2,distbin2)
+  bin_reads2[bin_reads]->bin_reads2
+  bin_reads2[,bin_reads:=sum(V1,reads,na.rm = T),by=distbin2]
+  bin_reads2[,reads:=NULL]
+  bin_reads2[,V1:=NULL]
+
+  
   setnames(bin_reads2,"distbin2","udbin2")
-  setnames(bin_reads2,"V1","bin_reads")
   
   # Bin distances from bait in x1_nonsign
   if(!is.data.table(x1_nonsign)){setDT(x1_nonsign)}
@@ -107,11 +162,23 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
     x1_nonsign[,dist:=abs(distSign)]
   }
   
-  x1_nonsign[,distbin3:= cut(dist, breaks=(no_bins))]
+  x1_nonsign <- x1_nonsign[order(dist)]
+  
+  if(min(x1_nonsign$dist)<min_dist){
+    x1_nonsign <- x1_nonsign[dist>=min_dist]
+  }
+  
+  if(max(x1_nonsign$dist)>max_dist){
+    x1_nonsign <- x1_nonsign[dist<=max_dist]
+  }
+  
+  
+  x1_nonsign[,distbin3:= cut(dist, breaks=seq(min_dist,max_dist,length.out=no_bins+1),include.lowest=TRUE)]
   udbin3<-unique(x1_nonsign$distbin3)
-  udbin3<-udbin3[order(udbin3)]
   
   bin_reads2[,distbin3:=udbin3]
+  
+  # print(bin_reads2)
   
   # Assign to each bin, how many other-ends should be sampled
   setkey(x1_nonsign, distbin3)
@@ -123,7 +190,7 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
   
   # Provide correct indexing for non-sign paired-end reads
   x1_nonsign[,i:=seq(1,nrow(x1_nonsign))]
-  sign[,distbin2:=NULL]
+  
   return(x1_nonsign)
 }
 .drawSamples <- function(x1_nonsign, sample_number, unique=TRUE) {
@@ -159,7 +226,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
     x <- x@x   
   }
   
-  Digest <- .readBedList(folder=NULL, list_frag = c(Digest=position_otherEnd), sep=sep, rm.MT = T)[[1]]
+  Digest <- .readBedList(folder=NULL, list_frag = c(Digest=position_otherEnd), sep=sep, rm.MT = T,is.Digest=TRUE)[[1]]
   setnames(Digest, names(Digest)[4], "otherEndID")
   
   # Get Features to overlap
@@ -177,19 +244,22 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   return(x)  
 }
 .plotNumberOL <- function(x_sign,s, files, plot_name=NULL) {
-  x_sign[,dist:=NULL]
+ 
+  if("distbin2" %in% names(x_sign)){x_sign[,distbin2:=NULL]}
+  if("dist" %in% names(x_sign)){x_sign[,dist:=NULL]}
+
   x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign),with=FALSE],na.rm = T)
   
   sample_number<- length(s)
   featureSumsMatrix <- matrix(rep(0),length(files)*sample_number,nrow=sample_number,ncol=length(files))
-  for (i in 1:sample_number){
-    x<-s[[i]]
-    x[,dist:=NULL]
-    x[,distbin3:=NULL]
-    x[,bin_reads:=NULL]
-    x[,i:=NULL]
+  for (k in 1:sample_number){
+    x<-s[[k]]
+    if("dist" %in% names(x)){x[,dist:=NULL]}
+    if("distbin3" %in% names(x)){x[,distbin3:=NULL]}
+    if("bin_reads" %in% names(x)){x[,bin_reads:=NULL]}
+    if("i" %in% names(x)){x[,i:=NULL]}
     featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x),with=FALSE],na.rm = T)
-    featureSumsMatrix[i,]<-featureSums
+    featureSumsMatrix[k,]<-featureSums
   }
   colnames(featureSumsMatrix)<-names(files)
   
@@ -210,6 +280,10 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   data <- cbind(x_sign, result3)
   d <- as.matrix(data[,c(1,2)])
   
+  if(any(!d)){
+    message("Some (or all) overlaps are zero - warnings will be generated.")
+  }
+  
   toplot <- barplot(t(d), beside=TRUE, main = "Number of interactions in our samples that map to a GF", col=c("lightyellow","lightblue"),
                     legend = c("Significant Reads", "Random Samples"), names.arg=rownames(data), ylab = c("Number of Overlaps with Feature") )
   arrows(toplot[2,], data$Mean, toplot[2,], data$EB_high, length=0.1, angle=90)
@@ -217,7 +291,6 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   
   if(!is.null(plot_name)) {
     dev.off()
-#     cat(paste0("Plot saved under the name ",plot_name," in your working directory...\n"))
   }
   
   # Return Matrix with Number of overlaps for ou significant interactions dataset and our samples
@@ -225,7 +298,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   cat("Return Table with results...\n\n")
   return(data[,c("OLwithSI","MeanOLwithSamples", "SDOLwithSample", "LowerCI","HigherCI")])
 }
-.readBedList <- function(folder=NULL, list_frag=NULL, sep="\t", header=FALSE, rm.MT = FALSE) {
+.readBedList <- function(folder=NULL, list_frag=NULL, sep="\t", header=FALSE, rm.MT = FALSE, is.Digest=FALSE) {
   
   if (is.null(list_frag) ) {
     stop("Please provide list with files of Genomic features to overlap")
@@ -237,7 +310,8 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   mt <- c("M", "MT")
   j <- 1
   for (bed in list_frag) {
-    Feature <- fread(input=bed, sep=sep, header=header,stringsAsFactors=FALSE)
+    if(is.Digest) {Feature <- fread(input=bed, sep=sep, header=header,stringsAsFactors=FALSE)}
+    else {Feature <- fread(input=bed, sep=sep, header=header,stringsAsFactors=FALSE, select=1:3)}
     firstCol <- names(Feature)[1]
     Feature[, c(firstCol):=gsub("chr", "", get(firstCol))]
     if (rm.MT){
@@ -249,22 +323,23 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", pos
   return(result)
 }
 
-.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, min_dist=NULL, max_dist=NULL) {
+.splitCHiC <-  function(x1=NULL, filename=NULL, threshold, colname_score, colname_dist=NULL, min_dist=NULL, max_dist=NULL, trans=FALSE) {
   if (is.null(x1) & is.null(filename)) {
     stop("Please provide file with paired-end reads")
   }
   else if (!is.null(filename)) {
     x1 <- read.table(samplefilename, header=TRUE)
   }  
+  if (is.null(min_dist)){min_dist=0}
   if(!is.data.table(x1)){setDT(x1)}
   if (!is.null(colname_dist)) {
-    if (is.null(max_dist) & is.null(min_dist)) {
+    if (is.null(max_dist) & min_dist==0) {
       cat("No distance from bait to trim sample was provided...\n")
     }
     else {
       x1 <- x1[,dist := abs(get(colname_dist))]
       if (!is.null(max_dist)) {x1<-x1[dist<=max_dist]}
-      if (!is.null(min_dist)) {x1<-x1[dist>=min_dist]}
+      if (!(min_dist==0)) {x1<-x1[dist>=min_dist]}
     }
   }
   result <- list(x1[get(colname_score)>=threshold],

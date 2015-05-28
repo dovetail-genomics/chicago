@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use File::Basename;
 use Getopt::Long;
 use FindBin '$Bin';
 use lib $Bin;
@@ -19,15 +20,17 @@ my %config = (
 	help => '',
 	hold_jid => '',
 	config => '',
+	settings => ''
 );
 
 my $config_result = GetOptions(    #Stores parameters
 	"digestfolder=s" => \$config{digestfolder},
-    "input=s"   => \$config{input},
+	"input=s"   => \$config{input},
 	"email=s"   => \$config{email},
 	"help"   => \$config{help},
 	"hold_jid=s" => \$config{hold_jid},
-	"config=s"   => \$config{config}
+	"config=s"   => \$config{config},
+        "settings=s" => \$config{settings}
 	);
 
 die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
@@ -50,17 +53,9 @@ if( hasval($config{config}) ) {
 
 check_parameters();
 processInputfile();
-
-# echo "/bi/home/paulafp/CHiCAGOv2/process_chic_single_core.sh
- # sample1742_lane2174_L006_uniques_captured.bam
-  # /bi/group/sysgen/CHIC/Digest_Human_HindIII_baits.bed 
-  # /bi/group/sysgen/CHIC/Digest_Human_HindIII.bed sample1742"| 
-  # qsub -V -cwd -l vf=10G -pe orte 4 -o sample1742.out -j y -N sample1742 -m eas -M paulafp@babraham.ac.uk
-
   
 #Create a log file
 open(LOG, '>', 'chicagoLog.txt') or die "Could not write to 'chicagoLog.txt' : $!";
-	
 	
 #Launch pipeline step1
 foreach my $array (@inputData){
@@ -72,7 +67,7 @@ foreach my $array (@inputData){
 		if(hasval ($config{hold_jid}) ){
 			$step1_jid_string = "-hold_jid $config{hold_jid}";
 		}		
-		my $command = "$Bin/process_chic_single_core.sh $inputFile $baits $digest $prefix1";
+		my $command = "$Bin/chicagoTools/bam2chicago.sh $inputFile $baits $digest $prefix1";
 		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -pe cores 4 -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email} $step1_jid_string";
 		
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
@@ -80,13 +75,6 @@ foreach my $array (@inputData){
 		push( @$array, "CHiCAGO1.$prefixRand");
 	}	
 }
-
-
-# echo "./run_chicago.sh %2 res_hESC12_CHiCAGO2/ hESC12_CHiCAGO2
- # /bi/group/sysgen/RadaIglesias_data/ /bi/group/sysgen/RadaIglesias_data/features_hESC.txt
- # /bi/group/sysgen/hESC/sample_hESC811_new/hESC811_new_bait_otherEnd_N_len_distSign.txt
- # /bi/group/sysgen/hESC/sample_sample_1096_1390/sample_1096_1390_bait_otherEnd_N_len_distSign.txt" |
- # qsub -V -cwd -l vf=10G -pe orte 4 -o hESC_CHiC2.out -j y -N hESC_CHiC2 -m eas -M paulafp@babraham.ac.uk
 
 #Launch pipeline step2
 my %prefixStep2Files;    # %{prefix2} = array of filename(s) to process
@@ -144,12 +132,18 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	
 	my $command;
+
+	my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
+	if (hasval($config{settings})){
+		$params .= " --settings-file $config{settings}";
+	}
+
 	if($numberFiles == 1){
-		$command = "Rscript $Bin/runChicago.R --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} $files[0] $prefixStep2";		
+		$command = "Rscript $Bin/chicagoTools/runChicago.R $params $files[0] $prefixStep2";		
 	
 	}else{
 		my $filenameString = join(',', @files);
-		$command = "Rscript $Bin/runChicago.R --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} $filenameString $prefixStep2";			
+		$command = "Rscript $Bin/chicagoTools/runChicago.R $params $filenameString $prefixStep2";			
 	}
 		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
 		
@@ -204,7 +198,7 @@ exit (0);
 #file produced by CHiCAGO step1
 sub calcStep1Outfile{
 	my $prefix = $_[0];
-	my $outFile = 'sample_' . $prefix . '/' . $prefix . '_bait_otherEnd_N_len_distSign.txt';
+	my $outFile = $prefix . '/' . $prefix . '.chinput';
 	return $outFile;
 }
 

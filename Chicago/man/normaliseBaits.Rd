@@ -47,35 +47,14 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 %}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+data(cdUnitTest)
 
-## The function is currently defined as
-function (cd, normNcol = "NNb", shrink = FALSE, plot = TRUE, 
-    outfile = NULL, debug = FALSE) 
-{
-    message("Normalising baits...")
-    adjBait2bait = cd@settings$adjBait2bait
-    if (debug) {
-        .normaliseFragmentSets(x = cd@x, s = cd@settings, npb = .readNPBfile(s = cd@settings), 
-            viewpoint = "bait", idcol = "baitID", Ncol = "N", 
-            adjBait2bait = adjBait2bait, shrink = shrink, refExcludeSuffix = NULL, 
-            plot = plot, outfile = outfile, debug = T)
-    }
-    else {
-        cd@x = .normaliseFragmentSets(x = cd@x, s = cd@settings, 
-            npb = .readNPBfile(s = cd@settings), viewpoint = "bait", 
-            idcol = "baitID", Ncol = "N", adjBait2bait = adjBait2bait, 
-            shrink = shrink, refExcludeSuffix = NULL, plot = plot, 
-            outfile = outfile, debug = F)
-    }
-    cd@x[, `:=`((normNcol), pmax(1, round(N/s_j)))]
-    setkey(cd@x, baitID, otherEndID)
-    othercols = names(cd@x)[!names(cd@x) \%in\% c("distbin", normNcol)]
-    setcolorder(cd@x, c(othercols, "distbin", normNcol))
-    cd
-  }
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
+
+cdUnitTest <- normaliseBaits(cdUnitTest)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

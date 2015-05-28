@@ -39,8 +39,8 @@ A list of the following settings:
 \item{tlb.minProxOEPerBin}{Default: 1000}
 \item{tlb.minProxB2BPerBin}{Default: 100}
 \item{techNoise.minBaitsPerBin}{Default: 1000}
-\item{brownianNoise.subset}{Default: 1000. Number of baits sampled from when estimating the Brownian noise dispersion.}
-\item{brownianNoise.seed}{Default: NULL. The random number generator seed used when subsampling baits.}
+\item{brownianNoise.subset}{Default: 1000. Number of baits sampled from when estimating the Brownian noise dispersion. If set to NA, then all baits are used.}
+\item{brownianNoise.seed}{Default: NA. If not NA, then \code{brownianNoise.seed} is used as the random number generator seed when subsampling baits. Set this to make your analysis reproducible.}
 \item{baitIDcol}{Default: "baitID". The name of the baitID column in cd@x.}
 \item{otherEndIDcol}{Default: "otherEndID". The name of the otherEndID column in cd@x.}
 \item{otherEndLencol}{Default: "otherEndLen". The name of the column in cd@x that contains the lengths of the other end fragments.}
@@ -61,6 +61,7 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 \examples{
 s <- defaultSettings()
+print(s)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -35,12 +35,14 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 %}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+filesDir <- file.path(system.file("extdata", package="Chicago"), "unitTestData")
+file <- file.path(filesDir, dir(filesDir))[1]
+print(file) ##we will read in this file
 
-## The function is currently defined as
-  function(FIXME) {FIXME}
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+
+cd <- setExperiment(designDir=designDir)
+cd <- readAndMerge(file, cd)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

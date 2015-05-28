@@ -99,7 +99,7 @@ defaultSettings <- function()
     tlb.minProxB2BPerBin=100,
     techNoise.minBaitsPerBin=1000, 
     brownianNoise.subset=1000,
-    brownianNoise.seed=NULL,
+    brownianNoise.seed=NA,
     baitIDcol = "baitID",
     otherEndIDcol = "otherEndID",
     otherEndLencol = "otherEndLen", 
@@ -123,6 +123,22 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     stop("Design not specified. Please specify a design directory or design files.")
   }
   
+  def.settings = .updateSettings(designDir, settings, settingsFile, def.settings) 
+  cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
+}
+
+modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL){
+  
+  message("Warning: settings are not checked for consistency with the original ones.")
+  cd@settings = .updateSettings(designDir, settings, settingsFile, def.settings=cd@settings, updateDesign=TRUE)   
+
+  ##test validity of new object
+  validObject(cd)
+  
+  cd
+}
+
+.updateSettings = function(designDir, settings, settingsFile, def.settings, updateDesign=FALSE){
   modSettings = vector("list")
   
   if(!is.null(settingsFile)){
@@ -157,38 +173,27 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     def.settings[[s]] = modSettings[[s]]
   }
   
-  if(is.na(def.settings[["baitmapfile"]])){
+  if(is.na(def.settings[["baitmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap$")
   }
   
-  if(is.na(def.settings[["rmapfile"]])){
+  if(is.na(def.settings[["rmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap$")
   }
   
-  if(is.na(def.settings[["nperbinfile"]])){
+  if(is.na(def.settings[["nperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb$")
   }
   
-  if(is.na(def.settings[["nbaitsperbinfile"]])){
+  if(is.na(def.settings[["nbaitsperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb$")
   }
   
-  if(is.na(def.settings[["proxOEfile"]])){
+  if(is.na(def.settings[["proxOEfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe$")
   }
-  
-  cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
-}
 
-modifySettings = function(cd, settings){
-  
-  message("Warning: settings are not checked for consistency with the previous ones.")
-  
-  for (s in names(settings)){
-    cd@settings[[s]] = settings[[s]]
-  }
-  
-  cd
+  def.settings
 }
 
 readSample = function(file, cd){
@@ -543,109 +548,124 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
 
 }
 
-### I've modified this function so it updates cd@params$f and returns cd.
-### This way f will be retained along with other params such as s_k and dispersion.
-### Just need to make sure cd@x doesn't get copied when we do this... 
-estimateDistFun <- function (cd, method="cubic", n.obs.head=10, n.obs.tail=25, logScale=FALSE, plot=TRUE, outfile=NULL) {
+##updates cd@params$distFunParams, can then be fed into .distFun()
+estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   
   # Take the "refBinMean" column of the data x as f(d_b)
   # then interpolate & extrapolate to get f(d).
   # TODO output extra diagnostic information?
-  # TODO optimize with data.table
   
-  if (!method %in% c("lm", "cubic")){
+  if (!method == "cubic"){
     stop ("Unknown method.\n")
   }
   
   # Get f(d_b)
-#   f.d <- unique(x[!is.na(x$refBinMean),c("distbin", "refBinMean")]) ##delete rows with NAs from baits that are too far away
+  #   f.d <- unique(x[!is.na(x$refBinMean),c("distbin", "refBinMean")]) ##delete rows with NAs from baits that are too far away
   setkey(cd@x, distbin, refBinMean)
   f.d <- unique(cd@x)[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=F]
   
-#   f.d <- f.d[order(f.d$refBinMean, decreasing=TRUE),]
+  #   f.d <- f.d[order(f.d$refBinMean, decreasing=TRUE),]
   f.d <- f.d[order(refBinMean, decreasing=TRUE)]
-
+  
   setDF(f.d) # f.d is tiny, so no need to bother with it being a data.table
   f.d$midpoint <- seq(from=round(cd@settings$binsize/2), by=cd@settings$binsize, length.out=nrow(f.d))
   
   obs.min <- log(min(f.d$midpoint))
   obs.max <- log(max(f.d$midpoint))
   
-  if(method == "lm") {
-    ##On log-scale, do a linear interpolation.
-    ##Linear models applied to first (n.obs.head) observations, and to last (n.obs.tail) observations.
-    
-    ##Interpolation: Estimate f(d) (NB "rule" parameter = 1 forces NAs outside of range)
-    log.f.obs <- approxfun(log(f.d$midpoint), log(f.d$refBinMean), rule=c(1,1))
-    
-    ##Extrapolation: Fit the "head" and "tail" of f using a linear model
-    head.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = head(f.d, n.obs.head))) ##Fit for small d
-    tail.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = tail(f.d, n.obs.tail))) ##Fit for large d
-    
-    log.f.head <- function(x, head.coef.=head.coef) {head.coef.[1] + x*head.coef.[2]}
-    log.f.tail <- function(x, tail.coef.=tail.coef) {tail.coef.[1] + x*tail.coef.[2]} ##explicitly stated in case of later change
-    
-  }
+  #   if(method == "lm") {
+  #
+  #     ##previously had arguments: n.obs.head=10, n.obs.tail=25
+  #
+  #     ##On log-scale, do a linear interpolation.
+  #     ##Linear models applied to first (n.obs.head) observations, and to last (n.obs.tail) observations.
+  #     
+  #     ##Interpolation: Estimate f(d) (NB "rule" parameter = 1 forces NAs outside of range)
+  #     log.f.obs <- approxfun(log(f.d$midpoint), log(f.d$refBinMean), rule=c(1,1))
+  #     
+  #     ##Extrapolation: Fit the "head" and "tail" of f using a linear model
+  #     head.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = head(f.d, n.obs.head))) ##Fit for small d
+  #     tail.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = tail(f.d, n.obs.tail))) ##Fit for large d
+  #     
+  #   }
   
   if(method == "cubic") {
     ##Spline - Cubic fit over observed interval, linear fit elsewhere, assume continuity of f(d) & f'(d).
+    distFunParams <- list(method="cubic")
     
     ##cubic fit (quadratic not immensely different TBH)
     f.d.cubic <- lm(log(refBinMean) ~ log(midpoint) + I(log(midpoint)^2) + I(log(midpoint)^3), data = f.d)
     fit <- f.d.cubic$coefficients
-    
-    ##Interpolation: Estimate f(d) from cubic (NB see "rule" parameter for what to do outside range)
-    log.f.obs <- function(x, fit. = fit) {fit.[1] + fit.[2]*x + fit.[3]*(x^2) + fit.[4]*(x^3)}
+    distFunParams[["cubicFit"]] <- fit
     
     ##Extrapolation: Fit the "head" and "tail" of f using continuity
-    obs.min <- log(min(f.d$midpoint))
-    obs.max <- log(max(f.d$midpoint))
+    distFunParams[["obs.min"]] <- log(min(f.d$midpoint))
+    distFunParams[["obs.max"]] <- log(max(f.d$midpoint))
     
     beta <- fit[2] + 2*fit[3]*c(obs.min, obs.max) + 3*fit[4]*(c(obs.min, obs.max)^2)
     alpha <- fit[1] + (fit[2] - beta)*c(obs.min, obs.max) + fit[3]*c(obs.min, obs.max)^2 + fit[4]*c(obs.min, obs.max)^3
     
-    head.coef <- c(alpha[1], beta[1])
-    tail.coef <- c(alpha[2], beta[2])
-    
-    log.f.head <- function(x, head.coef.=head.coef) {head.coef.[1] + x*head.coef.[2]}
-    log.f.tail <- function(x, tail.coef.=tail.coef) {tail.coef.[1] + x*tail.coef.[2]} ##explicitly stated in case of later change
+    distFunParams[["head.coef"]] <- c(alpha[1], beta[1])
+    distFunParams[["tail.coef"]] <- c(alpha[2], beta[2])
     
   }
   
-  ##Put everything together to get the final function
-  ##All these appended dots (e.g. "head.conf.") are to avoid errors of form "promise already under evaluation"
-  log.f <- function(x, head.coef.=head.coef, tail.coef.=tail.coef, obs.min.=obs.min, obs.max.=obs.max)
-  {
-    ifelse(x > obs.max.,
-           log.f.tail(x, tail.coef.), ##Common case evaluated first
-           ifelse(x < obs.min.,
-                  log.f.head(x, head.coef.),
-                  log.f.obs(x))
-    )
-  }
-  if(logScale)
-  {
-    f <- log.f
-  } else {
-    f <- function(x) exp(log.f(log(x)))
-  }
+  
   if(plot)
   {
     if (!is.null(outfile)){ 
       pdf(outfile)
     }
-      curve(log.f.obs, obs.min, obs.max,
-            main = paste0("Distance function (points = obs, line = ", method, " fit)"),
-            xlab = "log(distance)",
-            ylab = "log(f(d))")
-      with(f.d, points(log(midpoint), log(refBinMean)))
-    if (!is.null(outfile)){ 
+    my.log.d <- seq(from=obs.min, to=obs.max, length.out = 101)
+    my.d <- exp(my.log.d)
+    plot(my.log.d, log(.distFun(my.d, distFunParams)),
+         type="l",
+         main = paste0("Distance function (points = obs, line = ", method, " fit)"),
+         xlab = "log(distance)",
+         ylab = "log(f(d))",
+         col = "Red")
+    with(f.d, points(log(midpoint), log(refBinMean)))
+    if (!is.null(outfile)){
       dev.off()
     }
   }
-
-  cd@params$f = f
+  
+  cd@params$distFunParams <- distFunParams
   cd
+}
+
+.distFun <- function(d, distFunParams)
+{
+  ##d: distSign column of cd@x
+  
+  ##distFunParams: list of form
+  ##list(method, ...)
+  ##so list("cubic", head.coef, tail.coef, obs.min, obs.max, fit)
+  ##in future, could support e.g. list("lm", ...)
+  
+  p <- distFunParams
+  
+  stopifnot(p[["method"]] == c("cubic")) ##compatibility with future "method"s
+  
+  ##Transfer parameters
+  obs.max <- p[["obs.max"]]
+  obs.min <- p[["obs.min"]]  
+  head.coef <- p[["head.coef"]]
+  tail.coef <- p[["tail.coef"]]
+  fit <- p[["cubicFit"]]
+  
+  ##Put everything together to get the final function
+  d <- log(d)
+  
+  out <- ifelse(d > obs.max,
+                tail.coef[1] + d*tail.coef[2], ##Common case evaluated first (large d)
+                ifelse(d < obs.min,
+                       head.coef[1] + d*head.coef[2],
+                       fit[1] + fit[2]*d + fit[3]*(d^2) + fit[4]*(d^3) ##2nd most common case evaluated second (small d)
+                )
+  )
+  
+  exp(out)
 }
 
 estimateBrownianNoise <- function(cd) {
@@ -661,7 +681,7 @@ estimateBrownianNoise <- function(cd) {
   seed = s$brownianNoise.seed
   maxLBrownEst = s$maxLBrownEst
   
-  if (!is.null(seed)){
+  if (!is.na(seed)){
     set.seed(seed)
   }
   
@@ -677,7 +697,7 @@ estimateBrownianNoise <- function(cd) {
   ##Pre-filtering: get subset of data, store as x
   ##---------------------------------------------
   
-  if(!is.null(subset))
+  if(!is.na(subset))
   {
     if(!class(subset) %in% c("numeric","integer")) {stop("'subset' must be an integer.")}
     
@@ -718,7 +738,7 @@ estimateBrownianNoise <- function(cd) {
   ##1B) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
   ##   censored bait2bait pairs (etc...) already taken care of in pre-computation of ProxOE.  
   
-  if(!is.null(subset)) {
+  if(!is.na(subset)) {
     ## if we chose a subset of baits, restrict to that (none of these should be censored)
     sel.baits <- sel.sub
   } else {
@@ -784,7 +804,7 @@ estimateBrownianNoise <- function(cd) {
   
   ##2) Calculate Bmeans
   ##----------------
-  x <- .estimateBMean(x, distFun=cd@params$f)
+  x <- .estimateBMean(x, distFunParams=cd@params$distFunParams)
   
   ##3)Fit model
   ##---------
@@ -796,21 +816,21 @@ estimateBrownianNoise <- function(cd) {
   
   ##NB Parametrization: var = mu + (mu^2)/dispersion
   cd@params$dispersion <- model$theta
-  cd@x <- .estimateBMean(cd@x, cd@params$f)
+  cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams)
   cd
 }
 
-.estimateBMean = function(x, distFun) {
+.estimateBMean = function(x, distFunParams) {
   
   ##Adds a "Bmean" vector to a data.table x, giving expected value of Brownian noise.
   ##NB updates by reference
   
   if("s_i" %in% colnames(x))
   {
-    x[, Bmean:=s_j*s_i*distFun(abs(distSign))]
+    x[, Bmean:=s_j*s_i*.distFun(abs(distSign), distFunParams)]
   } else {
     warning("s_i factors NOT found in .estimateBMean - variance will increase, estimating means anyway...")
-    x[, Bmean:=s_j*distFun(abs(distSign))]
+    x[, Bmean:=s_j*.distFun(abs(distSign), distFunParams)]
   }
   ##distcol == NA for trans-pairs. Thus set Bmean = 0.
   x[is.na(distSign), Bmean:=0]
@@ -923,7 +943,6 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     boxplot(Tmean~tblb, as.data.frame(res), main="Technical noise estimates per bait pool")
     boxplot(Tmean~tlb, as.data.frame(res), main="Technical noise estimates per other end pool")
     if(!is.null(outfile)){dev.off()}
-    par(mfrow=c(1,1))
   }
   
   message("Post-processing the results...")
@@ -1010,7 +1029,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(!includeTrans)
   {
-    x <- x[!is.na(x$distSign),] ##Cannot delete row by reference yet?
+    x <- x[is.na(distSign)] ##Cannot delete row by reference yet?
   }
   
   if(method == "weightedRelative")
@@ -1104,7 +1123,10 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
   chr <- as.character(chrMax$chr)
-  if(any(chr == "MT")) chr <- chr[chr != "MT"] ##no mitochondria
+  if(any(chr %in% c("MT", "chrMT")))
+  {
+    chr <- chr[chr != "MT"] ##no mitochondria
+  }
   
   avgFragLen <- .getAvgFragLength(cd)
   
@@ -1675,8 +1697,9 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU_track","washU_text"), order=c("position", "score")[1]){
-    
+exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                          format=c("seqMonk","interBed","washU_text"), order=c("position", "score")[1], removeMT=TRUE){
+  
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
   }
@@ -1685,6 +1708,9 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   }
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
+  }
+  if (! removeMT %in% c(TRUE,FALSE)){
+    stop("removeMT must be TRUE or FALSE")
   }
   
   message("Reading the restriction map file...")
@@ -1696,7 +1722,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   
   message("Reading the bait map file...")
   baitmap = fread(cd@settings$baitmapfile)
-
+  
   setnames(baitmap, "V1", "baitChr")
   setnames(baitmap, "V2", "baitStart")
   setnames(baitmap, "V3", "baitEnd")
@@ -1704,7 +1730,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   setnames(baitmap, cd@settings$baitmapGeneIDcol, "promID")
   
   message("Preparing the output table...")
-
+  
   if (is.null(b2bcutoff)){
     x = cd@x[ get(scoreCol)>=cutoff ]
   }
@@ -1712,7 +1738,7 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
     x = cd@x[ (isBait2bait==T & get(scoreCol)>=b2bcutoff ) | 
                 ( isBait2bait==F & get(scoreCol)>=cutoff )]
   }
-
+  
   x = x[, c("baitID", "otherEndID", "N", scoreCol), with=F]
   
   setkey(x, otherEndID)
@@ -1723,10 +1749,10 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   
   setkey(baitmap, baitID)  
   x = merge(x, baitmap, by="baitID", allow.cartesian = T)
-        
+  
   # note that baitmapGeneIDcol has been renamed into "promID" above 
   bm2 = baitmap[,c ("baitID", "promID"), with=F]
-
+  
   setDF(x)
   setDF(bm2)
   
@@ -1740,93 +1766,111 @@ exportResults = function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutof
   
   out$N_reads [ is.na(out$N_reads) ] = 0
   out$score = round(out$score,2)
-
+  
   if (order=="position"){
     out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
   }
   if (order=="score"){
     out = out[order(out$score, decreasing=T), ]
   }
+  
+  if(removeMT)
+  {
+    ##Remove mitochondrial DNA
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
+    {
+      out <- out[!selMT,]
+    }
+  }
+  
   out0=out
-   
+  
   if ("seqMonk" %in% format){
     message("Writing out for seqMonk...")
     out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
     
     out$newLineOEChr = paste("\n",out[,"otherEnd_chr"], sep="")    
     out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
-  
+    
     write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
-  }	
+  }  
   if ("interBed" %in% format){
     message("Writing out interBed...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
-                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
-                 "N_reads", "score")]
-    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)	
+                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
+                  "N_reads", "score")]
+    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)  
   }
   
-  if("washU_text" %in% format){
-    message("Writing out text file for washU browser upload...")
+  if(any(c("washU_text", "washU_track") %in% format)){
+    message("Preprocessing for WashU outputs...")
+    ##WashU formats
+    
     out = out0[,c("bait_chr", "bait_start", "bait_end", 
-                  "otherEnd_chr", "otherEnd_start", "otherEnd_end",
+                  "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
                   "score")]
+    
     if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
     {
       out$bait_chr <- paste0("chr", out$bait_chr)
       out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
     }
-    if(any(out$bait_chr == c("chrMT")))
+    
+    ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
+    setDT(x)
+    setkey(x, baitID, otherEndID)
+    x$ReversedInteractionScore <- x[J(x$otherEndID, x$baitID), get(scoreCol)]
+    sel <- x[,get(scoreCol)] > x$ReversedInteractionScore
+    sel <- ifelse(is.na(sel), TRUE, sel) ##"FALSE" entries in sel should correspond to minima
+    setDF(x)
+    x$ReversedInteractionScore <- NULL
+
+    if(removeMT)
     {
-      out <- out[out$bait_chr != "chrMT",]
+      sel <- sel[!selMT] ##re-remove mitochondrial interactions (still present in x)
+    }
+    out <- out[sel,]
+    
+    if("washU_text" %in% format)
+    {
+      message("Writing out text file for WashU browser upload...")
+      res = paste0(out$bait_chr, ",", out$bait_start, ",", out$bait_end, "\t", out$otherEnd_chr,",", out$otherEnd_start, ",", out$otherEnd_end, "\t", out$score) 
+      writeLines(res, con=paste0(outfileprefix,"_washU_text.txt"))
     }
     
-    res = paste0(out$bait_chr, ",", out$bait_start, ",", out$bait_end, "\t", out$otherEnd_chr,",", out$otherEnd_start, ",", out$otherEnd_end, "\t", out$score) 
-    writeLines(res, con=paste0(outfileprefix,"_washU_text.txt"))
+    if("washU_track" %in% format)
+    {
+      message("Writing out track for WashU browser...")
+    
+      ##this format requires a duplicate of each row, with bait/otherEnd reversed
+      out$i = seq(1,nrow(out)*2,2)
+      appendOut <- out[,c("otherEnd_chr", "otherEnd_start", "otherEnd_end", "bait_chr", "bait_start", "bait_end", "otherEnd_name", "score", "i")]
+      names(appendOut) <- names(out)
+      out <- rbind(out, appendOut)
+      sel <- order(out$bait_chr, out$bait_start)
+      out <- out[sel,]
+      
+      res = apply(out,1,function(x){
+        lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
+        lines
+      })
+      res = gsub(" ", "", res)
+      writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
+      
+      ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
+      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
+      exitcode2 <- 1
+      if(exitcode1 == 0)
+      {
+        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
+      }
+      if(exitcode1 != 0 | exitcode2 != 0)
+      {
+        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
+      }
+    }
   }
-  
-  if("washU_track" %in% format){
-   message("Writing out track for washU browser...")
-   out = out0[,c("bait_chr", "bait_start", "bait_end", 
-                 "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name",
-                 "score")]
-
-   if(!(tolower(substr(out0$bait_chr[1], 1, 3)) == "chr"))
-   {
-     out$bait_chr <- paste0("chr", out$bait_chr)
-     out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
-   }
-   if(any(out$bait_chr == c("chrMT")))
-   {
-     out <- out[out$bait_chr != "chrMT",]
-   }
-   
-   ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
-   setDT(x)
-   setkey(x, baitID, otherEndID)
-   x$ReversedInteractionScore <- x[J(x$otherEndID, x$baitID), get(scoreCol)]
-   sel <- x[,get(scoreCol)] > x$ReversedInteractionScore
-   sel <- ifelse(is.na(sel), TRUE, sel) ##"FALSE" entries in sel should correspond to minima
-   setDF(x)
-   x$ReversedInteractionScore <- NULL
-   out <- out[sel,]
-   
-   out$i = seq(1,nrow(out)*2,2)
-   res = apply(out,1,function(x){
-      lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
-      lines = paste0(lines,  "\n",
-        paste0(x["otherEnd_chr"], "\t", x["otherEnd_start"], "\t", x["otherEnd_end"], "\t", x["bait_chr"],":", x["bait_start"], "-", x["bait_end"], ",", x["score"],"\t", as.numeric(x["i"])+1, "\t", "."))
-         lines
-    })
-    res = gsub(" ", "", res)
-    writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
-   
-   ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-   ##FIXME better error handling here?
-   system2(paste0("bgzip ", outfileprefix,"_washU_track.txt"))
-   system2(paste0("tabix -p bed ", outfileprefix,"_washU_track.txt.gz"))
-   }
-  
 }
 
 wb2b = function(oeID, s, baitmap=NULL){

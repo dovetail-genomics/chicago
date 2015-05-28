@@ -9,7 +9,8 @@ Export the results from a \code{chicagoData} object to disk.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
-        format = c("seqMonk", "interBed", "washU_track", "washU_text"), order = c("position", "score")[1])
+        format = c("seqMonk", "interBed", "washU_text"),
+        order = c("position", "score")[1], removeMT=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,14 +29,25 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
 }
   \item{format}{
   The file format(s) to output. If a multiple formats are supplied as a vector, then all of these formats will be outputted.
+
+  Supported formats are: "seqMonk", "interBed", "washU_text" and, for advanced users, "washU_track".
 }
   \item{order}{
   Should output be ordered by position or score?
 }
+  \item{removeMT}{
+  Logical. If \code{TRUE}, remove any interactions involving mitochondrial DNA from the output.
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
+}
+\details{
+Important notes on the washU formats: Most users will prefer "washU_text" output to "washU_track" output. The "washU_text" output can be uploaded to the washU browser directly. To do this, open the browser, select "Add custom tracks", and use the "Got text files instead? Upload them from your computer" link near the bottom of the page.
+
+The "washU_track" output needs to be hosted elsewhere. You can then link the browser to the data via the "Interaction - pairwise interaction" button on the "Add custom tracks" page.
+
+If you get the warning "WashU Browser track format could not be finalized due to absence of bgzip or tabix", this could be because you have not installed SAMtools and htslib. You can check with system2("tabix") and system2("bgzip"). Sometimes RStudio has issues with reading \code{$PATH} - you can check this with \code{system2("echo", "$PATH")}.
+
+If all else fails, and you need "washU_track" output, then you can manually perform the final steps yourself by running: \code{bgzip <outfileprefix>_washU_track.txt} and \code{tabix -p bed <outfileprefix>.txt.gz}.
+}
 \value{
 NULL
 }
@@ -49,12 +61,15 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{chicagoPipeline}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+data(cdUnitTest)
 
-## The function is currently defined as
-function(FIXME) {FIXME}
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
+
+  \dontrun{
+    exportResults(cdUnitTest, outfileprefix = "unitTestOutput")
+  }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

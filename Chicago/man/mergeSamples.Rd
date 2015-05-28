@@ -43,12 +43,19 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{readAndMerge}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+filesDir <- file.path(system.file("extdata", package="Chicago"), "unitTestData")
+files <- file.path(filesDir, dir(filesDir))
+print(files) ##we will read in and merge these files
 
-## The function is currently defined as
-function(FIXME) {FIXME}
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+
+cdA <- setExperiment(designDir=designDir)
+cdA <- readSample(files[1], cdA)
+
+cdB <- setExperiment(designDir=designDir)
+cdB <- readSample(files[2], cdB)
+
+cdMerged <- mergeSamples(list(cdA, cdB))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

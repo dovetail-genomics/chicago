@@ -8,15 +8,17 @@ Modify Settings
 Modify the settings in a \code{chicagoData} object.
 }
 \usage{
-modifySettings(cd, settings)
+modifySettings(cd, designDir=NULL, settings=list(), settingsFile=NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
-  \item{settings}{A named list.}
+  \item{designDir}{The new location of the design directory, e.g "~/resources/path" or NULL if not modified.}
+  \item{settings}{A named list containing settings to modify.}
+  \item{settingsFile}{The location of a file containing settings or NULL if not provided. Each row should contain the name of a setting, followed by whitespace, followed by the value of that setting.}
 }
 \details{
-\code{cd}'s settings are updated. Setting \code{names(settings)[1]} is set to (settings)[[1]], and so on. For a list of available settings, see \code{\link{defaultSettings}}.
+\code{cd}'s settings are updated. For a list of available settings, see \code{\link{defaultSettings}}.  
 }
 \value{
 An object of class \code{chicagoData}.
@@ -27,22 +29,19 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{defaultSettings}}
+\code{\link{setExperiment}}, \code{\link{defaultSettings}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
 
-## The function is currently defined as
-function (cd, settings) 
-{
-    message("Warning: settings are not checked for consistency with the previous ones.")
-    for (s in names(settings)) {
-        cd@settings[[s]] = settings[[s]]
-    }
-    cd
-  }
+cd <- setExperiment(designDir)
+
+##Suppose I want to increase the zone in which Brownian noise is assumed to dominate
+##(by default, 1500000):
+print(cd@settings$maxLBrownEst)
+
+cd <- modifySettings(cd, settings=list(maxLBrownEst = 3000000L))
+print(cd@settings$maxLBrownEst)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
