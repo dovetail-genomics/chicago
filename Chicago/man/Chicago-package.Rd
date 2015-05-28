@@ -9,12 +9,11 @@
 \packageDescription{Chicago}
 }
 \details{
+To get started, please read the vignette: \code{vignette("Chicago")}
 
 The DESCRIPTION file:
 \packageDESCRIPTION{Chicago}
 \packageIndices{Chicago}
-
-To get started, please read the vignette: \code{vignette("Chicago")}
 }
 \author{
 \packageAuthor{Chicago}
