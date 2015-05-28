@@ -55,7 +55,7 @@ if("PCHiCdata" %in% rownames(installed.packages()))
   smESC <- modifySettings(cd=smESC, designDir=designDir)
   
   ##normalise here...
-  
+  normaliseOtherEnds(smESC)
   
 } else {
   warning("Please install the PCHiCdata package to run this example.")
