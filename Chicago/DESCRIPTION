@@ -7,7 +7,7 @@ Author: Jonathan Cairns, Paula Freire Pritchett, Steven Wingett, Mikhail Spivako
 Maintainer: Mikhail Spivakov <spivakov@babraham.ac.uk>
 Description: A pipeline for analysing Capture Hi-C data.
 License: Artistic-2.0
-Depends: data.table
+Depends: R (>= 3.1.2), data.table
 Imports: matrixStats, MASS, Hmisc, Delaporte, methods
 Suggests: argparser, BiocStyle, knitr, rmarkdown, PCHiCdata, testthat
 VignetteBuilder: knitr
