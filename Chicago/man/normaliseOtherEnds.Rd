@@ -45,7 +45,7 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \examples{
 ##FIXME: example can be run by loading data package if it is installed, once it exists
 
-if("PCHiCdata" %in% rownames(installed.packages()))
+if("PCHiCdata" \%in\% rownames(installed.packages()))
 {
   library(PCHiCdata)
   data(smESC)

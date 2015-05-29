@@ -2,8 +2,8 @@
 \alias{overlapFragWithFeatures}
 \title{Overlap Other-Ends with Features}
 \usage{
-overlapFragWithFeatures(x = NULL, folder = NULL, list_frag, sep = "\\t",
-  position_otherEnd = NULL)
+overlapFragWithFeatures(x = NULL, folder = NULL, list_frag, position_otherEnd = NULL, 
+  sep = "\\t")
 }
 \arguments{
 \item{x}{a \code{\link{chicagoData}} object or a data table (\code{\link{data.table}}) containining other end IDs.}
@@ -14,13 +14,14 @@ overlapFragWithFeatures(x = NULL, folder = NULL, list_frag, sep = "\\t",
 These files must have a bed format, with no header.
 Each element of the list must be named.}
 
-\item{sep}{the field separator character. Values are separated by this character on each line of the file containing
-the coordinates of the restriction fragments (called by \code{position_otherEnd}).}
-
 \item{position_otherEnd}{the name of the file containing the coordinates of the restriction fragments
 and the corresponding IDs. The coordinates should be "chromosome", "start" and "end", and the ID should be numeric.
 \code{position_otherEnd} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
+
+\item{sep}{the field separator character. Values are separated by this character on each line of the file containing
+the coordinates of the restriction fragments (called by \code{position_otherEnd}).}
 }
+
 \value{
 a data table (\code{\link{data.table}}) built from \code{x}, where a column was added for each genomic feature present in \code{list_frag}.
 The new columns contain logical values indicating whether there was an overlap or not.
