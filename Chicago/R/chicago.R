@@ -480,7 +480,7 @@ normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=N
 }
 
 normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfile=NULL){
-
+  
   # NON-URGENT TODO: instead of looking at bins defined by trans-counts & isB2B, look at bins defined by 
   # fragment length, mappability, GC content and isB2B; 
   # In this case, the call to .addTLB() will be substituted with something like .addLMGB() [to be written] 
@@ -529,6 +529,11 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   message("Computing normalised counts...")
     
   setkey(cd@x, tlb)
+  
+  if("s_i" %in% colnames(cd@x))
+  {
+    set(cd@x, NULL, "s_i", NULL)
+  }
   
   cd@x = merge(cd@x, x, all.x=T, by="tlb")
   #setnames(xAll, "V1", "s_i")
@@ -1604,6 +1609,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   setkey(x, otherEndID)
   setkey(transLen, otherEndID)
+  
+  ##discard TLB if already present
+  if("tlb" %in% colnames(x))
+  {
+    set(x, NULL, "tlb", NULL)
+  }
   
   x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
   # removing the interactions with too "sticky" other ends and those mapping to very sparse bins

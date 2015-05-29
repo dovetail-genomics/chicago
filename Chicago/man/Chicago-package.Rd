@@ -20,8 +20,5 @@ The DESCRIPTION file:
 
 Maintainer: \packageMaintainer{Chicago}
 }
-\references{
-
-}
 \keyword{ package }
 
