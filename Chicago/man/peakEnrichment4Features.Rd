@@ -2,14 +2,33 @@
 \alias{peakEnrichment4Features}
 \title{Enrichment for Features}
 \usage{
-peakEnrichment4Features(x1 = NULL, score = 5, colname_score = "score",
-  min_dist = 0, max_dist = NULL, folder = NULL, list_frag,
-  sep = "\\t", filterB2B = TRUE, b2bcol = "isBait2bait", unique = TRUE,
-  no_bins, sample_number, plot_name = NULL, position_otherEnd = NULL,
-  colname_dist = NULL,trans=FALSE, plotPeakDensity=FALSE)
+peakEnrichment4Features(x1, folder=NULL,  list_frag, no_bins, sample_number, 
+                        position_otherEnd= NULL,colname_dist=NULL,
+                        score=5, colname_score="score",min_dist=0, max_dist=NULL,
+                        sep="\\t", filterB2B=TRUE, b2bcol="isBait2bait", 
+                        unique=TRUE,plot_name=NULL, trans=FALSE, plotPeakDensity=FALSE)
 }
 \arguments{
 \item{x1}{a \code{\link{chicagoData}} object or a data table (\code{\link{data.table}}) containining other end IDs.}
+
+\item{folder}{the name of the folder where the files containing the features of interest are stored.}
+
+\item{list_frag}{a list where each element is the name of a file containing a feature of interest (e. g. H3K4me1, CTCF, DHS etc.).
+These files must have a bed format, with no header.
+Each element of the list must be named.}
+
+\item{no_bins}{Number of bins to divide the range of \code{colname_dist} (after \code{colname_dist} has been trimmed
+according to \code{min_dist} and \code{max_dist}). This will be important to determine how many interactions should be
+sampled according to distance from bait. For more details see \code{Note} below.}
+
+\item{sample_number}{Number of samples to be used in the permutation test. Large numbers of samples (around 100) are recommended. Nevertheless, smaller numbers (around 10) speed up the processing time and have shown to give sensible results when compared to large numbers.}
+
+\item{position_otherEnd}{the name of the file containing the coordinates of the restriction fragments
+and the corresponding IDs. The coordinates should be "chromosome", "start" and "end", and the ID should be numeric.
+\code{position_otherEnd} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
+
+\item{colname_dist}{the name of the column which contains the distances between bait and other end.
+\code{colname_dist} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
 
 \item{score}{the threshold above which interactions start being called as significant.}
 
@@ -22,11 +41,6 @@ This parameter is also useful when the user only wants to look at cis distal int
 \item{max_dist}{the maximum distance from bait required in the query.
 This parameter is particularly useful when the user only wants to look at cis proximal interactions (interactions surrounding the bait).}
 
-\item{folder}{the name of the folder where the files containing the features of interest are stored.}
-
-\item{list_frag}{a list where each element is the name of a file containing a feature of interest (e. g. H3K4me1, CTCF, DHS etc.).
-These files must have a bed format, with no header.
-Each element of the list must be named.}
 
 \item{sep}{the field separator character. Values are separated by this character on each line of the file containing
 the coordinates of the restriction fragments (called by \code{position_otherEnd}).}
@@ -37,21 +51,9 @@ the coordinates of the restriction fragments (called by \code{position_otherEnd}
 
 \item{unique}{a logical value indicating whether to removing duplicated other-ends from significant interactions and samples.}
 
-\item{no_bins}{Number of bins to divide the range of \code{colname_dist} (after \code{colname_dist} has been trimmed
-according to \code{min_dist} and \code{max_dist}). This will be important to determine how many interactions should be
-sampled according to distance from bait.}
-
-\item{sample_number}{Number of samples to be used in the permutation test.}
 
 \item{plot_name}{the name of the file where to save the resulting plot. This parameter is only required if the user wants to save the plot.
 Otherwise, the plot will be displayed on the screen, but not saved.}
-
-\item{position_otherEnd}{the name of the file containing the coordinates of the restriction fragments
-and the corresponding IDs. The coordinates should be "chromosome", "start" and "end", and the ID should be numeric.
-\code{position_otherEnd} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
-
-\item{colname_dist}{the name of the column which contains the distances between bait and other end.
-\code{colname_dist} only needs to be specified if x is not a \code{\link{chicagoData}} object.}
 
 \item{trans}{a logical value indicating whether the enrichment is to be computed for trans interactions. 
 If this parameter is set to \code{TRUE} and \code{min_dist} is set to \code{NULL}, cis interactions are disregarded from the analysis.}
@@ -76,9 +78,36 @@ Samples have the same size as the number of significant interactions called. Mor
 bait and other-end. This is achieved by binning this distribution and drawing interactions per bin, according to the numbers observed in
 the significant set.
 }
+
+\note{
+The number of interactions sampled per distance follows the same distribution as the one in the significant set. 
+This is achieved by counting the number of significant interactions per distance bin. In this way, when samples are computed, the number of interactions drawn will depend on each distance bin. Each sample will have the same number of interactions per bin as in the significant set.
+To improve this computation, we recommend a bin size of around 10-20kb, but this number could be larger when looking
+at trans interactions only (up to 200kb). This is established using the parameter \code{no_bins}. For instance, using \code{min_dist=0} and \code{max_dist=1e6}, \code{no_bins} should be set to \code{100} so to obtain 10kb bins.
+}
+
+
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 \examples{
-FIXME <- function(FIXME)
+data(cdUnitTest)
+
+##modifications to cdUnitTest, ensuring it uses correct design directory
+designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
+
+##get the unit test ChIP tracks
+dataPath <- system.file("extdata", package="Chicago")
+ChIPdir <- file.path(dataPath, "unitTestChIP")
+dir(ChIPdir)
+
+##get a list of the unit test ChIP tracks
+featuresFile <- file.path(ChIPdir, "featuresmESC.txt")
+featuresTable <- read.delim(featuresFile, header=FALSE, as.is=TRUE)
+featuresList <- as.list(featuresTable$V2)
+names(featuresList) <- featuresTable$V1
+
+##test for overlap
+peakEnrichment4Features(cdUnitTest, folder=ChIPdir, list_frag = featuresList, no_bins = 500, sample_number = 100)
 }

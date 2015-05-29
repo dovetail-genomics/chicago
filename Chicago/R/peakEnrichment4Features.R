@@ -1,7 +1,6 @@
-peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
-                                    min_dist=0, max_dist=NULL, folder=NULL,  list_frag, sep="\t", filterB2B=TRUE, 
-                                    b2bcol="isBait2bait", unique=TRUE, no_bins, sample_number,
-                                    plot_name=NULL, position_otherEnd= NULL,colname_dist=NULL,trans=FALSE, plotPeakDensity=FALSE) {
+peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample_number, position_otherEnd= NULL,colname_dist=NULL,
+                                    score=5, colname_score="score",min_dist=0, max_dist=NULL,  sep="\t", filterB2B=TRUE, 
+                                    b2bcol="isBait2bait", unique=TRUE,plot_name=NULL, trans=FALSE, plotPeakDensity=FALSE) {
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (is.null(colname_score)){
@@ -176,9 +175,11 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
   x1_nonsign[,distbin3:= cut(dist, breaks=seq(min_dist,max_dist,length.out=no_bins+1),include.lowest=TRUE)]
   udbin3<-unique(x1_nonsign$distbin3)
   
-  bin_reads2[,distbin3:=udbin3]
+  # Make sure that udbin2 and udbin3 have the same arguments
+  bin_reads2 <- bin_reads2[bin_reads2$udbin2 %in% udbin3]
   
-  # print(bin_reads2)
+  # Ready to merge           
+  bin_reads2[,distbin3:=udbin3]
   
   # Assign to each bin, how many other-ends should be sampled
   setkey(x1_nonsign, distbin3)
@@ -212,7 +213,7 @@ peakEnrichment4Features <- function(x1=NULL, score=5, colname_score="score",
   }
   return(sample_NP)
 }
-overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, sep="\t", position_otherEnd=NULL) {
+overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, position_otherEnd=NULL, sep="\t") {
   if (is.null(x)) {
     stop("Missing sample")
   }

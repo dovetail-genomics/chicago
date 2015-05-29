@@ -67,9 +67,10 @@ data(cdUnitTest)
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
 cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 
-  \dontrun{
-    exportResults(cdUnitTest, outfileprefix = "unitTestOutput")
-  }
+##create a temporary directory, export output there
+tempDirectory <- tempdir()
+print(tempDirectory)
+exportResults(cdUnitTest, outfileprefix = file.path(tempDirectory, "unitTestOutput"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

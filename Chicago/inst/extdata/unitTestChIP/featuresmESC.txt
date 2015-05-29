@@ -4,5 +4,3 @@ H3k27ac	unitTestwgEncodeLicrHistoneEse14H3k27acME0129olaStdPk.broadPeak
 H3K27me3	unitTestH3K27me3_ENCFF001ZJO.broadPeak.bed
 H3K9me3	unitTestwgEncodeSydhHistEse14H3k09me3StdPk.narrowPeak
 
-  
-
