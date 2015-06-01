@@ -1127,7 +1127,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
-  chr <- as.character(chrMax$chr)
+  chr <- as.character(names(nBaits))
   if(any(chr %in% c("MT", "chrMT")))
   {
     chr <- chr[chr != "MT"] ##no mitochondria
