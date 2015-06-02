@@ -714,8 +714,8 @@ estimateBrownianNoise <- function(cd) {
     }
     else{
       x <- cd@x
-      subset=NULL
-      warning("subset > number of baits in data, so use the full dataset.\n")
+      subset=NA
+      warning("subset > number of baits in data, so used the full dataset.\n")
     }
   }
   else{
