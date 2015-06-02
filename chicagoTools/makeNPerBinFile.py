@@ -3,6 +3,7 @@ import sys
 import random
 import fnmatch
 import os
+from ntpath import basename
 
 class Unbuffered(object):
    def __init__(self, stream):
@@ -30,7 +31,7 @@ outfile = ""
 designDir=""
 
 def usage():
-  print "Usage: python makeNPerBinFile.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEst=%d] [--binsize=%d] [--removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=designDir/*.rmap]\n\t[--baitmapfile=designDir/*.baitmap]\n\t[--outfile=designDir/nperbin.npb]\n\t[--designDir=.]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output file will be saved as designDir/nperbin.npb unless explicitly specified." \
+  print "Usage: python makeNPerBinFile.py [--minFragLen=%d] [--maxFragLen=%d] [--maxLBrownEst=%d] [--binsize=%d] [--removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=designDir/*.rmap]\n\t[--baitmapfile=designDir/*.baitmap]\n\t[--outfile=designDir/<rmapfileName>.npb]\n\t[--designDir=.]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output file will be saved as designDir/nperbin.npb unless explicitly specified." \
   % (minFragLen, maxFragLen, maxLBrownEst, binsize)
 
 
@@ -108,7 +109,8 @@ if rmapfile == "":
 
 
 if outfile == "":
-  outfile = os.path.join(designDir, "nperbin.npb")
+  rmapfileName = os.path.splitext(basename(rmapfile))[0]
+  outfile = os.path.join(designDir, rmapfileName + ".npb")
   print "Output fill be saved as %s\n" % outfile
 
 

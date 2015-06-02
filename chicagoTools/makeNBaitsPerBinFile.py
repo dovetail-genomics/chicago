@@ -3,6 +3,7 @@ import sys
 import random
 import fnmatch
 import os
+from ntpath import basename
 
 class Unbuffered(object):
    def __init__(self, stream):
@@ -24,12 +25,16 @@ designDir=""
 removeAdjacent = True
 
 def usage():
-  print "Usage: python makeNBaitsPerBinFile.py [--maxLBrownEst=%d] [--binsize=%d] [--removeAdjacent=True]\n\t[--rmapfile=designDir/*.rmap]\n\t[--baitmapfile=designDir/*.baitmap]\n\t[--outfile=designDir/nbaitsperbin.nbpb]\n\t[--designDir=.]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output file will be saved as designDir/nbaitsperbin.nbpb unless explicitly specified." \
+  print "Usage: python makeNBaitsPerBinFile.py [--maxLBrownEst=%d] [--binsize=%d] [--removeAdjacent=True]\n\t[--rmapfile=designDir/*.rmap]\n\t[--baitmapfile=designDir/*.baitmap]\n\t[--outfile=designDir/<rmapfileName>.nbpb]\n\t[--designDir=.]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output file will be saved as designDir/nbaitsperbin.nbpb unless explicitly specified." \
   % (maxLBrownEst, binsize)
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'l:b:jr:b:o:d:', \
-['maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'designDir='])
+  # minFragLen, maxFragLen and removeb2b aren't used here but included and will be ignored quetly, 
+  # so equal command lines can be accepted by all three design scripts
+  opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:rja:b:f:t:o:d:', \
+['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', \
+'removeb2b=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'designDir='])
+
 except getopt.GetoptError:
   usage()
   sys.exit(120)
@@ -51,6 +56,9 @@ for opt, arg in opts:
     removeAdjacent = str2bool(arg)
   elif opt == '-j':
     removeAdjacent = True
+  elif opt in ('--minFragLen', '-m', '--maxFragLen', '-x', '--removeb2b', '-b'):
+    pass # options not used by this script
+    
 
 if designDir != "":
   if os.path.isdir(designDir):
@@ -92,7 +100,8 @@ if rmapfile == "":
 
 
 if outfile == "":
-  outfile = os.path.join(designDir, "nbaitsperbin.nbpb")
+  rmapfileName = os.path.splitext(basename(rmapfile))[0]
+  outfile = os.path.join(designDir, rmapfileName + ".nbpb")
   print "Output fill be saved as %s\n" % outfile
 
 print "Using options:\nmaxLBrownEst=%d, binsize=%d removeAdjacent=%r\n\trmapfile=%s\n\tbaitmapfile=%s\n\toutfile=%s\n" \
