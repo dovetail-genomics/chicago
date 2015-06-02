@@ -1884,6 +1884,13 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   }
 }
 
+copyCD <- function(cd)
+{
+  newCD <- cd
+  newCD@x <- copy(cd@x)
+  newCD
+}
+
 wb2b = function(oeID, s, baitmap=NULL){
   # s is the current chicagoData object's settings list
   if (is.null(baitmap)){
