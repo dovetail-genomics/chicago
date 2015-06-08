@@ -175,24 +175,50 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
   
   if(is.na(def.settings[["baitmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap$")
+  }else{
+    if (!file.exists(def.settings[["baitmapfile"]])){
+      stop(paste("No baitmap file found at the specified location", def.settings[["baitmapfile"]]))
+    }
   }
   
   if(is.na(def.settings[["rmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap$")
+  }else{
+    if (!file.exists(def.settings[["rmapfile"]])){
+      stop(paste("No rmap file found at the specified location", def.settings[["rmapfile"]]))
+    }
   }
   
   if(is.na(def.settings[["nperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb$")
+  }else{
+    if (!file.exists(def.settings[["nperbinfile"]])){
+      stop(paste("No nperbin file found at the specified location", def.settings[["nperbinfile"]]))
+    }
   }
   
   if(is.na(def.settings[["nbaitsperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb$")
+  }else{
+    if (!file.exists(def.settings[["nbaitsperbinfile"]])){
+      stop(paste("No nbaitsperbin file found at the specified location", def.settings[["nbaitsperbinfile"]]))
+    }
   }
   
   if(is.na(def.settings[["proxOEfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe$")
+  }else{
+    if (!file.exists(def.settings[["proxOEfile"]])){
+      stop(paste("No proxOE file found at the specified location", def.settings[["proxOEfile"]]))
+    }
   }
-
+  
+  bm = fread(def.settings[["baitmapfile"]])
+  if(ncol(bm)<max(c(def.settings[["baitmapFragIDcol"]], def.settings[["baitmapGeneIDcol"]]))){
+    stop("There are fewer columns in the baitmapfile than expected. Check that this file lists both the IDs and names for each baited fragment,
+and that the corresponding columns are specified in baitmapFragIDcol and baitmapGeneIDcol, respectively.")
+  }
+  
   def.settings
 }
 
@@ -714,8 +740,8 @@ estimateBrownianNoise <- function(cd) {
     }
     else{
       x <- cd@x
-      subset=NULL
-      warning("subset > number of baits in data, so use the full dataset.\n")
+      subset=NA
+      warning("subset > number of baits in data, so used the full dataset.\n")
     }
   }
   else{
@@ -1127,7 +1153,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
-  chr <- as.character(chrMax$chr)
+  chr <- as.character(names(nBaits))
   if(any(chr %in% c("MT", "chrMT")))
   {
     chr <- chr[chr != "MT"] ##no mitochondria
@@ -1882,6 +1908,13 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       }
     }
   }
+}
+
+copyCD <- function(cd)
+{
+  newCD <- cd
+  newCD@x <- copy(cd@x)
+  newCD
 }
 
 wb2b = function(oeID, s, baitmap=NULL){

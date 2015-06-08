@@ -1,6 +1,10 @@
 peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample_number, position_otherEnd= NULL,colname_dist=NULL,
                                     score=5, colname_score="score",min_dist=0, max_dist=NULL,  sep="\t", filterB2B=TRUE, 
                                     b2bcol="isBait2bait", unique=TRUE,plot_name=NULL, trans=FALSE, plotPeakDensity=FALSE) {
+  # Check that all features have different names
+  if (any(duplicated(names(list_frag)))){
+    stop(paste0("Feature(s) ", unique(names(list_frag)[duplicated(names(list_frag))])," appear more than once. Please make sure that each feature appears only once or is given a different name.\n", collapse=","))
+  }
   # Extract significant interactions
   # Be aware that you can trim for a specific window
   if (is.null(colname_score)){

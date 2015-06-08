@@ -3,22 +3,22 @@
 \alias{Chicago}
 \docType{package}
 \title{
-\packageTitle{Chicago}
+CHiCAGO: Capture Hi-C Analysis of Genomic Organization
 }
 \description{
-\packageDescription{Chicago}
+A pipeline for analysing Capture Hi-C data.
 }
 \details{
 To get started, please read the vignette: \code{vignette("Chicago")}
 
-The DESCRIPTION file:
-\packageDESCRIPTION{Chicago}
-\packageIndices{Chicago}
+%The DESCRIPTION file:
+%\packageDESCRIPTION{Chicago}
+%\packageIndices{Chicago}
 }
 \author{
-\packageAuthor{Chicago}
+Jonathan Cairns, Paula Freire Pritchett, Steven Wingett, Mikhail Spivakov
 
-Maintainer: \packageMaintainer{Chicago}
+Maintainer: Mikhail Spivakov - \email{spivakov@babraham.ac.uk}
 }
 \keyword{ package }
 
