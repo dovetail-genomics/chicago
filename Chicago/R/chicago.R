@@ -123,6 +123,22 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     stop("Design not specified. Please specify a design directory or design files.")
   }
   
+  def.settings = .updateSettings(designDir, settings, settingsFile, def.settings) 
+  cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
+}
+
+modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL){
+  
+  message("Warning: settings are not checked for consistency with the original ones.")
+  cd@settings = .updateSettings(designDir, settings, settingsFile, def.settings=cd@settings, updateDesign=TRUE)   
+
+  ##test validity of new object
+  validObject(cd)
+  
+  cd
+}
+
+.updateSettings = function(designDir, settings, settingsFile, def.settings, updateDesign=FALSE){
   modSettings = vector("list")
   
   if(!is.null(settingsFile)){
@@ -157,41 +173,53 @@ setExperiment = function(designDir="", settings=list(), settingsFile=NULL,
     def.settings[[s]] = modSettings[[s]]
   }
   
-  if(is.na(def.settings[["baitmapfile"]])){
+  if(is.na(def.settings[["baitmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["baitmapfile"]] = locateFile("<baitmapfile>.baitmap", designDir, "\\.baitmap$")
+  }else{
+    if (!file.exists(def.settings[["baitmapfile"]])){
+      stop(paste("No baitmap file found at the specified location", def.settings[["baitmapfile"]]))
+    }
   }
   
-  if(is.na(def.settings[["rmapfile"]])){
+  if(is.na(def.settings[["rmapfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["rmapfile"]] = locateFile("<rmapfile>.rmap", designDir, "\\.rmap$")
+  }else{
+    if (!file.exists(def.settings[["rmapfile"]])){
+      stop(paste("No rmap file found at the specified location", def.settings[["rmapfile"]]))
+    }
   }
   
-  if(is.na(def.settings[["nperbinfile"]])){
+  if(is.na(def.settings[["nperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nperbinfile"]] = locateFile("<nperbinfile>.npb", designDir, "\\.npb$")
+  }else{
+    if (!file.exists(def.settings[["nperbinfile"]])){
+      stop(paste("No nperbin file found at the specified location", def.settings[["nperbinfile"]]))
+    }
   }
   
-  if(is.na(def.settings[["nbaitsperbinfile"]])){
+  if(is.na(def.settings[["nbaitsperbinfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["nbaitsperbinfile"]] = locateFile("<nbaitsperbinfile>.nbpb", designDir, "\\.nbpb$")
+  }else{
+    if (!file.exists(def.settings[["nbaitsperbinfile"]])){
+      stop(paste("No nbaitsperbin file found at the specified location", def.settings[["nbaitsperbinfile"]]))
+    }
   }
   
-  if(is.na(def.settings[["proxOEfile"]])){
+  if(is.na(def.settings[["proxOEfile"]]) | (updateDesign & !is.null(designDir))){
     def.settings[["proxOEfile"]] = locateFile("<proxOEfile>.poe", designDir, "\\.poe$")
+  }else{
+    if (!file.exists(def.settings[["proxOEfile"]])){
+      stop(paste("No proxOE file found at the specified location", def.settings[["proxOEfile"]]))
+    }
   }
   
-  cd = chicagoData(x=data.table(), params=list(), settings=def.settings)
-}
-
-modifySettings = function(cd, settings){
-  
-  message("Warning: settings are not checked for consistency with the previous ones.")
-    
-  for (s in names(settings)){
-    cd@settings[[s]] = settings[[s]]
+  bm = fread(def.settings[["baitmapfile"]])
+  if(ncol(bm)<max(c(def.settings[["baitmapFragIDcol"]], def.settings[["baitmapGeneIDcol"]]))){
+    stop("There are fewer columns in the baitmapfile than expected. Check that this file lists both the IDs and names for each baited fragment,
+and that the corresponding columns are specified in baitmapFragIDcol and baitmapGeneIDcol, respectively.")
   }
-
-  ##test validity of new object
-  validObject(cd)
   
-  cd
+  def.settings
 }
 
 readSample = function(file, cd){
@@ -478,7 +506,7 @@ normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=N
 }
 
 normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfile=NULL){
-
+  
   # NON-URGENT TODO: instead of looking at bins defined by trans-counts & isB2B, look at bins defined by 
   # fragment length, mappability, GC content and isB2B; 
   # In this case, the call to .addTLB() will be substituted with something like .addLMGB() [to be written] 
@@ -527,6 +555,11 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   message("Computing normalised counts...")
     
   setkey(cd@x, tlb)
+  
+  if("s_i" %in% colnames(cd@x))
+  {
+    set(cd@x, NULL, "s_i", NULL)
+  }
   
   cd@x = merge(cd@x, x, all.x=T, by="tlb")
   #setnames(xAll, "V1", "s_i")
@@ -707,8 +740,8 @@ estimateBrownianNoise <- function(cd) {
     }
     else{
       x <- cd@x
-      subset=NULL
-      warning("subset > number of baits in data, so use the full dataset.\n")
+      subset=NA
+      warning("subset > number of baits in data, so used the full dataset.\n")
     }
   }
   else{
@@ -1120,7 +1153,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   baitmap = fread(set$baitmapfile)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
-  chr <- as.character(chrMax$chr)
+  chr <- as.character(names(nBaits))
   if(any(chr %in% c("MT", "chrMT")))
   {
     chr <- chr[chr != "MT"] ##no mitochondria
@@ -1603,6 +1636,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   setkey(x, otherEndID)
   setkey(transLen, otherEndID)
   
+  ##discard TLB if already present
+  if("tlb" %in% colnames(x))
+  {
+    set(x, NULL, "tlb", NULL)
+  }
+  
   x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
   # removing the interactions with too "sticky" other ends and those mapping to very sparse bins
   
@@ -1695,7 +1734,8 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   baits
 }
 
-exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL, format=c("seqMonk","interBed","washU_text"), order=c("position", "score")[1]){
+exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                          format=c("seqMonk","interBed","washU_text"), order=c("position", "score")[1], removeMT=TRUE){
   
   if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
     stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
@@ -1705,6 +1745,9 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   }
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
+  }
+  if (! removeMT %in% c(TRUE,FALSE)){
+    stop("removeMT must be TRUE or FALSE")
   }
   
   message("Reading the restriction map file...")
@@ -1767,6 +1810,17 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   if (order=="score"){
     out = out[order(out$score, decreasing=T), ]
   }
+  
+  if(removeMT)
+  {
+    ##Remove mitochondrial DNA
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
+    {
+      out <- out[!selMT,]
+    }
+  }
+  
   out0=out
   
   if ("seqMonk" %in% format){
@@ -1800,13 +1854,6 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       out$otherEnd_chr <- paste0("chr", out$otherEnd_chr)
     }
     
-    ##Remove mitochondrial DNA
-    selMT <- tolower(out$bait_chr) == c("chrmt")
-    if(any(selMT))
-    {
-      out <- out[!selMT,]
-    }
-
     ##Bait to bait interactions can be asymmetric in terms of score. Here, we find asymmetric interactions and delete the minimum score
     setDT(x)
     setkey(x, baitID, otherEndID)
@@ -1816,7 +1863,10 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     setDF(x)
     x$ReversedInteractionScore <- NULL
 
-    sel <- sel[!selMT] ##remove mitochondrial interactions (still present in x)
+    if(removeMT)
+    {
+      sel <- sel[!selMT] ##re-remove mitochondrial interactions (still present in x)
+    }
     out <- out[sel,]
     
     if("washU_text" %in% format)
@@ -1858,6 +1908,13 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       }
     }
   }
+}
+
+copyCD <- function(cd)
+{
+  newCD <- cd
+  newCD@x <- copy(cd@x)
+  newCD
 }
 
 wb2b = function(oeID, s, baitmap=NULL){

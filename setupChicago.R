@@ -1,10 +1,22 @@
-message("\nRscript setupChicago.R --path=<chicago-package-path> --rlib=<r-lib-dir> --bin=<scripts-target-dir>\n\nChicago and dependencies installation script")
+if(getRversion() < "3.1.2")
+{
+  stop("Requires R version > 3.1.2. Please follow download instructions at http://cran.r-project.org/")
+}
+
 args = commandArgs(trailingOnly = TRUE)
+
+message("\nRscript setupChicago.R [--help] [--path=<Chicago-package-path>] [--data-path=<PCHiCdata-package-path>] [--rlib=<r-lib-dir>] [--bin=<chicagoTools-target-dir>]\n\nChicago and dependencies installation script")
 
 pathLoc = grep("\\-\\-path\\=", args)
 path = NULL
 if (length(pathLoc)==1){
   path = gsub("\\-\\-path\\=", "", args[pathLoc])
+}
+
+dataPathLoc = grep("\\-\\-data\\-path\\=", args)
+dataPath = NULL
+if (length(dataPathLoc)==1){
+  dataPath = gsub("\\-\\-data\\-path\\=", "", args[dataPathLoc])
 }
 
 rlibLoc = grep("\\-\\-rlib\\=", args)
@@ -36,33 +48,57 @@ if (!length(path)){
     }else{
       stop("Could not unambiguously locate Chicago package, please provide as argument.\n")
     }
-  
   }
 }else{
   if (file.exists(path)){
     loc = path
   }else{
-    stop("Could not locate the R package. Check the --path argument.\n")
+    stop("Could not locate Chicago R package. Check the --path argument.\n")
   }
 }
+
+if(!length(dataPath)){
+  if (file.exists("PCHiCdata") & file.info("PCHiCdata")$isdir){
+    message("Found uncompressed PCHiCdata folder in the current location.")
+    dataLoc = "PCHiCdata"
+  }else{
+    chicagoDataFiles = list.files(pattern = "PCHiCdata")
+    chicagoDataTarGz = grep("\\.tar\\.gz$", chicagoDataFiles)
+    if(length(chicagoDataTarGz == 1)){
+      message("Found compressed PCHiCdata package in the current location.")
+      dataLoc = chicagoDataFiles[chicagoDataTarGz]
+    }else{
+      stop("Could not unambiguously locate PCHiCdata package, please provide as argument.\n")
+    }
+  }
+}else{
+  if (file.exists(dataPath)){
+    dataLoc = path
+  }else{
+    stop("Could not locate PCHiCdata R package. Check the --data-path argument.\n")
+  }
+}
+
 
 if (length(rlib)){
   if (!file.exists(rlib) | !file.info(rlib)$isdir){
     stop("The specified R library directory does not exist.\n")
   }else{
-    message("Installing R package and dependencies to directory: ", rlib)
+    message("Installing Chicago R package and dependencies to directory: ", rlib)
   }
+}else{
+  message("Installing Chicago R package and dependencies to the default directory ", .libPaths()[1])
 }
 
 if (length(bin)){
   if (!file.exists(bin) | !file.info(bin)$isdir){
-    message("Creating the scripts target directory...")
-    if (!dir.create(bin)){
-      stop("Coud not create scripts target directory.\n")
-    }
-  }else{
-    message("Installing Chicago scripts to directory: ", bin)
+    stop("The path for installing chicagoTools does not exist.\n")
   }
+  if (!dir.create(file.path(bin,"chicagoTools"))){
+    stop("Could not create chicagoTools target directory.\n")
+  }
+}else{
+  message("chicagoTools will be retained at their original location")
 }
 
 message("\nInstalling dependencies if needed...\n")
@@ -116,15 +152,20 @@ if(! "matrixStats" %in% rownames(installed.packages())){
 message("\nInstalling Chicago R package...\n")
 install.packages(pkgs = loc, repos=NULL, lib=rlib)
 
+message("\nInstalling PCHiCdata package...\n")
+install.packages(pkgs = dataLoc, repos=NULL, lib=rlib)
+
+
 if(!is.null(bin)){
-  message("\nInstalling Chicago scripts...\n")
-  for (f in list.files(pattern = ".sh$")){
-    file.copy(f, bin)
-    Sys.chmod(file.path(bin, f), "770")
+  message("\nInstalling chicagoTools...\n")
+  binct = file.path(bin, "chicagoTools")
+  for (f in list.files(path="chicagoTools", pattern = ".sh$", full.names=T)){
+    file.copy(f, binct)
+    Sys.chmod(file.path(binct, f), "770")
   }
-  for (f in list.files(pattern = "(.R$)|(.py$)|(chicago)")){
-    file.copy(f, bin)
-    Sys.chmod(file.path(bin, f), "770")
+  for (f in list.files(path="chicagoTools", pattern = "(.R$)|(.py$)|(.Rmd$)", full.names=T)){
+    file.copy(f, binct)
+    #Sys.chmod(file.path(binct, f), "770")
   }
 }
 

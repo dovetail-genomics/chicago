@@ -10,7 +10,7 @@ Export the results from a \code{chicagoData} object to disk.
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
         format = c("seqMonk", "interBed", "washU_text"),
-        order = c("position", "score")[1])
+        order = c("position", "score")[1], removeMT=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,6 +34,9 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
 }
   \item{order}{
   Should output be ordered by position or score?
+}
+  \item{removeMT}{
+  Logical. If \code{TRUE}, remove any interactions involving mitochondrial DNA from the output.
 }
 }
 \details{
@@ -62,15 +65,12 @@ data(cdUnitTest)
 
 ##modifications to cdUnitTest, ensuring it uses correct design directory
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
-extensions <- c(".rmap", ".baitmap", ".npb", ".nbpb", ".poe")
-new.settings <- paste0(file.path(designDir, "unitTest"), extensions)
-new.settings <- as.list(new.settings)
-names(new.settings) <- c("rmapfile", "baitmapfile", "nperbinfile", "nbaitsperbinfile", "proxOEfile")
-cdUnitTest <- modifySettings(cd = cdUnitTest, new.settings)
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 
-  \dontrun{
-    exportResults(cdUnitTest, outfileprefix = "unitTestOutput")
-  }
+##create a temporary directory, export output there
+tempDirectory <- tempdir()
+print(tempDirectory)
+exportResults(cdUnitTest, outfileprefix = file.path(tempDirectory, "unitTestOutput"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
