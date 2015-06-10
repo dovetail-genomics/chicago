@@ -3,9 +3,9 @@ chicagoTools are an assorted set of scripts associated with the CHiCAGO R packag
 Currently it includes the following software:
 
 - Scripts for preparing "design files" needed for the CHiCAGO package:
-    makeNBaitsPerBinFile.py
-    makeNPerBinFile.py
-    makeProxOEFile.py
+    makeNBaitsPerBinFile.py  
+    makeNPerBinFile.py  
+    makeProxOEFile.py.
     
 - Script to processing BAM files into CHiCAGO input files:
     bam2chicago.sh
