@@ -10,7 +10,9 @@
 
 library(argparser)
 
-args = commandArgs(trailingOnly=T)
+#args = commandArgs(trailingOnly=T)
+args = c("myOutput","-i", "a.RDa,b.RDa")
+
 p = arg.parser("Get the parameters for the p-value weighting curve (alpha through delta). Specify '--inputs' OR '--summaryInput'.", name="Rscript fitDistCurve.R")
 
 p = add.argument(p, arg="<output-prefix>", help = "Output files: settings file for use in CHiCAGO, summary object, and plot.", default = "fitDistCurve.settingsFile")
@@ -75,8 +77,6 @@ if(!validInput) {stop("Please specify --inputs or --summaryInput (but not both)"
 message("Bins used:")
 print(bins)
 
-stop("Derp!")
-
 ##location of restriction fragment map (rmapfile)
 #rmapfile <- "/bi/group/sysgen/CHIC/Digest_Human_HindIII.bed" FIXME can get from CHiCAGO objects
 
@@ -86,14 +86,18 @@ stop("Derp!")
 
 if(!is.na(inputs))
 {
-  samples <- strsplit(inputs, split = ",")
+  samples <- strsplit(inputs, split = ",")[[1]]
   
-  invalidFileNames <- !seq_along(samples) %in% grep(c(".[Rr][Dd][AaSs]$"), samples)
+  invalidFileNames <- !seq_along(samples) %in% grep(".[Rr][Dd][AaSs]$", samples)
   if(any(invalidFileNames))
   {
     stop("Some of the submitted files do not end with .Rda or .Rds.")
   }
-  message(samples)
+  print(samples)
+  if(any(!file.exists(samples)))
+  {
+    stop("Files not found: ", paste(samples[!file.exists(samples)],collapse=", "))
+  }
   
     ##loop through the results, grabbing data
     for(s in samples)
@@ -101,7 +105,7 @@ if(!is.na(inputs))
       ##Load sample
       gc()
       
-      if(grep(c(".[Rr][Dd][Ss]$"), s))
+      if(identical(grep(".[Rr][Dd][Ss]$", s), 1L))
       {
         message("Found a .Rds file: ", s)
         ##it's an Rds/rds, load it straight in
@@ -376,7 +380,6 @@ dev.off()
 
 ##FIXME full fit
 ##lines from fit to each subset:
-FIXME
 pdf(paste0(outputPrefix, "_curveFit.pdf"))
 plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
 lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), col="black")
