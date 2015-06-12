@@ -22,7 +22,11 @@ This vignette will walk you through a typical CHiCAGO analysis.
 
 A wrapper to perform the analysis, called *runChicago.R*, can be found on our website: [FIXME URL].
 
-WARNING: The data set used in this tutorial is only a small part of a real data set. Do not use any of the input data in your own analysis. We will release a companion data package that has a fully executable workflow.
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. It is only a small part of a real data set. Do not use any of the input data in your own analysis.
+
+```{}
+library(PCHiCdata)
+```
 
 ## Input files required
 
