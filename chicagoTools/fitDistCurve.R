@@ -10,8 +10,7 @@
 
 library(argparser)
 
-#args = commandArgs(trailingOnly=T)
-args = c("myOutput","-i", "a.RDa,b.RDa")
+args = commandArgs(trailingOnly=T)
 
 p = arg.parser("Get the parameters for the p-value weighting curve (alpha through delta). Specify '--inputs' OR '--summaryInput'.", name="Rscript fitDistCurve.R")
 
@@ -63,6 +62,10 @@ bins$mid <- with(bins, 0.5*(end + start - 1))
 
 library(Chicago)
 
+expit <- function(x)
+{
+  exp(x)/(1+exp(x))
+}
 
 ##parse input files
 validInput <- xor(is.na(inputs), is.na(summaryInput))
@@ -149,13 +152,24 @@ if(!is.na(inputs))
         }
         rm(list=myObjects)
       }
+      
+      ##log which map file is being used
+      if(!exists("rmapfile"))
+      {
+        rmapfile <- x@settings$rmapfile
+      } else {
+        if (rmapfile != x@settings$rmapfile)
+        {
+          warning("rmapfile location did not match across input files. The rmapfile specified first takes precedence; please check that your data were analysed using the same rmapfile.")
+        }
+      }
 
+      x <- x@x
       requiredCols <- c("baitID","otherEndID","distSign","log.p")
-      x <- x[,requiredCols]
+      x <- x[,requiredCols, with=FALSE]
       
       #put x in merge-conducive form
-      colnames(x)[4] <- "new.log.p"
-      x <- data.table(x)
+      setnames(x, "log.p", "new.log.p")
       setkey(x, baitID, otherEndID, distSign)
       
       gc()
@@ -184,22 +198,14 @@ if(!is.na(inputs))
         setkey(maxPvals, baitID, otherEndID, distSign)
         gc()
       }
-      
-      if(!exists("rmapfile"))
-      {
-        rmapfile <- x@settings$rmapfile
-      } else {
-        if (rmapfile != x@settings$rmapfile)
-        {
-          warning("rmapfile location did not match across input files. The rmapfile specified first takes precedence; please check that your data were analysed using the same rmapfile.")
-        }
-      }
       rm(x)
     }
     ##now we can discard 1s from maxPvals
     maxPvals <- maxPvals[maxPvals$log.p < 0,]
-    
+
+
     rdsFile <- paste0(outputPrefix, "_summaryInput.Rds")
+    message("Saving file: ", rdsFile)
     save(maxPvals, rmapfile, file=rdsFile)
   
   gc()
@@ -240,7 +246,7 @@ G = sum(C)
 ##Number of baits
 Nbaits <- length(unique(maxPvals$baitID))
 ##average fragment length
-Lfrag <- .getAvgFragLength(rmapfile=rmapfile)
+Lfrag <- Chicago:::.getAvgFragLength(rmapfile=rmapfile)
 
 ##calculate number of hypotheses at given distances
 bins$N <- as.numeric(NA)
@@ -378,15 +384,19 @@ lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), col="b
 dev.off()
 
 
-##FIXME full fit
-##lines from fit to each subset:
+##full fit
+##get table for all observations
+data.lr <- cbind(rbind(bins, c(Inf,Inf,Inf,Ntrans)), Ints=rowSums(obsJack))
+data.lr$N <- data.lr$N
+data.lr$notInts <- with(data.lr, N - Ints)
+
 pdf(paste0(outputPrefix, "_curveFit.pdf"))
-plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
-lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), col="black")
+plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), type="l", ylim = c(-19,-4), col="Red", main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
+points(log(data.lr$mid), log(data.lr$Ints) - log(data.lr$N), col="black")
 dev.off()
 
 
 ## FINAL OUTPUT
 outputTable <- cbind(c("alpha", "beta", "gamma", "delta"), medianJackPar[1:4])
-write.table(outputTable, paste0("~/Temp/",outputPrefix,".settings"), quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE)
+write.table(outputTable, paste0(outputPrefix,".settings"), quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE)
 message("Output saved.")
