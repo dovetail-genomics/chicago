@@ -22,7 +22,7 @@ This vignette will walk you through a typical CHiCAGO analysis.
 
 A wrapper to perform the analysis, called *runChicago.R*, can be found on our website: [FIXME URL].
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. It is only a small part of a real data set. Do not use any of the input data in your own analysis.
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. It is only a small part of a real data set. Do not use any of the input data in your own analysis. We are going to use data from mouse embryonic stem cells (mESCs):
 
 ```{}
 library(PCHiCdata)
@@ -43,20 +43,20 @@ It is easiest to put all of these files in the same directory. If you are using 
 Examples of these files are also provided in the package, as follows. Do not use these files in your analysis!
 
 ```{r}
-dataPath <- system.file("extdata", package="Chicago")
-testDesignDir <- file.path(dataPath, "unitTestDesign")
+dataPath <- system.file("extdata", package="PCHiCdata")
+testDesignDir <- file.path(dataPath, "mm9TestDesign")
 dir(testDesignDir)
 ```
 
 2. You will also need your input data files. These files can be obtained by running bam2chicago.sh, available from our website [FIXME URL]. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
-testDataPath <- file.path(dataPath, "unitTestData")
+testDataPath <- file.path(dataPath, "mESCchinputFiles")
 dir(testDataPath)
 
 files <- c(
-    file.path(testDataPath, "unitTest_mESC_rep1.chinput"),
-    file.path(testDataPath, "unitTest_mESC_rep2.chinput")
+    file.path(testDataPath, "mESCrep1.chinput"),
+    file.path(testDataPath, "mESCrep2.chinput")
   )
 ```
 
