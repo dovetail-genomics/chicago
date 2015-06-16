@@ -68,7 +68,7 @@ foreach my $array (@inputData){
 			$step1_jid_string = "-hold_jid $config{hold_jid}";
 		}		
 		my $command = "$Bin/chicagoTools/bam2chicago.sh $inputFile $baits $digest $prefix1";
-		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email} $step1_jid_string";
+		my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=100G -o CHiCAGO1.$prefixRand.out -j y -N CHiCAGO1.$prefixRand $config{email} $step1_jid_string";
 		
 		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";
 		print LOG "CHiCAGO_Step1:\t$clusterCommand\n";
@@ -163,9 +163,9 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		
 		my $memory_allocation;
 		if($numberFiles == 1){
-			$memory_allocation = 'h_vmem=200G';
+			$memory_allocation = 'h_vmem=100G';
 		}else{	
-			my $mem = $numberFiles * 100;
+			my $mem = $numberFiles * 75;
 			if ($mem > 400) {
 				print "Capping memory allocation to 400Gb\n";
 				$mem = 400;
