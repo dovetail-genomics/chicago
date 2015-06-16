@@ -547,7 +547,10 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   
   if(plot){
     if (!is.null(outfile)){ pdf(outfile)}
-    with(x, barplot(s_i, names.arg=tlb, col=sapply(tlb, function(x)ifelse(length(grep("B2B",x)), "darkblue", "red")), xlab="tlb", ylab="s_i"))
+    with(x,
+         barplot(s_i, names.arg=tlb, col=sapply(tlb, function(x)ifelse(length(grep("B2B",x)), "darkblue", "red")),
+                    xlab="tlb", ylab="s_i", main = "Brownian noise: other end factors, s_i, estimated per other end pool")
+         )
     legend("topleft", legend=c("non-B2B", "B2B"),fill=c("red", "darkblue"))
     if (!is.null(outfile)){ dev.off()}
   }
@@ -651,11 +654,12 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
     my.d <- exp(my.log.d)
     plot(my.log.d, log(.distFun(my.d, distFunParams)),
          type="l",
-         main = paste0("Distance function (points = obs, line = ", method, " fit)"),
+         main = "Distance function estimate",
          xlab = "log(distance)",
          ylab = "log(f(d))",
          col = "Red")
     with(f.d, points(log(midpoint), log(refBinMean)))
+    legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
     if (!is.null(outfile)){
       dev.off()
     }
@@ -973,6 +977,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     par(mfrow=c(2,1))
     boxplot(Tmean~tblb, as.data.frame(res), main="Technical noise estimates per bait pool")
     boxplot(Tmean~tlb, as.data.frame(res), main="Technical noise estimates per other end pool")
+    par(mfrow=c(1,1))
     if(!is.null(outfile)){dev.off()}
   }
   

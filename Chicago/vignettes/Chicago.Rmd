@@ -24,7 +24,7 @@ A wrapper to perform the analysis, called *runChicago.R*, can be found on our we
 
 WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. It is only a small part of a real data set. Do not use any of the input data in your own analysis. We are going to use data from mouse embryonic stem cells (mESCs):
 
-```{}
+```{r}
 library(PCHiCdata)
 ```
 
@@ -60,43 +60,61 @@ files <- c(
   )
 ```
 
+OPTIONAL: Note that, because this data set is smaller than usual, we need to input some custom settings; normally, you will not have to do this.
+```{r}
+settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "smESCSettings", "smESC.settingsFile")
+```
+
 ## Example workflow
 
-We run CHiCAGO on the test data as follows. First, we create a blank ``ChicagoData`` object, and we tell it where the design files are. (If we want to change any other settings, we would do that here.)
+We run CHiCAGO on the test data as follows. First, we create a blank ``ChicagoData`` object, and we tell it where the design files are. For this example, we also provide the optional settings file.
 
 ```{r, message=FALSE}
 library(Chicago)
 
-cd <- setExperiment(designDir = testDesignDir)
+cd <- setExperiment(designDir = testDesignDir, settingsFile = settingsFile)
 ```
 
 The properties of ``ChicagoData`` objects are discussed more in [The ChicagoData object](#link).
 
-Next, we read in the samples:
+Next, we read in the input data files:
 
 ```{r, message=FALSE}
 cd <- readAndMerge(files=files, cd=cd)
 ```
 
-Finally, we run the pipeline. Note that this command will fail on the example data set, because we don't have enough data. A pre-analysed data set is provided in the next section.
+Finally, we run the pipeline with ``chicagoPipeline()``:
 
 ```{r, eval=FALSE}
 cd <- chicagoPipeline(cd)
 ```
 
-``chicagoPipeline()`` produces a number of plots. You can save these to disk by setting the ``outprefix`` argument.
+## Output plots
 
-For use in the next section, we load a pre-analysed data set as follows:
+``chicagoPipeline()`` produces a number of plots. You can save these to disk by setting the ``outprefix`` argument in ``chicagoPipeline()``.
 
-```{r}
-data(cdUnitTest)
+The plots are as follows:
+
+1. FIXME
+2. FIXME
+3. FIXME
+
+```{r, echo=FALSE, message=FALSE}
+cd <- chicagoPipeline(cd)
 ```
 
 ## Output files
 
-You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data.)
+You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data.) By default, the function outputs three different output file formats:
+
+```{r}
+outputDirectory <- tempdir()
+exportResults(cd, file.path(outputDirectory, "vignetteOutput"))
+```
 
 Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of -log(adjusted p-value) of 5 is applied.
+
+FIXME explain what happens for bait-to-bait interactions.
 
 Summary of output files:
 
@@ -110,23 +128,16 @@ ibed format (ends with ...ibed):
 
 seqmonk format (ends with ...seqmonk.txt)
 
-- Can be read by seqmonk (http://www.bioinformatics.babraham.ac.uk/projects/seqmonk/)
+- Can be read by [seqmonk](http://www.bioinformatics.babraham.ac.uk/projects/seqmonk/).
 - An interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
 - Columns are: chromosome, start, end, name, number of reads, interaction score (see above)
 
 washU\_text format (ends with ...washU\_text.txt)
 
-- Can be read by WashU browser (epigenomegateway.wustl.edu)
+- Can be read by the [WashU browser](http://epigenomegateway.wustl.edu)
 - Upload via the "Got text files instead? Upload them from your computer" link.
 - Note - Advanced users may wish to export to washU\_track format instead. See the help page for ``exportResults()``.
 
-## Output plots
-
-(NB: Update once data package is ready)
-
-```{r}
-#FIXME
-```
 
 ## Peak enrichment for features
 
@@ -146,7 +157,7 @@ In the above workflow, *cd* is a *ChicagoData* object. It contains three element
 
 A closer look at ``cd@x``:
 ```{r}
-head(cdUnitTest@x, 2)
+head(cd@x, 2)
 ```
 
 Columns:
@@ -176,8 +187,8 @@ Columns:
 To avoid this behaviour, copy the *chicagoData* object first:
 
 ```{r}
-cdCopy <- cdUnitTest
-cdCopy@x <- copy(cdUnitTest@x)
+cdCopy <- cd
+cdCopy@x <- copy(cd@x)
 ```
 
 We will provide an explicit function to do this in due course.
