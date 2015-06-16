@@ -10,7 +10,7 @@
 
 library(argparser)
 
-args = commandArgs(trailingOnly=T)
+args = commandArgs(trailingOnly=TRUE)
 
 p = arg.parser("Get the parameters for the p-value weighting curve (alpha through delta). Specify '--inputs' OR '--summaryInput'.", name="Rscript fitDistCurve.R")
 
@@ -204,9 +204,9 @@ if(!is.na(inputs))
     maxPvals <- maxPvals[maxPvals$log.p < 0,]
 
 
-    rdsFile <- paste0(outputPrefix, "_summaryInput.Rds")
-    message("Saving file: ", rdsFile)
-    save(maxPvals, rmapfile, file=rdsFile)
+    rdaFile <- paste0(outputPrefix, "_summaryInput.Rda")
+    message("Saving file: ", rdaFile)
+    save(maxPvals, rmapfile, file=rdaFile)
   
   gc()
 }
@@ -214,8 +214,16 @@ if(!is.na(inputs))
 ##---------------------------------------------------------------
 ##Mode where maxPvals is specified
 
-if(!is.na(inputs))
+if(!is.na(summaryInput))
 {
+  if(!identical(grep(".[Rr][Dd][Aa]$", summaryInput), 1L))
+  {
+    stop("summaryInput file is not an .Rda")
+  }
+  if(!file.exists(summaryInput))
+  {
+    stop("Could not find summaryInput file: ", summaryInput)
+  }
   message("Reading summaryInput file: ", summaryInput)
   load(summaryInput) ##should contain maxPvals and rmapfile (can change code to check for this?)
 }
@@ -373,7 +381,7 @@ p.fit <- function(d, params)
 
 ##lines from fit to each subset:
 pdf(paste0(outputPrefix, "_mediancurveFit.pdf"))
-plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
+plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[1]]$par)), type="l", ylim = c(-19,-4), col=rainbow(5)[1], main="Data subsetting", xlab="log_e(distance)", ylab="log_e(probability of interaction)")
 for(i in 2:Nsub)
 {
   lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), outJack[[i]]$par)), col=rainbow(5)[i])
@@ -381,6 +389,7 @@ for(i in 2:Nsub)
 
 ##median fit
 lines(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), col="black", lty=2, pch=7, type="o")
+legend("topright", legend = "Median parameters", col = "Black", pch = 7, lty=2)
 dev.off()
 
 
@@ -389,10 +398,13 @@ dev.off()
 data.lr <- cbind(rbind(bins, c(Inf,Inf,Inf,Ntrans)), Ints=rowSums(obsJack))
 data.lr$N <- data.lr$N
 data.lr$notInts <- with(data.lr, N - Ints)
+xlims <- range(log(data.lr$mid))
+ylims <- range(log(p.fit(log(data.lr$mid), medianJackPar[1:4])))
 
 pdf(paste0(outputPrefix, "_curveFit.pdf"))
-plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), type="l", ylim = c(-19,-4), col="Red", main="Data subsetting", xlab="log_e(distance)", ylab="log_e(prior probability of interaction)")
+plot(log(data.lr$mid), log(p.fit(log(data.lr$mid), medianJackPar[1:4])), type="l", ylim = c(-19,-4), col="Red", main="P-value weighting curve: fit to data", xlab="log_e(distance)", ylab="log_e(probability of interaction)")
 points(log(data.lr$mid), log(data.lr$Ints) - log(data.lr$N), col="black")
+legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
 dev.off()
 
 
