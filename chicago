@@ -133,7 +133,7 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 	
 	my $command;
 
-	my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
+	my $params = "--print-memory --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
 	if (hasval($config{settings})){
 		$params .= " --settings-file $config{settings}";
 	}
@@ -163,10 +163,16 @@ foreach my $prefixStep2 (keys %prefixStep2Files){
 		
 		my $memory_allocation;
 		if($numberFiles == 1){
-			$memory_allocation = 'h_vmem=300G';
-		}else{
-			$memory_allocation = 'h_vmem=500G';
+			$memory_allocation = 'h_vmem=200G';
+		}else{	
+			my $mem = $numberFiles * 100;
+			if ($mem > 400) {
+				print "Capping memory allocation to 400Gb\n";
+				$mem = 400;
+			}
+			$memory_allocation = 'h_vmem='.$mem.'G';
 		}
+		print "Requesting memory allocation: $memory_allocation\n";
 		
 		$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l $memory_allocation -o $prefix2Rand.out -j y -N $currentJobName $config{email} $step2_jid_string";	
 	
