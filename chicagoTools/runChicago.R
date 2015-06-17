@@ -324,6 +324,7 @@ if(!dir.create.ifNotThere("enrichment_data")){
 setwd(curDir)
 
 if(featuresOnly){
+  message("\n\nReading the input data image...\n") 
   if (inputFiles[1]=="-"){
     dataPath = file.path(outDir, "data")
     cd = readRDS(file.path(dataPath, paste0(outPrefix_rel, ".Rds")))
