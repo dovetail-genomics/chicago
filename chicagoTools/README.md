@@ -10,7 +10,7 @@ Currently it includes the following software:
 - The script for processing BAM files into Chicago input files:  
        + bam2chicago.sh  
    
-- The wrapper script for the Chicago package itself:  
+- The wrapper script for the Chicago package:  
        + runChicago.R  
     
 - The script for bundling the interaction calls from multiple samples into a single data matrix:  
@@ -115,6 +115,22 @@ The script takes the following input parameters:
 - sample-name: will be used for naming the output folder, in which the output files will be placed and as the basename of the output .chinput and .bedpe files  
 - nodelete: a flag to prevent the script from deleting intermediate files  
   
+**The wrapper script for the Chicago package**   
+   
+The R script runChicago.R can be used to run a typical Chicago analysis. Please refer to Chicago vignette and the inline help for the individual R functions used
+for more details on each analysis step.   
+   
+runChicago.R performs the following steps:   
+- Creates the chicagoData object given the design folder and, if needed, with other custom settings using ```setExperiment()```   
+- Reads in the input file(s) and merges replicates if necessary using ```readSample()``` or ```readAndMerge()```    
+- Runs interaction calling using chicagoPipeline()   
+- Saves the full chicagoData object as an R image (Rds or RDa)   
+- Exports significant interactions in a genome browser-readable format using exportResults()   
+- Plots the profiles multiple random baits using plotBaits()   
+- Estimates the enrichment of significant interactions for user-specified genomic 
+features versus distance-matched controls using peakEnrichment4Features()   
+- Saves the parameters used in setExperiment
+- Sorts output files into a directory tree with data/ 
 
-    
+
 
