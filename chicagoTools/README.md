@@ -31,11 +31,11 @@ either restriction enzyme, capture design or Chicago settings with respect to bi
   
 These scripts take the following input files:  
   
-- rmap file (.rmap): a tab-separated file of the format <chr> <start> <end> <numeric ID>, describing the restriction digest (or "virtual digest" 
+- rmap file (```.rmap```): a tab-separated file of the format ```<chr> <start> <end> <numeric ID>```, describing the restriction digest (or "virtual digest" 
   if pooled fragments are used). These numeric IDs are referred to as "otherEndID" in Chicago. All fragments mapping outside of the digest coordinates will be disregarded 
   by both these scripts and Chicago.   
-- baitmap file (.baitmap): a tab-separated file of the format <chr> <start> <end> <numeric ID> <annotation>, listing the coordinates of the 
-  baited/captured restriction fragments (should be a subset of the fragments listed in rmapfile), their numeric ids (should match those listed in 
+- baitmap file (```.baitmap```): a tab-separated file of the format ```<chr> <start> <end> <numeric ID> <annotation>```, listing the coordinates of the 
+  baited/captured restriction fragments (should be a subset of the fragments listed in rmapfile), their numeric IDs (should match those listed in 
   rmapfile for the corresponding fragments) and their annotations (such as, for example, the names of baited promoters). The numeric IDs are referred to as "baitID" in Chicago.    
   
 These files are ASCII files containing the following information:  
@@ -89,21 +89,21 @@ The output is an ASCII .chinput file used as input by the Chicago package.
 The BAM file is a paired-end file produced by a HiC aligner; Chicago has only been tested with data produced by HiCUP (http://www.bioinformatics.babraham.ac.uk/projects/hicup/). However, it should theoretically be possible to use 
 other HiC aligners for this purpose. 
 
-The formats of the design files (.baitmap and .rmap) are as described above:
-- rmap file (.rmap): a tab-separated file of the format <chr> <start> <end> <numeric ID>, describing the restriction digest (or "virtual digest" 
+The formats of the design files (.baitmap and .rmap) are as described above:  
+- rmap file (```.rmap```): a tab-separated file of the format ```<chr> <start> <end> <numeric ID>```, describing the restriction digest (or "virtual digest" 
   if pooled fragments are used). These numeric IDs are referred to as "otherEndID" in Chicago. All fragments mapping outside of the digest coordinates will be disregarded 
   by both these scripts and Chicago.   
-- baitmap file (.baitmap): a tab-separated file of the format <chr> <start> <end> <numeric ID> <annotation>, listing the coordinates of the 
+- baitmap file (```.baitmap```): a tab-separated file of the format ```<chr> <start> <end> <numeric ID> <annotation>```, listing the coordinates of the 
   baited/captured restriction fragments (should be a subset of the fragments listed in rmapfile), their numeric ids (should match those listed in 
   rmapfile for the corresponding fragments) and their annotations (such as, for example, the names of baited promoters). The numeric IDs are referred to as "baitID" in Chicago.    
 
-The output .chinput file has the format <baitID> <otherEndID> <N> <otherEndLen> <distSign>, where N is the number of reads detected for ligation products between the "bait" and "other end", otherEndLen 
+The output ```.chinput``` file has the format ```<baitID> <otherEndID> <N> <otherEndLen> <distSign>```, where N is the number of reads detected for ligation products between the "bait" and "other end", otherEndLen 
 is the length of the "other-end" restriction fragment and distSign is the linear distance between the bait and other-end fragments, respectively.   
 
-In addition, bam2chicago.sh produces a paired-end bed (.bedpe) file that lists all read pairs corresponding to bait-to-bait interactions. This file is not used for Chicago; the rationale for creating it is that 
+In addition, bam2chicago.sh produces a paired-end bed (```.bedpe```) file that lists all read pairs corresponding to bait-to-bait interactions. This file is not used for Chicago; the rationale for creating it is that 
 bait-to-bait interactions are symmetric and may also be analysed by any HiC normalisation/interaction calling tool (in addition to Chicago) if desired.
     
-The shell script requires a bash-compatible Unix shell, perl and bedtools. Bedtools can be obtained at https://github.com/arq5x/bedtools2; they need to be installed and added to $PATH.  
+The shell script requires a bash-compatible Unix shell, perl and bedtools. Bedtools can be obtained at https://github.com/arq5x/bedtools2; they need to be installed and added to ```$PATH```.  
   
 The script takes the following input parameters:   
    
