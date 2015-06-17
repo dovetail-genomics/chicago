@@ -146,16 +146,42 @@ contain the genomic coordinates of the features to compute the enrichment at Chi
 - <input-files> - a single .chinput file (produced by ```bam2chicago.sh``` or any other method) or a comma-separated 
 file corresponding to the multiple biological replicates of the same experimental condition.
 Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.
-- <output-prefix> - 
-
-The full list of the  parameters:   
+- <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.
    
-```Rscript runChicago.R [--help] [--print-memory] [--rda] [--save-df-only] [--examples-full-range] [--opts OPTS] [--settings-file SETTINGS-FILE] 
+The full list of the  parameters is however much more extensive:    
+   
+```Rscript runChicago.R [--help] [--print-memory] [--rda] [--save-df-only] [--examples-full-range] [--settings-file SETTINGS-FILE] 
 [--design-dir DESIGN-DIR] [--cutoff CUTOFF] [--export-format EXPORT-FORMAT] [--export-order EXPORT-ORDER] [--examples-prox-dist EXAMPLES-PROX-DIST] [--output-dir OUTPUT-DIR] 
-[--features-only] [--en-full-cis-range] [--en-trans] [--en-feat-files EN-FEAT-FILES] [--en-feat-list EN-FEAT-LIST] 
-[--en-feat-folder EN-FEAT-FOLDER] [--en-min-dist EN-MIN-DIST] [--en-max-dist EN-MAX-DIST] [--en-sample-no EN-SAMPLE-NO] 
-<input-files> <output-prefix>```
-
-
-
-
+[--en-feat-list EN-FEAT-LIST] [--en-feat-files EN-FEAT-FILES] [--en-feat-folder EN-FEAT-FOLDER] [--en-full-cis-range] [--en-trans] 
+[--en-min-dist EN-MIN-DIST] [--en-max-dist EN-MAX-DIST] [--en-sample-no EN-SAMPLE-NO] [--features-only]
+<input-files> <output-prefix>```   
+   
+- help: print a help message
+- print-memory: print memory use during ```chicagoPipeline()``` execution   
+- rda: save the image of the chicagoData object as an RDa (under the name cd) rather than an Rds file   
+- save-df-only: save the image of only the data table part of the chicagoData object (```cd@x```) as a data frame (i.e., converting from 
+data.table to data frame and discarding the ```@params``` and ```@settings``` slots)
+- examples-full-range: in addition to plotting interactions within 1Mb from baits, also plot the same for the full distance range   
+- settings-file: the path to a settings file, from which to load custom ```chicagoData@settings```   
+- design-dir: the name of the design folder containing exactly one of the following file types: 
+```.baitmap```, ```.rmap```, ```.npb```, ```.nbpb``` and ```.poe``` with the corresponding extensions (see above and the 
+Chicago package documentation for the description of these formats). The option defaults to the current directory.   
+- cutoff: a signal cutoff to use for significant interactions [default: 5]   
+- export-format: file format for writing out peaks: one or more of the following: seqMonk,interBed,washU_text,washU_track (comma-separated) 
+[default: washU_text]   
+- export-order: should the results be ordered by "score" or genomic "position"? [default: position]   
+- examples-prox-dist: the distance limit for plotting "proximal" examples [default: 1Mb]   
+- en-feat-list: the name of the feature list file of the format <feature-name> <feature-bed-file-location>, where feature-bed-files  
+contain the genomic coordinates of the features to compute the enrichment at Chicago significant interactions 
+(Chicago signal cutoff 5 is used by default).   
+- en-feat-files: a comma-separated list of files with genomic feature coordinates for computing peaks' enrichment (to provide them explicitly 
+instead of using the --en-feat-list option)   
+- en-feat-folder: the folder, in which all feature files are located (if provided, --en-feature-file(s) don't need to list the full path)   
+- en-full-cis-range: assess the enrichment for features for the full distance range (same chromosome only; use --en-trans in addition to include trans-interactions). Can be very slow!   
+- en-trans: include trans-interactions into enrichment analysis   
+- en-min-dist: the lower distance limit for computing enrichment for features (default: 0)   
+- en-max-dist: the upper distance limit for computing enrichment for features (default: 1Mb)   
+- en-sample-no: the number of negative samples, over which to compute the enrichment for features (default: 100)   
+- features-only: re-run feature enrichment analysis with Chicago output files. 
+With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', 
+in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.   
