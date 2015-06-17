@@ -1,11 +1,6 @@
 message("***makePeakMatrix.R***\n")
-message("Loading libraries...\n")
 
-library(data.table)
-library(matrixStats)
-library(cluster)
 library(argparser)
-library(Hmisc)
 
 ### A great function from http://www.r-bloggers.com/testing-for-valid-variable-names/
 is_valid_variable_name = function(x, allow_reserved = TRUE, unique = FALSE)
@@ -76,6 +71,14 @@ p = add.argument(p, arg="--printmem", help = "Print memory info at each step", f
 
 
 opts = parse.args(p, args)
+
+message("Loading libraries...\n")
+
+library(data.table)
+library(matrixStats)
+library(cluster)
+library(Hmisc)
+
 
 namesfile = opts[["<names-file>"]]
 prefix = opts[["<output-prefix>"]]
