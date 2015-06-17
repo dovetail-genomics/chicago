@@ -1,42 +1,9 @@
 message("\n***runChicago.R\n\n")
 
-message("Loading libraries...\n")
+### Parsing the command line ###
 
 library(argparser)
-library(Chicago)
-
-dir.create.ifNotThere = function(path, ...){
-  if(file.exists(path)){
-    if(!file.info(path)$isdir){
-      message("Cannot create directory ", path, " as it coincides with an existing file\n")
-      return(0)
-    }else{
-      message("\nWarning: directory ", path, " exists and will be reused.")
-      return(1)
-    }
-  }
-  else{
-    dir.create(path, ...)
-  }
-}
-
-moveToFolder = function(pattern, where){
-  files = list.files(".", pattern)
-  if (!length(files)){
-    message("No files found matching the pattern ", pattern)
-    return(0)
-  }
-  res = vector("numeric", length(files))
-  i=1
-  for(f in files){
-    res[i] = file.rename(f, file.path(where, f))
-    if (!res[i]){
-      message("Warning: did not succeed in moving ", f, " into ", where)
-    }
-    i = i+1
-  }
-  min(res)
-}
+message("\n")
 
 args = commandArgs(trailingOnly=T)
 spec = matrix(c("<input-files>", "Full path to the input file (or comma-separated list of files)", 
@@ -85,6 +52,46 @@ p = add.argument(p, arg="--en-trans", help = "Include trans-interactions into en
 p = add.argument(p, arg="--features-only", help = "Re-run feature enrichment analysis with Chicago output files. With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.",  flag = T)
 
 opts = parse.args(p, args)
+
+
+### Auxilliary functions ###
+dir.create.ifNotThere = function(path, ...){
+  if(file.exists(path)){
+    if(!file.info(path)$isdir){
+      message("Cannot create directory ", path, " as it coincides with an existing file\n")
+      return(0)
+    }else{
+      message("\nWarning: directory ", path, " exists and will be reused.")
+      return(1)
+    }
+  }
+  else{
+    dir.create(path, ...)
+  }
+}
+
+moveToFolder = function(pattern, where){
+  files = list.files(".", pattern)
+  if (!length(files)){
+    message("No files found matching the pattern ", pattern)
+    return(0)
+  }
+  res = vector("numeric", length(files))
+  i=1
+  for(f in files){
+    res[i] = file.rename(f, file.path(where, f))
+    if (!res[i]){
+      message("Warning: did not succeed in moving ", f, " into ", where)
+    }
+    i = i+1
+  }
+  min(res)
+}
+
+### Main code ###
+
+message("Loading the Chicago package and dependencies...\n")
+library(Chicago)
 
 featuresOnly = opts[["features-only"]]
 
