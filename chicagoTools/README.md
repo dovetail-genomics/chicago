@@ -148,7 +148,7 @@ file corresponding to the multiple biological replicates of the same experimenta
 Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.
 - <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.
    
-The full list of the  parameters is however much more extensive:    
+The full list of the parameters is however more extensive:    
    
 ```Rscript runChicago.R [--help] [--print-memory] [--rda] [--save-df-only] [--examples-full-range] [--settings-file SETTINGS-FILE] 
 [--design-dir DESIGN-DIR] [--cutoff CUTOFF] [--export-format EXPORT-FORMAT] [--export-order EXPORT-ORDER] [--examples-prox-dist EXAMPLES-PROX-DIST] [--output-dir OUTPUT-DIR] 
@@ -185,3 +185,19 @@ instead of using the --en-feat-list option)
 - features-only: re-run feature enrichment analysis with Chicago output files. 
 With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', 
 in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.   
+
+**The script for bundling the interaction calls from multiple samples into a single data matrix**
+
+When running multiple samples through CHiCAGO it is convenient to represent the results in the form of a "peak matrix". This matrix lists 
+the coordinates, annotations and sample-wise scores for all interactions that pass a signal threshold in at at least one sample. 
+The peak matrix can then be used for downstream analyses such as clustering by interaction and sample type and integration with other types of data.   
+
+The R script ```makePeakMatrix.R``` takes as input the list of chicago output data images (by default, the Rds files containing the chicagoData 
+objects) and outputs a peak matrix as a text and Rds file. In addition the script generates a hierarchical clustering dendrogram of the samples 
+based on the peak matrix scores.
+
+A typical run of ```makePeakMatrix.R``` will use the following options:   
+
+```Rscript makePeakMatrix.R [--twopass] <names-file> <output-prefix>```
+
+names-file: Full path to a tab-separated file with sample names (1st column) and full paths to input Rds files (2nd column)
