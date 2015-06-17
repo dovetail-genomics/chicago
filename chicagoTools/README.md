@@ -185,19 +185,42 @@ instead of using the --en-feat-list option)
 - features-only: re-run feature enrichment analysis with Chicago output files. 
 With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', 
 in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.   
-
-**The script for bundling the interaction calls from multiple samples into a single data matrix**
-
-When running multiple samples through CHiCAGO it is convenient to represent the results in the form of a "peak matrix". This matrix lists 
-the coordinates, annotations and sample-wise scores for all interactions that pass a signal threshold in at at least one sample. 
-The peak matrix can then be used for downstream analyses such as clustering by interaction and sample type and integration with other types of data.   
-
-The R script ```makePeakMatrix.R``` takes as input the list of chicago output data images (by default, the Rds files containing the chicagoData 
-objects) and outputs a peak matrix as a text and Rds file. In addition the script generates a hierarchical clustering dendrogram of the samples 
-based on the peak matrix scores.
-
-A typical run of ```makePeakMatrix.R``` will use the following options:   
-
-```Rscript makePeakMatrix.R [--twopass] <names-file> <output-prefix>```
-
-names-file: Full path to a tab-separated file with sample names (1st column) and full paths to input Rds files (2nd column)
+- <input-files> - a single .chinput file (produced by bam2chicago.sh or any other method) or a comma-separated file corresponding to the multiple biological replicates of the same experimental condition. Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.   
+- <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.   
+      
+***The script for bundling the interaction calls from multiple samples into a single data matrix***  
+   
+When running multiple samples through CHiCAGO it is convenient to represent the results in the form of a "peak matrix". This matrix lists the coordinates, annotations and sample-wise scores for all interactions that pass a signal threshold in at at least one sample. The peak matrix can then be used for downstream analyses such as clustering by interaction and sample type and integration with other types of data.   
+   
+The R script makePeakMatrix.R takes as input the list of chicago output data images (by default, the Rds files containing the chicagoData objects) and outputs a peak matrix as a text and Rds file. In addition the script generates a hierarchical clustering dendrogram of the samples based on the peak matrix scores.   
+   
+A typical run of ```makePeakMatrix.R``` will use the following options:  
+    
+```Rscript makePeakMatrix.R [--twopass] <names-file> <output-prefix>```   
+   
+- <names-file>: full path to a tab-separated file with sample names (1st column) and full paths to input Rds files (2nd column)   
+- <output-prefix>: the prefix to use for the output files   
+- twopass: first obtain a list of significant interactions as a union of peaks in each dataset, then reload and subset for these interactions prior to merging. Slower but uses significantly less memory.     
+   
+The full list of options for ```makePeakMatrix.R``` is listed below:   
+   
+```Rscript makePeakMatrix.R [--help] [--twopass] [--notrans] [--vanilla] [--rda] [--var VAR] [--print-memory] [--scorecol SCORECOL] [--cutoff CUTOFF] [--lessthan] [--maxdist MAXDIST] [--digestmap DIGESTMAP] [--baitmap BAITMAP] [--peaklist PEAKLIST] [--clustmethod CLUSTMETHOD] [--clustsubset CLUSTSUBSET] <names-file> <output-prefix>```    
+   
+- help: print a help message   
+- twopass: first obtain a list of significant interactions as a union of peaks in each dataset, then reload and subset for these interactions prior to merging. Slower but uses significantly less memory.   
+- notrans: exclude trans-chromosomal interactions from the peak matrix (an alternative, but faster way to save memory compared with ```--twopass```)   
+- vanilla: a flag indicating that the input RDa/RDS images contain only the  data frames and not Chicago objects. In this case, the ```--digestmap``` and ```--baitmap``` options are required (see below).   
+- rda: load data from an RDa archive rather than the default Rds. In this case, the name of the variable in the RDa containing the image is given by the ```--var``` option (see below).   
+- var: the name of the variable containing the ```chicagoData``` object or the peak data frame in the RDa images (default: x)   
+- print-memory: print memory info at each step   
+- scorecol: the column name in the ```chicagoData@x``` slot or the input data frame containing the Chicago scores (default: score). Note that this also allows to create peak matrices for entities other than Chicago scores (e.g., the raw or normalised reads).   
+- cutoff: the ```scorecol``` signal cutoff   
+- lessthan: pick interactions with ```scorecol``` below the cutoff rather than above    
+- maxdist: max distance from bait to include into the peak matrix   
+- digestmap: full path to digest map file; will override settings from ```chicagoData``` if provided. Required for ```--vanilla```.   
+- baitmap: full path to bait map ID file; will override settings from ```chicagoData``` even if provided. Required for ```--vanilla```.   
+- peaklist: use a predefined peak list (such as the one generated by the first pass of the ```--twopass``` mode)   
+- clustmethod: the clustering method to use for clustering columns (average/ward.D2/complete) (default: average)   
+- clustsubset: number of interactions to randomly subset for clustering. Full dataset used if total number of interactions in the peak matrix is below this number. (default: 1e+06)   
+   
+   
