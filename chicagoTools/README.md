@@ -121,16 +121,41 @@ The R script runChicago.R can be used to run a typical Chicago analysis. Please 
 for more details on each analysis step.   
    
 runChicago.R performs the following steps:   
+   
 - Creates the chicagoData object given the design folder and, if needed, with other custom settings using ```setExperiment()```   
 - Reads in the input file(s) and merges replicates if necessary using ```readSample()``` or ```readAndMerge()```    
-- Runs interaction calling using chicagoPipeline()   
-- Saves the full chicagoData object as an R image (Rds or RDa)   
-- Exports significant interactions in a genome browser-readable format using exportResults()   
-- Plots the profiles multiple random baits using plotBaits()   
+- Runs interaction calling using ```chicagoPipeline()```
+- Saves the full chicagoData object as an R image (in the Rds or RDa format)   
+- Exports significant interactions in a genome browser-readable format using ```exportResults()```
+- Plots the profiles multiple random baits using ```plotBaits()```   
 - Estimates the enrichment of significant interactions for user-specified genomic 
-features versus distance-matched controls using peakEnrichment4Features()   
-- Saves the parameters used in setExperiment
-- Sorts output files into a directory tree with data/ 
+features versus distance-matched controls using ```peakEnrichment4Features()```   
+- Saves the settings used for running Chicago and the input parameters of the script itself to a text file   
+- Sorts output files into a directory tree with the subfolders ```data/```, ```diag_plots/```,  ```enrichment_data/``` and ```examples/```   
+   
+A typical analysis will use the following options:   
+   
+```Rscript runChicago.R --design-dir DESIGN-DIR --en-feat-list EN-FEAT-LIST <input-files> <output-prefix>```   
+   
+- design-dir: the name of the design folder containing exactly one of the following file types: 
+```.baitmap```, ```.rmap```, ```.npb```, ```.nbpb``` and ```.poe``` with the corresponding extensions (see above and the 
+Chicago package documentation for the description of these formats). The option defaults to the current directory.   
+- en-feat-list: the name of the feature list file of the format <feature-name> <feature-bed-file-location>, where feature-bed-files  
+contain the genomic coordinates of the features to compute the enrichment at Chicago significant interactions 
+(Chicago signal cutoff 5 is used by default).   
+- <input-files> - a single .chinput file (produced by ```bam2chicago.sh``` or any other method) or a comma-separated 
+file corresponding to the multiple biological replicates of the same experimental condition.
+Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.
+- <output-prefix> - 
+
+The full list of the  parameters:   
+   
+```Rscript runChicago.R [--help] [--print-memory] [--rda] [--save-df-only] [--examples-full-range] [--opts OPTS] [--settings-file SETTINGS-FILE] 
+[--design-dir DESIGN-DIR] [--cutoff CUTOFF] [--export-format EXPORT-FORMAT] [--export-order EXPORT-ORDER] [--examples-prox-dist EXAMPLES-PROX-DIST] [--output-dir OUTPUT-DIR] 
+[--features-only] [--en-full-cis-range] [--en-trans] [--en-feat-files EN-FEAT-FILES] [--en-feat-list EN-FEAT-LIST] 
+[--en-feat-folder EN-FEAT-FOLDER] [--en-min-dist EN-MIN-DIST] [--en-max-dist EN-MAX-DIST] [--en-sample-no EN-SAMPLE-NO] 
+<input-files> <output-prefix>```
+
 
 
 
