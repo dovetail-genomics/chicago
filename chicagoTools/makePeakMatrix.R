@@ -65,9 +65,9 @@ p = add.argument(p, arg="--rda", help="Load from an RDa archive rather than the 
 p = add.argument(p, arg="--var", help="The name of the variable containing the chicagoData object or the peak data frame in the RDa images", default="x")
 
 p = add.argument(p, arg="--clustmethod", help = "The clustering method to use (average/ward.D2/complete)", default = "average")
-p = add.argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering", default = 100000)
+p = add.argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering (full dataset used if total number of interactions in the peak matrix is below this number", default = 1000000)
 
-p = add.argument(p, arg="--printmem", help = "Print memory info at each step", flag=T)
+p = add.argument(p, arg="--print-memory", help = "Print memory info at each step", flag=T)
 
 
 opts = parse.args(p, args)
@@ -333,13 +333,12 @@ cat(paste0("Writing out the result as ", txtname, "...\n"))
 write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 if (nrow(input)>2){
-  cat("Clustering samples based on", sampsize,  "random interactions...\n")
   if (sampsize>nrow(z)){
-    cat(paste0("Warning: requested random subset size for clustering (", sampsize, ") was larger than the peak matrix size ", nrow(z), 
-". Using the whole matrix\n"))
+    cat("Using the whole data matrix for clustering\n")
     zsamp = z
   }
   else{
+    cat("Clustering samples based on", sampsize,  "random interactions...\n")
     zsamp = z[sample(1:nrow(z), sampsize),]    
   }
   d = dist(t(zsamp[,12:ncol(zsamp)]))
