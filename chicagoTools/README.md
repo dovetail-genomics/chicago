@@ -188,7 +188,7 @@ in which case the file location will be inferred automatically from <output-pref
 - <input-files> - a single .chinput file (produced by bam2chicago.sh or any other method) or a comma-separated file corresponding to the multiple biological replicates of the same experimental condition. Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.   
 - <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.   
       
-***The script for bundling the interaction calls from multiple samples into a single data matrix***  
+**The script for bundling the interaction calls from multiple samples into a single data matrix**  
    
 When running multiple samples through CHiCAGO it is convenient to represent the results in the form of a "peak matrix". This matrix lists the coordinates, annotations and sample-wise scores for all interactions that pass a signal threshold in at at least one sample. The peak matrix can then be used for downstream analyses such as clustering by interaction and sample type and integration with other types of data.   
    
