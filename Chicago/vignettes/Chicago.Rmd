@@ -4,6 +4,7 @@ VignetteIndexEntry:
 output:
   BiocStyle::html_document:
     toc: true
+bibliography: Chicago.bib
 ---
 <!--
 %\VignetteEngine{knitr::rmarkdown}
@@ -145,9 +146,7 @@ washU\_text format (ends with ...washU\_text.txt)
 
 ``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. We find out how many overlaps are expected under the null hypothesis (i.e. that there is no enrichment) by shuffling the other ends around in the genome, while preserving the overall distribution of distances over which interactions span.
 
-You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium, again restricted to chr18 and chr19.
-
-FIXME ENCODE data citation.
+You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium [@Bernstein2012], again restricted to chr18 and chr19. (Data accession numbers: Snyder lab GSM1003750, GSM1003756, GSM1003751; Ren lab GSM1000126, Hardison lab ENCFF001ZJO, ENCFF001ZQY)
 
 First, we find the folder that contains the features, and construct a list of the features to use:
 
@@ -164,15 +163,18 @@ featuresList
 
 Next, we feed this information into the ``peakEnrichment4Features()`` function.
 
-This function takes a distance range (by default, the full distance range), and divides it into some number of bins. We must select the number of bins. See ``?peakEnrichment4Features`` for more information.
+As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (by default, the full distance range over which interactions are observed), and divides it into some number of bins. We must select the number of bins; here, we choose that number to ensure that the bin size is approximately 10kb. If the defaults are changed, a different number of bins is more appropriate. See ``?peakEnrichment4Features`` for more information.
 
-```{r}
+```{r, message=FALSE}
 no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
 
-enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag = featuresList, no_bins = no_bins, sample_number = 100)
+enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
+                                             no_bins=no_bins, sample_number=100)
 ```
 
-Explain the plot
+Note the plot produced by this function. For each feature type, the yellow bar represents the number of features that overlap with interaction other ends. The blue bar represents what would be expected by chance, with a 95\% confidence interval for the mean number of overlaps plotted. If the yellow bar lies outside of this interval, we reject the null hypothesis, thus concluding that there is enrichment/depletion of that feature.
+
+In addition, this information is returned in tabular form:
 
 ```{r}
 enrichmentResults
@@ -180,7 +182,7 @@ enrichmentResults
 
 ## The ChicagoData object {#cd}
 
-In the above workflow, *cd* is a *ChicagoData* object. It contains three elements:
+In the above workflows, *cd* is a *ChicagoData* object. It contains three elements:
 
 * ``cd@x`` is a `r CRANpkg("data.table")` (note: not a *data.frame*) that contains information about fragment pairs.
 * ``cd@settings`` is a list of settings, usually set with the setExperiment() function.
@@ -229,3 +231,6 @@ We will provide an explicit function to do this in due course.
 ```{r}
 sessionInfo()
 ```
+
+##References
+<!-- the bibliography automatically gets appended here -->
