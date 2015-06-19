@@ -143,21 +143,40 @@ washU\_text format (ends with ...washU\_text.txt)
 
 ## Peak enrichment for features
 
-``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. You will need additional files to perform this analysis - namely, a .bed file for each feature.
+``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. We find out how many overlaps are expected under the null hypothesis (i.e. that there is no enrichment) by shuffling the other ends around in the genome, while preserving the overall distribution of distances over which interactions span.
+
+You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium, again restricted to chr18 and chr19.
 
 FIXME ENCODE data citation.
 
+First, we find the folder that contains the features, and construct a list of the features to use:
+
 ```{r}
-#FIXME
+featuresFolder <- file.path(dataPath, "mESCfeatures")
+dir(featuresFolder)
+
+featuresFile <- file.path(featuresFolder, "featuresmESC.txt")
+featuresTable <- read.delim(featuresFile, header=FALSE, as.is=TRUE)
+featuresList <- as.list(featuresTable$V2)
+names(featuresList) <- featuresTable$V1
+featuresList
 ```
 
-FIXME Plot
+Next, we feed this information into the ``peakEnrichment4Features()`` function.
+
+This function takes a distance range (by default, the full distance range), and divides it into some number of bins. We must select the number of bins. See ``?peakEnrichment4Features`` for more information.
 
 ```{r}
-#FIXME
+no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
+
+enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag = featuresList, no_bins = no_bins, sample_number = 100)
 ```
 
 Explain the plot
+
+```{r}
+enrichmentResults
+```
 
 ## The ChicagoData object {#cd}
 
