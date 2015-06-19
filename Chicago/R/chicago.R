@@ -290,6 +290,26 @@ readAndMerge = function(files, cd, ...){
   mergeSamples(lapply(files, readSample, cd), ...)
 }
 
+getSkOnly <- function(files, cd)
+{
+  N <- length(files)
+  if(any(!file.exists(files))) {stop("Could not find files: ", paste(files[!file.exists(files)], collapse=", "))}
+  
+  cdList <- vector("list", N)
+  for(i in 1:N)
+  {
+    cdList[[i]] <- cd
+    cdList[[i]] <- readSample(file = files[i],cd = cdList[[i]])
+    sel <- !is.na(cdList[[i]]@x$distSign) & (abs(cdList[[i]]@x$distSign) < defaultSettings()$maxLBrownEst)
+    cdList[[i]]@x <- cdList[[i]]@x[sel]
+  }
+  
+  cdMerge <- mergeSamples(cdList)
+  sk <- cdMerge@params$s_k
+  names(sk) <- files
+  sk
+}
+
 mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm", 
                         mergeMethod=c("weightedMean", "mean")[1]){
   
