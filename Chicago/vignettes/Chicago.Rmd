@@ -60,10 +60,12 @@ files <- c(
   )
 ```
 
-OPTIONAL: Note that, because this data set is smaller than usual, we need to input some custom settings; normally, you will not have to do this.
+OPTIONAL: Note that, because this data set is smaller than usual, we need to input some custom settings:
 ```{r}
 settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "smESCSettings", "smESC.settingsFile")
 ```
+
+Normally, you will not have to do this.
 
 ## Example workflow
 
@@ -95,9 +97,9 @@ cd <- chicagoPipeline(cd)
 
 The plots are as follows:
 
-1. FIXME
-2. FIXME
-3. FIXME
+1. Brownian noise other end factors: The adjustment made to the mean Brownian noise count, based on the class of the other end. ("tlb" refers to the number of trans reads the other end has, in total. "B2B" stands for a "bait-to-bait" interaction.)
+2. Technical noise estimates: The mean number of technical noise reads expected for other ends and baits, respectively, in certain classes. These classes, displayed on the x axis, again refer to the number of trans reads that the other end has.
+3. Distance function: The mean number of Brownian noise reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
 
 ```{r, echo=FALSE, message=FALSE}
 cd <- chicagoPipeline(cd)
@@ -141,11 +143,21 @@ washU\_text format (ends with ...washU\_text.txt)
 
 ## Peak enrichment for features
 
-``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. You will need additional files to perform this analysis - namely, a .bed file for each feature:
+``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. You will need additional files to perform this analysis - namely, a .bed file for each feature.
+
+FIXME ENCODE data citation.
 
 ```{r}
 #FIXME
 ```
+
+FIXME Plot
+
+```{r}
+#FIXME
+```
+
+Explain the plot
 
 ## The ChicagoData object {#cd}
 
