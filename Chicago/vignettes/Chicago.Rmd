@@ -49,7 +49,7 @@ testDesignDir <- file.path(dataPath, "mm9TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files. These files can be obtained by running bam2chicago.sh, available from our website [FIXME URL]. Normally, the names of these input files end with *.chinput*.
+2. You will also need your input data files. These files can be obtained by running bam2chicago.sh, available from the ``ChicagoTools`` package. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
 testDataPath <- file.path(dataPath, "mESCchinputFiles")
@@ -117,8 +117,6 @@ exportResults(cd, file.path(outputDirectory, "vignetteOutput"))
 
 Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of -log(adjusted p-value) of 5 is applied.
 
-FIXME explain what happens for bait-to-bait interactions.
-
 Summary of output files:
 
 ibed format (ends with ...ibed):
@@ -141,6 +139,7 @@ washU\_text format (ends with ...washU\_text.txt)
 - Upload via the "Got text files instead? Upload them from your computer" link.
 - Note - Advanced users may wish to export to washU\_track format instead. See the help page for ``exportResults()``.
 
+For bait-to-bait interactions, the interaction can be tested either way round (i.e. either fragment can be considered the "bait"). In most output formats, both of these tests are preserved. The exception is washU output, where these scores are consolidated by taking the maximum.
 
 ## Peak enrichment for features
 
