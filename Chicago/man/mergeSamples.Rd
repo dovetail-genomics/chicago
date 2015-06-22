@@ -28,7 +28,7 @@ If \code{mergeMethod == "weightedMean"}, then NcolOut is the weighted mean of th
 }
 
   \item{repNormCounts}{
-Report normalised counts (by dividing them by s_k) in the <NcolNormPrefix>.<sampleNo> column (by default, NNorm.1, NNorm.2, etc.). This option is on by default when \code{mergeMethod == "mean"}. However, it can also be used with \code{mergeMethod == "weightedMean"} (but the normalised counts will still be divided by s_k).
+Report normalised counts for each replicate (by dividing them by s_k) in the <NcolNormPrefix>.<sampleNo> column (by default, NNorm.1, NNorm.2, etc.). This option is on by default when \code{mergeMethod == "mean"}. However, it can also be used with \code{mergeMethod == "weightedMean"} (but the normalised counts will still be produced by dividing the raw counts for each replicate by s_k).
 }
 
 }
