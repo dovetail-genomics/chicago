@@ -10,7 +10,11 @@ This repository contains the following files:
 
 Please refer to the Chicago R package vignette and the chicagoTools README file for more information.
 
-To install the Chicago package, PCHiC data package and chicagoTools (as well as all R packages they depend on), download the whole repository and run:
+Standard R tools (such as ```R CMD INSTALL``` and ```install.packages()```) can be used to install the Chicago and PCHiCdata packages. The chicagoTools scripts require no specific installation.   
+   
+Note that the R packages require R version >= 3.1.2, and chicagoTools require bedtools, perl and python >= 2.7 that need to be pre-installed and added to PATH.   
+   
+Alternatively, to install the Chicago package, PCHiC data package and chicagoTools (as well as all R packages they depend on), download the whole repository and run:
 
 ```
 #!bash
@@ -34,12 +38,6 @@ The description of these parameters (all of them optional) is as follows:
  - data-path: the location of the PCHiCdata package (either as a directory or as a tar.gz file). Defaults to the current directory
  - rlib: the location of the R library directory (known to R and for which you have write permissions). If not provided, the default R library directory is used (available via .libPaths()[1])
  - bin: if provided, chicagoTools will be moved to this path, alternatively they will be left at their current location. 
-
-Note that the R packages require R version >= 3.1.2, and chicagoTools require bedtools, perl and python >= 2.7 that need to be pre-installed and added to PATH.
-
-Alternatively, you can use standard R tools to only install the Chicago and/or PCHiCdata R packages. 
-
-Please refer to the Chicago package vignette for more information. 
 
 Chicago is developed and maintained by:
 
