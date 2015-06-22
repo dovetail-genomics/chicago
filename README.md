@@ -9,9 +9,25 @@ To install the Chicago package, data package and chicagoTools (and all the R pac
 ```
 #!bash
 
-    Rscript setupChicago.R [--bin=<scripts-target-dir>] [--path=<chicago-package-path>] [--rlib=<r-lib-dir>] 
+    Rscript setupChicago.R
 
 ```
+
+In some cases, you may need to run the setup script with custom parameters:
+
+```
+#!bash
+
+    Rscript setupChicago.R [--chicago-path=<Chicago-package-path>] [--data-path=<PCHiCdata-package-path>] [--rlib=<r-lib-dir>] [--bin=<chicagoTools-target-dir>]
+    
+```
+
+The description of these parameters (all of them optional) is as follows:
+
+ - chicago-path: the location of the Chicago package (either as a directory or as a tar.gz file). Defaults to the current directory
+ - data-path: the location of the PCHiCdata package (either as a directory or as a tar.gz file). Defaults to the current directory
+ - rlib: the location of the R library directory (for which you have write permissions). If not provided, the default R library directory (available via .libPaths()[1]) is used
+ - bin: if provided, chicagoTools will be moved to this path, alternatively they will be left at their current location. 
 
 Note that the R packages require R version >= 3.1.2, and chicagoTools require bedtools, perl and python >= 2.7 that need to be pre-installed and added to PATH.
 
