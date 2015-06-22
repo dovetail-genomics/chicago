@@ -19,11 +19,13 @@ BiocStyle::markdown()
 
 ## Introduction
 
-This vignette will walk you through a typical CHiCAGO analysis.
+This vignette will walk you through a typical CHiCAGO analysis. 
 
-A wrapper to perform the analysis, called *runChicago.R*, can be found on our website: [FIXME URL].
+NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools* [FIXME URL].
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. It is only a small part of a real data set. Do not use any of the input data in your own analysis. We are going to use data from mouse embryonic stem cells (mESCs):
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains a small part of the real data set (two chromosomes) from Schoenfelder et al [@Schoenfelder2015] (note that boths papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training - download full BAM files and restart the analysis from them instead. 
+
+Here we are going to use the data sample from mouse embryonic stem cells (mESCs) [@Schoenfelder2015]:
 
 ```{r}
 library(PCHiCdata)
@@ -37,11 +39,11 @@ Before you start, you will need:
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
 - Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
-- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts *countNperBin.py*, *countNbaitsPerBin.py* and *getProxOE.py*. 
+- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* [FIXME URL]: ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. 
 
-It is easiest to put all of these files in the same directory. If you are using a standard restriction enzyme and bait map, you can use the files on our website [FIXME URL], otherwise you will need to generate them yourself using CHiCTools, also available on our website.
+It is easiest to put all of these files in the same directory. If you are using HindIII restriction enzyme in mouse and human and the same captured baits as in [@Schoenfelder2015] (mouse) and [@Mifsud2015] (human), you can use the files on our website [FIXME URL], otherwise you will need to generate them yourself using ``chicagoTools`` scripts as mentioned above. Refer to ``chicagoTools`` README file for more details.
 
-Examples of these files are also provided in the package, as follows. Do not use these files in your analysis!
+Examples of these files for a two-chromosome sample of the mESC data used in this vignette are also provided in the PCHiCdata package, as follows. Do not use these files in your analysis!
 
 ```{r}
 dataPath <- system.file("extdata", package="PCHiCdata")
@@ -49,7 +51,7 @@ testDesignDir <- file.path(dataPath, "mm9TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files. These files can be obtained by running bam2chicago.sh, available from the ``ChicagoTools`` package. Normally, the names of these input files end with *.chinput*.
+2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP] http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
 testDataPath <- file.path(dataPath, "mESCchinputFiles")
@@ -61,7 +63,8 @@ files <- c(
   )
 ```
 
-OPTIONAL: Note that, because this data set is smaller than usual, we need to input some custom settings:
+OPTIONAL: Because this data set is smaller than usual, we need to input some custom settings:
+
 ```{r}
 settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "smESCSettings", "smESC.settingsFile")
 ```
@@ -70,7 +73,7 @@ Normally, you will not have to do this.
 
 ## Example workflow
 
-We run CHiCAGO on the test data as follows. First, we create a blank ``ChicagoData`` object, and we tell it where the design files are. For this example, we also provide the optional settings file.
+We run CHiCAGO on the test data as follows. First, we create a blank ``chicagoData`` object, and we tell it where the design files are. For this example, we also provide the optional settings file.
 
 ```{r, message=FALSE}
 library(Chicago)
@@ -78,7 +81,7 @@ library(Chicago)
 cd <- setExperiment(designDir = testDesignDir, settingsFile = settingsFile)
 ```
 
-The properties of ``ChicagoData`` objects are discussed more in [The ChicagoData object](#link).
+The properties of ``chicagoData`` objects are discussed more in [The chicagoData object](#link).
 
 Next, we read in the input data files:
 
@@ -108,7 +111,7 @@ cd <- chicagoPipeline(cd)
 
 ## Output files
 
-You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data.) By default, the function outputs three different output file formats:
+You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data). By default, the function outputs three different output file formats:
 
 ```{r}
 outputDirectory <- tempdir()
@@ -145,7 +148,7 @@ For bait-to-bait interactions, the interaction can be tested either way round (i
 
 ``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. We find out how many overlaps are expected under the null hypothesis (i.e. that there is no enrichment) by shuffling the other ends around in the genome, while preserving the overall distribution of distances over which interactions span.
 
-You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium [@Bernstein2012], again restricted to chr18 and chr19. (Data accession numbers: Snyder lab GSM1003750, GSM1003756, GSM1003751; Ren lab GSM1000126, Hardison lab ENCFF001ZJO, ENCFF001ZQY)
+You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium [@encode_integrated_2012], again restricted to chr18 and chr19. (Data accession numbers: Snyder lab GSM1003750, GSM1003756, GSM1003751; Ren lab GSM1000126, Hardison lab ENCFF001ZJO, ENCFF001ZQY)
 
 First, we find the folder that contains the features, and construct a list of the features to use:
 
@@ -179,9 +182,9 @@ In addition, this information is returned in tabular form:
 enrichmentResults
 ```
 
-## The ChicagoData object {#cd}
+## The chicagoData object {#cd}
 
-In the above workflows, *cd* is a *ChicagoData* object. It contains three elements:
+In the above workflows, *cd* is a *chicagoData* object. It contains three elements:
 
 * ``cd@x`` is a `r CRANpkg("data.table")` (note: not a *data.frame*) that contains information about fragment pairs.
 * ``cd@settings`` is a list of settings, usually set with the setExperiment() function.
@@ -200,8 +203,8 @@ Columns:
 * otherEndLen: The length of the other end fragment
 * distSign: The distance from the baited fragment to the other end fragment. Positive and negative values indicate that the other end is, respectively, $5'$ and $3'$ of the baited fragment. NA indicates a trans interactions.
 * isBait2Bait: TRUE if the other end fragment is also a baited fragment
-* N.1, N.2: Normalized counts (see ``?mergeSamples``).
-* N: Merged count (see ``?mergeSamples``).
+* N.1, N.2, ...: Raw read counts per replicate (see ``?mergeSamples``).
+* N: Merged count (see ``?mergeSamples``) or raw count in the case of single-replicate interaction calling.
 * refBinMean: Can be ignored. (see ``?normaliseBaits``)
 * s_i: other end-specific scaling factor (Brownian noise)
 * NNb: "N normalised for baits", a count scaled up by accounting for s_j. May be useful for visualization.
@@ -219,11 +222,8 @@ Columns:
 To avoid this behaviour, copy the *chicagoData* object first:
 
 ```{r}
-cdCopy <- cd
-cdCopy@x <- copy(cd@x)
+newCd = copyCD(cd)
 ```
-
-We will provide an explicit function to do this in due course.
 
 ##Session info
 
