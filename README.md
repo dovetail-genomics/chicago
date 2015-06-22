@@ -4,7 +4,7 @@ CHiCAGO is a set of tools for Capture HiC data analysis. A preprint describing t
 
 This repository contains the following files:
 
-- The Chicago R package (source and build)  
+- The Chicago R package     
 - The PCHiCdata R data package with small example Promoter Capture HiC datasets for mouse and human  
 - chicagoTools: scripts for preparing input files, running Chicago and processing the output  
 
