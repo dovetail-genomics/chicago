@@ -1,10 +1,16 @@
-This repository contains the following:
+**CHiCAGO: Capture HiC Analysis of Genomic Organisation** 
 
-- The Chicago R package (source and build)
-- The PCHiCdata R data package with small example datasets for mouse and human 
+CHiCAGO is a set of tools for Capture HiC data analysis. A preprint describing the statistical algorithm behind Chicago interaction calling will be available in the next few weeks. 
+
+This repository contains the following files:
+
+- The Chicago R package (source and build)  
+- The PCHiCdata R data package with small example Promoter Capture HiC datasets for mouse and human  
 - chicagoTools: scripts for preparing input files, running Chicago and processing the output  
 
-To install the Chicago package, data package and chicagoTools (and all the R packages they depend on), download the whole repository and run:
+Please refer to the Chicago R package vignette and the chicagoTools README file for more information.
+
+To install the Chicago package, PCHiC data package and chicagoTools (as well as all R packages they depend on), download the whole repository and run:
 
 ```
 #!bash
@@ -13,7 +19,7 @@ To install the Chicago package, data package and chicagoTools (and all the R pac
 
 ```
 
-In some cases, you may need to run the setup script with custom parameters:
+In some cases, you may need to run setupChicago.R with custom parameters:
 
 ```
 #!bash
