@@ -7,10 +7,10 @@ args = commandArgs(trailingOnly = TRUE)
 
 message("\nRscript setupChicago.R [--help] [--path=<Chicago-package-path>] [--data-path=<PCHiCdata-package-path>] [--rlib=<r-lib-dir>] [--bin=<chicagoTools-target-dir>]\n\nChicago and dependencies installation script")
 
-pathLoc = grep("\\-\\-path\\=", args)
+pathLoc = grep("\\-\\-chicago\\-path\\=", args)
 path = NULL
 if (length(pathLoc)==1){
-  path = gsub("\\-\\-path\\=", "", args[pathLoc])
+  path = gsub("\\-\\-chicago\\-path\\=", "", args[pathLoc])
 }
 
 dataPathLoc = grep("\\-\\-data\\-path\\=", args)
