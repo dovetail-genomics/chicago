@@ -225,23 +225,23 @@ The full list of options for ```makePeakMatrix.R``` is listed below:
    
 **The script for reestimating Chicago p-value weighting parameters based on user data**  
 
-CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. To weight appropriately, CHiCAGO needs to know how the probability of an interaction event between two fragments decreases as the distance between these fragments increases. The parametrization used has four parameters: alpha, beta, gamma, and delta (more details on the exact parametrization are given in the CHiCAGO paper). 
+CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. To weight appropriately, CHiCAGO needs to know how the probability of an interaction event between two fragments decreases as the distance between these fragments increases. The parametrization used has four parameters: alpha, beta, gamma, and delta (more details on the exact parametrization are given in the CHiCAGO paper).  
 
-We have calibrated these parameters on high-confidence calls from seven human Macrophage data sets. Provided that your cell type is not too dissimilar to these calibration data, it should be fine to leave the parameters at their default settings. However, if your data set is from an unusual cell type, you may wish to recalibrate these parameters using data from cell types similar to yours. This script provides a CHiCAGO .settings file, which contains estimates of each of the four parameters, and a plot to show how the interaction abun.
+We have calibrated these parameters on high-confidence calls from seven human Macrophage data sets (i.e. interactions that pass our p-value threshold in all seven samples). Provided that your cell type is not too dissimilar to these calibration data, it should be fine to leave the parameters at their default settings. However, if your data set is from an unusual cell type, you may wish to recalibrate these parameters using data from cell types similar to yours. This script provides a CHiCAGO .settings file, which contains estimates of each of the four parameters, and a plot to show how the interaction abun.  
 
-Users must specify <output-prefix>, and either inputs or summaryInput. Typically, the first time you run this script, you specify --inputs:
+Users must specify <output-prefix>, and either inputs or summaryInput. Typically, the first time you run this script, you specify --inputs:  
 
-Rscript fitDistCurve.R cellType --inputs 1stFile.Rda,2ndFile.Rda,3rdFile.Rda
+Rscript fitDistCurve.R cellType --inputs 1stFile.Rda,2ndFile.Rda,3rdFile.Rda  
 
-This procedure generates a file called cellType_summaryInput.Rda. To rerun the same inputs but with different parameters, you can save time by specifying --summaryInput instead:
+This procedure generates a file called cellType_summaryInput.Rda. To rerun the same inputs but with different parameters, you can save time by specifying --summaryInput instead:  
 
-Rscript fitDistCurve.R cellTypeLargerBin --summaryInput cellType_summaryInput.Rda --largeBinSize 2000000
+Rscript fitDistCurve.R cellTypeLargerBin --summaryInput cellType_summaryInput.Rda --largeBinSize 2000000  
 
 ```Rscript fitDistCurve.R [--help] [--opts OPTS] [--inputs INPUTS] [--summaryInput SUMMARYINPUT] [--threshold THRESHOLD] [--subsets SUBSETS] [--largeBinSize LARGEBINSIZE] [--binNumber BINNUMBER] [--halfNumber HALFNUMBER] <output-prefix>```  
 
 - <output-prefix>: All output files will begin with the value of this argument.  
 - inputs: Comma-separated list, specifying locations of saved chicagoData objects, in either .Rda or .Rds form. If .Rda, there must be only one chicagoData object in the file.  
 - summaryInput: An .Rda file of summary information -- the max P-val for each putative interaction, and the location of the .rmap file. This file will be generated if it wasn't provided.  
-- threshold: Threshold applied to -log(p) values (NB: not the CHiCAGO score!). [default: -10]  
+- threshold: Threshold applied to log(p) values (NB: not the CHiCAGO score!). In other words, log(p) must be below this value in all of the samples. [default: -10]  
 - subsets: To ensure robustness, the data are partitioned into approximately equal subsets. Parameters are estimated separately on each subset. Then, an estimate for each parameter is derived from its median value across subsets. The number of subsets is controlled by this argument. [default: 5]  
 - largeBinSize, binNumber, halfNumber: Parameters pertaining to the bins used in the analysis. Default breaks occur at 0, 31.25k, 62.5k, 125k, 250k, 500k, 1m, 2m, 3m, 4m, ..., 16m. The breaks are constructed by taking [binNumber] bins of size [largeBinSize], then breaking the first bin into two, iterating [halfNumber] times. [default: 1000000, 16, 5]  
