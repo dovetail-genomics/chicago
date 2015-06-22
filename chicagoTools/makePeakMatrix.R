@@ -104,6 +104,9 @@ rds = !opts[["rda"]]
 var = opts[["var"]]
 
 shouldPrintMem = opts[["printmem"]]
+if (is.null(shouldPrintMem)){
+	shouldPrintMem = 0
+}
 
 if(rds & var!="x"){ # if var has been changed from default
   cat("Warning: var name redefined while the --rds option is used, for which it's irrelevant.\n") 

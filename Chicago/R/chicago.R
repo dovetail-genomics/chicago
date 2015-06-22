@@ -311,7 +311,7 @@ getSkOnly <- function(files, cd)
 }
 
 mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm", 
-                        mergeMethod=c("weightedMean", "mean")[1]){
+                        mergeMethod=c("weightedMean", "mean")[1], repNormCounts = (mergeMethod=="mean") ){
   
   # Now takes a list of chicagoData classes as input and returns a single chicagoData class
   
@@ -410,15 +410,16 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     }
     else{ # arithmetic mean
       # N:=round((N.1/s_ks["N.1"]+N.2/s_ks["N.2"]+N.3/s_ks["N.3"])/length(Nnames)
-      xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "/s_ks[\"", Nnames, "\"]", collapse="+"), ")/length(Nnames))")))]
-
+      xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "/s_ks[\"", Nnames, "\"]", collapse="+"), ")/length(Nnames))")))]    
+    }
+    
+    if(repNormCounts){
       # compute scaled per-sample quantities
       for (i in 1:length(x)){
         # e.g., NNorm.1:=round(N.1/s_ks["N.1"])
         xmerge[, eval(parse(text=paste0(NcolNormPrefix, ".", i,":=round(", Nnames[i], "/s_ks[\"", Nnames[i], "\"])")))]
       }
-      
-    }
+    }    
   }
   else{
     # N:=round((N.1+N.2+N.3)/length(Nnames))

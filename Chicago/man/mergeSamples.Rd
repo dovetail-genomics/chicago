@@ -9,7 +9,7 @@ Merge a number of \code{chicagoData} objects together, summarising their counts 
 }
 \usage{
 mergeSamples(cdl, normalise = TRUE, NcolOut = "N",
-      NcolNormPrefix = "NNorm", mergeMethod = c("weightedMean", "mean")[1])
+      NcolNormPrefix = "NNorm", mergeMethod = c("weightedMean", "mean")[1], repNormCounts = (mergeMethod=="mean"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -24,14 +24,19 @@ The column to store the normalised counts in.
 Each sample gains a normalised count column, that begins with this prefix.
 }
   \item{mergeMethod}{
-If \code{mergeMethod == "weightedMean"}, then NcolOut is the weighted mean of the sample-wise counts adjusted by the samples' respective scaling factors \code{s_k}. If \code{mergeMethod == "normMean"}, then sample-specific counts are first normalised by dividing by s_k, and NcolOut is computed as the mean of these normalised counts.
+If \code{mergeMethod == "weightedMean"}, then NcolOut is the weighted mean of the sample-wise counts adjusted by the samples' respective scaling factors \code{s_k}. If \code{mergeMethod == "mean"}, then sample-specific counts are first normalised by dividing by s_k, and NcolOut is computed as the mean of these normalised counts.
 }
+
+  \item{repNormCounts}{
+Report normalised counts (by dividing them by s_k) in the <NcolNormPrefix>.<sampleNo> column (by default, NNorm.1, NNorm.2, etc.). This option is on by default when \code{mergeMethod == "mean"}. However, it can also be used with \code{mergeMethod == "weightedMean"} (but the normalised counts will still be divided by s_k).
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
+
+}
+\note{
+Raw per-sample counts will be stored in the N.<sampleNo> column (N.1, N.2, etc.)
+}
 \value{
-An object of class \code{chicagoData}.
+An object of class \code{chicagoData}, with a \code{@params$s_k} slot added representing the per-sample scaling factors used in normalisation.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
