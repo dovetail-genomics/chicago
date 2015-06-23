@@ -34,6 +34,7 @@ Maintainer: Paula Freire-Pritchett <paula.freire-pritchett@babraham.ac.uk>
 }
 \references{
 Mifsud, B. et al. "Mapping long-range promoter contacts in human cells with high-resolution capture Hi-C." Nature Genetics (2015) doi:10.1038/ng.3286
+
 Schoenfelder, S. et al. "The pluripotent regulatory circuitry connecting promoters to their long-range interacting elements." Genome research 25.4 (2015): 582-597.
 }
 \examples{

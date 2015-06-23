@@ -21,11 +21,13 @@ BiocStyle::markdown()
 
 This vignette will walk you through a typical CHiCAGO analysis. 
 
-NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src).
+NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to chicagoTools for more information.
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains a small part of the real data set (two chromosomes) from Schoenfelder et al [@Schoenfelder2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training - download full BAM files and restart the analysis from them instead. 
+The statistical foundations of CHiCAGO will be presented in a separate paper currently in preparation. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
 
-Here we are going to use the data sample from mouse embryonic stem cells (mESCs) [@Schoenfelder2015]:
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts of the real data sets (two chromosomes each) from published Promoter Capture HiC analyses in mouse ESCs [@Schoenfelder2015] and human LCLs [@Mifsud2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training. 
+
+In this vignette we are going to use the data sample from mouse embryonic stem cells (mESCs) [@Schoenfelder2015]:
 
 ```{r}
 library(PCHiCdata)
@@ -49,7 +51,7 @@ testDesignDir <- file.path(dataPath, "mm9TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP] http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
+2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP] (http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
 testDataPath <- file.path(dataPath, "mESCchinputFiles")
