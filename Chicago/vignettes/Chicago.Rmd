@@ -23,7 +23,7 @@ This vignette will walk you through a typical CHiCAGO analysis.
 
 NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src).
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains a small part of the real data set (two chromosomes) from Schoenfelder et al [@Schoenfelder2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training - download full BAM files and restart the analysis from them instead. 
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains a small part of the real data set (two chromosomes) from Schoenfelder et al [@Schoenfelder2015] (note that this paper used a different interaction calling algorithm and we are only reusing raw data from it). Do not use any of these sample input data for purposes other than training. 
 
 Here we are going to use the data sample from mouse embryonic stem cells (mESCs) [@Schoenfelder2015]:
 
@@ -49,7 +49,7 @@ testDesignDir <- file.path(dataPath, "mm9TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP] http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
+2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP] (http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
 testDataPath <- file.path(dataPath, "mESCchinputFiles")
