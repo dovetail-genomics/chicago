@@ -1,11 +1,6 @@
 message("***makePeakMatrix.R***\n")
-message("Loading libraries...\n")
 
-library(data.table)
-library(matrixStats)
-library(cluster)
 library(argparser)
-library(Hmisc)
 
 ### A great function from http://www.r-bloggers.com/testing-for-valid-variable-names/
 is_valid_variable_name = function(x, allow_reserved = TRUE, unique = FALSE)
@@ -45,6 +40,8 @@ p = add.argument(p, arg="--scorecol", help = "Column name for the scores", defau
 p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
 p = add.argument(p, arg="--lessthan", help = "Pick interactions with scorecol *below* the cutoff rather than above", flag = T)
 
+p = add.argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the information that will end up in the final peak matrix. By default, the same as scorecol.", default = NA)
+
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", 
                  default = NA, type="numeric")
 p = add.argument(p, arg="--notrans", help = "Exclude trans-interactions", flag = T)
@@ -70,12 +67,20 @@ p = add.argument(p, arg="--rda", help="Load from an RDa archive rather than the 
 p = add.argument(p, arg="--var", help="The name of the variable containing the chicagoData object or the peak data frame in the RDa images", default="x")
 
 p = add.argument(p, arg="--clustmethod", help = "The clustering method to use (average/ward.D2/complete)", default = "average")
-p = add.argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering", default = 100000)
+p = add.argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering (full dataset used if total number of interactions in the peak matrix is below this number", default = 1000000)
 
-p = add.argument(p, arg="--printmem", help = "Print memory info at each step", flag=T)
+p = add.argument(p, arg="--print-memory", help = "Print memory info at each step", flag=T)
 
 
 opts = parse.args(p, args)
+
+message("Loading libraries...\n")
+
+library(data.table)
+library(matrixStats)
+library(cluster)
+library(Hmisc)
+
 
 namesfile = opts[["<names-file>"]]
 prefix = opts[["<output-prefix>"]]
@@ -91,6 +96,9 @@ maxdist = opts[["maxdist"]]
 scorecol = opts[["scorecol"]]
 noTrans = opts[["notrans"]]
 
+fetchcol = opts[["fetchcol"]]
+if(is.na(fetchcol)) {fetchcol <- scorecol}
+
 clMethod = opts[["clustmethod"]]
 sampsize = opts[["clustsubset"]]
 
@@ -100,7 +108,7 @@ peaklistfile  = opts[["peaklist"]]
 rds = !opts[["rda"]]
 var = opts[["var"]]
 
-shouldPrintMem = opts[["printmem"]]
+shouldPrintMem = opts[["print-memory"]]
 
 if(rds & var!="x"){ # if var has been changed from default
   cat("Warning: var name redefined while the --rds option is used, for which it's irrelevant.\n") 
@@ -256,8 +264,8 @@ for (i in 1:nrow(input)){
   cat("\t\t\tBefore data[[name]] = x:", nrow(x), "\n")
 
   name = input[i, "name"]
-  data[[name]] = x[, c("baitID", "otherEndID", scorecol), with=F]
-  setnames(data[[name]], scorecol, name)
+  data[[name]] = x[, c("baitID", "otherEndID", fetchcol), with=F]
+  setnames(data[[name]], fetchcol, name)
   setkey(data[[name]], baitID, otherEndID)
   
   printMem(shouldPrintMem)
@@ -330,13 +338,12 @@ cat(paste0("Writing out the result as ", txtname, "...\n"))
 write.table(z, txtname, quote = F, sep = "\t", col.names = T, row.names=F)
 
 if (nrow(input)>2){
-  cat("Clustering samples based on", sampsize,  "random interactions...\n")
   if (sampsize>nrow(z)){
-    cat(paste0("Warning: requested random subset size for clustering (", sampsize, ") was larger than the peak matrix size ", nrow(z), 
-". Using the whole matrix\n"))
+    cat("Using the whole data matrix for clustering\n")
     zsamp = z
   }
   else{
+    cat("Clustering samples based on", sampsize,  "random interactions...\n")
     zsamp = z[sample(1:nrow(z), sampsize),]    
   }
   d = dist(t(zsamp[,12:ncol(zsamp)]))
