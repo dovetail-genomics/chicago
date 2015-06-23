@@ -40,7 +40,8 @@ p = add.argument(p, arg="--scorecol", help = "Column name for the scores", defau
 p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
 p = add.argument(p, arg="--lessthan", help = "Pick interactions with scorecol *below* the cutoff rather than above", flag = T)
 
-p = add.argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the information that will end up in the final peak matrix. By default, the same as scorecol.", default = NA)
+p = add.argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the information that will end up in the final peak matrix. By default, the same as scorecol. If different,
+the --twopass mode will be enforced", default = NA)
 
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", 
                  default = NA, type="numeric")
@@ -96,13 +97,21 @@ maxdist = opts[["maxdist"]]
 scorecol = opts[["scorecol"]]
 noTrans = opts[["notrans"]]
 
+twoPass = opts[["twopass"]]
+
 fetchcol = opts[["fetchcol"]]
-if(is.na(fetchcol)) {fetchcol <- scorecol}
+if(is.na(fetchcol)) {
+	fetchcol <- scorecol
+}else{
+	if (!twoPass & fetchcol != scorecol){
+		message("Fetchcol is different from scorecol, therefore the twoPass mode is switched on\n")
+		twoPass <- TRUE
+	}
+}
 
 clMethod = opts[["clustmethod"]]
 sampsize = opts[["clustsubset"]]
 
-twoPass = opts[["twopass"]]
 peaklistfile  = opts[["peaklist"]]
 
 rds = !opts[["rda"]]

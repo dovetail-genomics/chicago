@@ -215,7 +215,7 @@ The full list of options for ```makePeakMatrix.R``` is listed below:
 - print-memory: print memory info at each step   
 - scorecol: the column name in the ```chicagoData@x``` slot or the input data frame containing the Chicago scores (default: score). Note that this also allows to create peak matrices for entities other than Chicago scores (e.g., the raw or normalised reads).   
 - cutoff: the ```scorecol``` signal cutoff   
-- fetchcol: Instead of collecting scores for the peak matrix, choose the name of a different column to collect information from. ```scorecol``` is still used to threshold interactions.
+- fetchcol: Instead of collecting scores for the peak matrix, choose the name of a different column to collect information from. ```scorecol``` is still used to threshold interactions. Note that if ```fetchcol``` is different from ```scorecol```, the ```--twopass``` mode will be enforced. 
 - lessthan: pick interactions with ```scorecol``` below the cutoff rather than above    
 - maxdist: max distance from bait to include into the peak matrix   
 - digestmap: full path to digest map file; will override settings from ```chicagoData``` if provided. Required for ```--vanilla```.   
