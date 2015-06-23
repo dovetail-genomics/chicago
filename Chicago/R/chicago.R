@@ -290,8 +290,28 @@ readAndMerge = function(files, cd, ...){
   mergeSamples(lapply(files, readSample, cd), ...)
 }
 
+getSkOnly <- function(files, cd)
+{
+  N <- length(files)
+  if(any(!file.exists(files))) {stop("Could not find files: ", paste(files[!file.exists(files)], collapse=", "))}
+  
+  cdList <- vector("list", N)
+  for(i in 1:N)
+  {
+    cdList[[i]] <- cd
+    cdList[[i]] <- readSample(file = files[i],cd = cdList[[i]])
+    sel <- !is.na(cdList[[i]]@x$distSign) & (abs(cdList[[i]]@x$distSign) < defaultSettings()$maxLBrownEst)
+    cdList[[i]]@x <- cdList[[i]]@x[sel]
+  }
+  
+  cdMerge <- mergeSamples(cdList)
+  sk <- cdMerge@params$s_k
+  names(sk) <- files
+  sk
+}
+
 mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNorm", 
-                        mergeMethod=c("weightedMean", "mean")[1]){
+                        mergeMethod=c("weightedMean", "mean")[1], repNormCounts = (mergeMethod=="mean") ){
   
   # Now takes a list of chicagoData classes as input and returns a single chicagoData class
   
@@ -390,15 +410,16 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     }
     else{ # arithmetic mean
       # N:=round((N.1/s_ks["N.1"]+N.2/s_ks["N.2"]+N.3/s_ks["N.3"])/length(Nnames)
-      xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "/s_ks[\"", Nnames, "\"]", collapse="+"), ")/length(Nnames))")))]
-
+      xmerge[, eval(parse(text=paste0(NcolOut, ":=round((", paste0(Nnames, "/s_ks[\"", Nnames, "\"]", collapse="+"), ")/length(Nnames))")))]    
+    }
+    
+    if(repNormCounts){
       # compute scaled per-sample quantities
       for (i in 1:length(x)){
         # e.g., NNorm.1:=round(N.1/s_ks["N.1"])
         xmerge[, eval(parse(text=paste0(NcolNormPrefix, ".", i,":=round(", Nnames[i], "/s_ks[\"", Nnames[i], "\"])")))]
       }
-      
-    }
+    }    
   }
   else{
     # N:=round((N.1+N.2+N.3)/length(Nnames))
@@ -477,6 +498,15 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
 
 normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
+  
+  ##test to see if s_j, distbin, refBinMean columns exist, warn & delete if so
+  replacedCols <- c("s_j", "refBinMean")
+  sel <- replacedCols %in% colnames(cd@x)
+  if(any(sel))
+  {
+    warning("Columns will be overwritten: ", paste(replacedCols[sel], collapse=", ")) 
+    set(cd@x, j=replacedCols[sel], value=NULL) ##delete these columns
+  }
 
   adjBait2bait = cd@settings$adjBait2bait
   
@@ -547,7 +577,10 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   
   if(plot){
     if (!is.null(outfile)){ pdf(outfile)}
-    with(x, barplot(s_i, names.arg=tlb, col=sapply(tlb, function(x)ifelse(length(grep("B2B",x)), "darkblue", "red")), xlab="tlb", ylab="s_i"))
+    with(x,
+         barplot(s_i, names.arg=tlb, col=sapply(tlb, function(x)ifelse(length(grep("B2B",x)), "darkblue", "red")),
+                    xlab="tlb", ylab="s_i", main = "Brownian noise: other end factors, s_i, estimated per other end pool")
+         )
     legend("topleft", legend=c("non-B2B", "B2B"),fill=c("red", "darkblue"))
     if (!is.null(outfile)){ dev.off()}
   }
@@ -651,11 +684,12 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
     my.d <- exp(my.log.d)
     plot(my.log.d, log(.distFun(my.d, distFunParams)),
          type="l",
-         main = paste0("Distance function (points = obs, line = ", method, " fit)"),
+         main = "Distance function estimate",
          xlab = "log(distance)",
          ylab = "log(f(d))",
          col = "Red")
     with(f.d, points(log(midpoint), log(refBinMean)))
+    legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
     if (!is.null(outfile)){
       dev.off()
     }
@@ -882,6 +916,16 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     
   message("Estimating technical noise based on trans-counts...")
 
+  ##test to see if s_j, distbin, refBinMean columns exist, warn & delete if so
+  replacedCols <- c("tblb", "Tmean")
+  sel <- replacedCols %in% colnames(cd@x)
+  if(any(sel))
+  {
+    warning("Columns will be overwritten: ", paste(replacedCols[sel], collapse=", ")) 
+    set(cd@x, j=replacedCols[sel], value=NULL) ##delete these columns
+  }
+  
+  
   minBaitsPerBin = cd@settings$techNoise.minBaitsPerBin
   adjBait2bait = cd@settings$adjBait2bait
   
@@ -973,6 +1017,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     par(mfrow=c(2,1))
     boxplot(Tmean~tblb, as.data.frame(res), main="Technical noise estimates per bait pool")
     boxplot(Tmean~tlb, as.data.frame(res), main="Technical noise estimates per other end pool")
+    par(mfrow=c(1,1))
     if(!is.null(outfile)){dev.off()}
   }
   

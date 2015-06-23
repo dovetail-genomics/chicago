@@ -10,26 +10,26 @@ context("f(x) = f(f(x)) for key pipeline functions (idempotence)")
 
 
 # normaliseBaits
-# test_that("normaliseBaits is idempotent", {
-#   cd1 <- copy(cdUnitTest)
-#   cd1 <- normaliseBaits(cd1)
-#   cd2 <- copy(cd1)
-#   cd2 <- normaliseBaits(cd2)
-#   expect_identical(cd1, cd2)
-# })
+test_that("normaliseBaits is idempotent", {
+  cd1 <- copy(cdUnitTest)
+  cd1 <- normaliseBaits(cd1)
+  cd2 <- copy(cd1)
+  cd2 <- normaliseBaits(cd2)
+  expect_identical(cd1, cd2)
+})
 
 # normaliseOtherEnds
 
 ##Not enough data to test here
 
 # estimateTechnicalNoise
-# test_that("estimateTechnicalNoise is idempotent", {
-#   cd1 <- copy(cdUnitTest)
-#   cd1 <- estimateTechnicalNoise(cd1)
-#   cd2 <- copy(cd1)
-#   cd2 <- estimateTechnicalNoise(cd2)
-#   expect_identical(cd1, cd2)
-# })
+ test_that("estimateTechnicalNoise is idempotent", {
+  cd1 <- copy(cdUnitTest)
+  cd1 <- estimateTechnicalNoise(cd1)
+  cd2 <- copy(cd1)
+  cd2 <- estimateTechnicalNoise(cd2)
+   expect_identical(cd1, cd2)
+ })
 
 # estimateDistFun
  test_that("estimateDistFun is idempotent", {
