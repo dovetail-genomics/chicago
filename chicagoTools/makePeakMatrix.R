@@ -40,6 +40,8 @@ p = add.argument(p, arg="--scorecol", help = "Column name for the scores", defau
 p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
 p = add.argument(p, arg="--lessthan", help = "Pick interactions with scorecol *below* the cutoff rather than above", flag = T)
 
+p = add.argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the information that will end up in the final peak matrix. By default, the same as scorecol.", default = NA)
+
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", 
                  default = NA, type="numeric")
 p = add.argument(p, arg="--notrans", help = "Exclude trans-interactions", flag = T)
@@ -93,6 +95,9 @@ baitmapfile = opts[["baitmap"]]
 maxdist = opts[["maxdist"]]
 scorecol = opts[["scorecol"]]
 noTrans = opts[["notrans"]]
+
+fetchcol = opts[["fetchcol"]]
+if(is.na(fetchcol)) {fetchcol <- scorecol}
 
 clMethod = opts[["clustmethod"]]
 sampsize = opts[["clustsubset"]]
@@ -259,8 +264,8 @@ for (i in 1:nrow(input)){
   cat("\t\t\tBefore data[[name]] = x:", nrow(x), "\n")
 
   name = input[i, "name"]
-  data[[name]] = x[, c("baitID", "otherEndID", scorecol), with=F]
-  setnames(data[[name]], scorecol, name)
+  data[[name]] = x[, c("baitID", "otherEndID", fetchcol), with=F]
+  setnames(data[[name]], fetchcol, name)
   setkey(data[[name]], baitID, otherEndID)
   
   printMem(shouldPrintMem)

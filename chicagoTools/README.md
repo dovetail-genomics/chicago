@@ -204,7 +204,7 @@ A typical run of ```makePeakMatrix.R``` will use the following options:
    
 The full list of options for ```makePeakMatrix.R``` is listed below:   
    
-```Rscript makePeakMatrix.R [--help] [--twopass] [--notrans] [--vanilla] [--rda] [--var VAR] [--print-memory] [--scorecol SCORECOL] [--cutoff CUTOFF] [--lessthan] [--maxdist MAXDIST] [--digestmap DIGESTMAP] [--baitmap BAITMAP] [--peaklist PEAKLIST] [--clustmethod CLUSTMETHOD] [--clustsubset CLUSTSUBSET] <names-file> <output-prefix>```    
+```Rscript makePeakMatrix.R [--help] [--twopass] [--notrans] [--vanilla] [--rda] [--var VAR] [--print-memory] [--scorecol SCORECOL] [--cutoff CUTOFF] [--fetchcol FETCHCOL] [--lessthan] [--maxdist MAXDIST] [--digestmap DIGESTMAP] [--baitmap BAITMAP] [--peaklist PEAKLIST] [--clustmethod CLUSTMETHOD] [--clustsubset CLUSTSUBSET] <names-file> <output-prefix>```    
    
 - help: print a help message   
 - twopass: first obtain a list of significant interactions as a union of peaks in each dataset, then reload and subset for these interactions prior to merging. Slower but uses significantly less memory.   
@@ -215,6 +215,7 @@ The full list of options for ```makePeakMatrix.R``` is listed below:
 - print-memory: print memory info at each step   
 - scorecol: the column name in the ```chicagoData@x``` slot or the input data frame containing the Chicago scores (default: score). Note that this also allows to create peak matrices for entities other than Chicago scores (e.g., the raw or normalised reads).   
 - cutoff: the ```scorecol``` signal cutoff   
+- fetchcol: Instead of collecting scores for the peak matrix, choose the name of a different column to collect information from. ```scorecol``` is still used to threshold interactions.
 - lessthan: pick interactions with ```scorecol``` below the cutoff rather than above    
 - maxdist: max distance from bait to include into the peak matrix   
 - digestmap: full path to digest map file; will override settings from ```chicagoData``` if provided. Required for ```--vanilla```.   
