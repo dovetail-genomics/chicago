@@ -21,9 +21,9 @@ BiocStyle::markdown()
 
 This vignette will walk you through a typical CHiCAGO analysis. 
 
-NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools* [FIXME URL].
+NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src).
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains a small part of the real data set (two chromosomes) from Schoenfelder et al [@Schoenfelder2015] (note that boths papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training - download full BAM files and restart the analysis from them instead. 
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains a small part of the real data set (two chromosomes) from Schoenfelder et al [@Schoenfelder2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training - download full BAM files and restart the analysis from them instead. 
 
 Here we are going to use the data sample from mouse embryonic stem cells (mESCs) [@Schoenfelder2015]:
 
@@ -39,11 +39,9 @@ Before you start, you will need:
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
 - Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
-- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), proxOEfile (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* [FIXME URL]: ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. 
+- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to ``chicagoTools`` README file for more details.
 
-It is easiest to put all of these files in the same directory. If you are using HindIII restriction enzyme in mouse and human and the same captured baits as in [@Schoenfelder2015] (mouse) and [@Mifsud2015] (human), you can use the files on our website [FIXME URL], otherwise you will need to generate them yourself using ``chicagoTools`` scripts as mentioned above. Refer to ``chicagoTools`` README file for more details.
-
-Examples of these files for a two-chromosome sample of the mESC data used in this vignette are also provided in the PCHiCdata package, as follows. Do not use these files in your analysis!
+It is easiest to put all of these files in the same directory. An examples of a valid design, for a two-chromosome sample of the mESC data used in this vignette, is provided in the PCHiCdata package, as follows.
 
 ```{r}
 dataPath <- system.file("extdata", package="PCHiCdata")

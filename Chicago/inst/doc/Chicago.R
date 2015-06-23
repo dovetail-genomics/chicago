@@ -21,18 +21,18 @@ files <- c(
 ## ------------------------------------------------------------------------
 settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "smESCSettings", "smESC.settingsFile")
 
-## ----, message=FALSE-----------------------------------------------------
+## ---- message=FALSE------------------------------------------------------
 library(Chicago)
 
 cd <- setExperiment(designDir = testDesignDir, settingsFile = settingsFile)
 
-## ----, message=FALSE-----------------------------------------------------
+## ---- message=FALSE------------------------------------------------------
 cd <- readAndMerge(files=files, cd=cd)
 
-## ----, eval=FALSE--------------------------------------------------------
+## ---- eval=FALSE---------------------------------------------------------
 #  cd <- chicagoPipeline(cd)
 
-## ----, echo=FALSE, message=FALSE-----------------------------------------
+## ---- echo=FALSE, message=FALSE------------------------------------------
 cd <- chicagoPipeline(cd)
 
 ## ------------------------------------------------------------------------
@@ -49,7 +49,7 @@ featuresList <- as.list(featuresTable$V2)
 names(featuresList) <- featuresTable$V1
 featuresList
 
-## ----, message=FALSE-----------------------------------------------------
+## ---- message=FALSE------------------------------------------------------
 no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
 
 enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
