@@ -25,9 +25,9 @@ NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is prov
 
 The statistical foundations of CHiCAGO will be presented in a separate paper currently in preparation. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts of the real data sets (two chromosomes each) from published Promoter Capture HiC analyses in mouse ESCs [@Schoenfelder2015] and human LCLs [@Mifsud2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training. 
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts of the real data sets (two chromosomes each) from published Promoter Capture HiC analyses in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training. 
 
-In this vignette we are going to use the data sample from mouse embryonic stem cells (mESCs) [@Schoenfelder2015]:
+In this vignette we are going to use the GM12878 data [@Mifsud2015]:
 
 ```{r}
 library(PCHiCdata)
@@ -43,30 +43,31 @@ Before you start, you will need:
 - Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
 - *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to ``chicagoTools`` README file for more details.
 
-It is easiest to put all of these files in the same directory. An examples of a valid design, for a two-chromosome sample of the mESC data used in this vignette, is provided in the PCHiCdata package, as follows.
+It is easiest to put all of these files in the same directory. An examples of a valid design, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
 
 ```{r}
 dataPath <- system.file("extdata", package="PCHiCdata")
-testDesignDir <- file.path(dataPath, "mm9TestDesign")
+testDesignDir <- file.path(dataPath, "hg19TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP] (http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
+2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
 
 ```{r}
-testDataPath <- file.path(dataPath, "mESCchinputFiles")
+testDataPath <- file.path(dataPath, "GMchinputFiles")
 dir(testDataPath)
 
 files <- c(
-    file.path(testDataPath, "mESCrep1.chinput"),
-    file.path(testDataPath, "mESCrep2.chinput")
+    file.path(testDataPath, "GM_rep1.chinput"),
+    file.path(testDataPath, "GM_rep2.chinput"),
+    file.path(testDataPath, "GM_rep3.chinput")
   )
 ```
 
 OPTIONAL: Because this data set is smaller than usual, we need to input some custom settings:
 
 ```{r}
-settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "smESCSettings", "smESC.settingsFile")
+settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "sGM12878Settings", "sGM12878.settingsFile")
 ```
 
 Normally, you will not have to do this.
@@ -148,15 +149,15 @@ For bait-to-bait interactions, the interaction can be tested either way round (i
 
 ``peakEnrichment4Features()`` tests the hypothesis that other ends in the CHiCAGO output are enriched for genomic features of interest - for example, histone marks associated with enhancers. We find out how many overlaps are expected under the null hypothesis (i.e. that there is no enrichment) by shuffling the other ends around in the genome, while preserving the overall distribution of distances over which interactions span.
 
-You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium [@encode_integrated_2012], again restricted to chr18 and chr19. (Data accession numbers: Snyder lab GSM1003750, GSM1003756, GSM1003751; Ren lab GSM1000126, Hardison lab ENCFF001ZJO, ENCFF001ZQY)
+You will need additional files to perform this analysis - namely, a .bed file for each feature. We include ChIP-seq data from the ENCODE consortium [@encode_integrated_2012], also restricted to chr20 and chr21. (Data accession numbers: Bernstein lab GSM733752, GSM733772, GSM733708, GSM733664, GSM733771, GSM733758)
 
 First, we find the folder that contains the features, and construct a list of the features to use:
 
 ```{r}
-featuresFolder <- file.path(dataPath, "mESCfeatures")
+featuresFolder <- file.path(dataPath, "GMfeatures")
 dir(featuresFolder)
 
-featuresFile <- file.path(featuresFolder, "featuresmESC.txt")
+featuresFile <- file.path(featuresFolder, "featuresGM.txt")
 featuresTable <- read.delim(featuresFile, header=FALSE, as.is=TRUE)
 featuresList <- as.list(featuresTable$V2)
 names(featuresList) <- featuresTable$V1
@@ -167,7 +168,7 @@ Next, we feed this information into the ``peakEnrichment4Features()`` function.
 
 As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (by default, the full distance range over which interactions are observed), and divides it into some number of bins. We must select the number of bins; here, we choose that number to ensure that the bin size is approximately 10kb. If the defaults are changed, a different number of bins is more appropriate. See ``?peakEnrichment4Features`` for more information.
 
-```{r, message=FALSE}
+```{r, message=FALSE, fig.width=12, fig.height=7}
 no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
 
 enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
