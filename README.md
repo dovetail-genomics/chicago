@@ -10,34 +10,27 @@ This repository contains the following files:
 
 Please refer to the Chicago R package vignette and the chicagoTools README file for more information.
 
-Standard R tools (such as ```R CMD INSTALL``` and ```install.packages()```) can be used to install the Chicago and PCHiCdata packages. The chicagoTools scripts require no specific installation.   
-   
-Note that the R packages require R version >= 3.1.2, and chicagoTools require bedtools, perl and python >= 2.7 that need to be pre-installed and added to PATH.   
-   
-Alternatively, to install the Chicago package, PCHiC data package and chicagoTools (as well as all R packages they depend on), download the whole repository and run:
+*Installation instructions*
 
+1. Make sure that you have R version >= 3.1.2. In addition, chicagoTools require bedtools, perl and python >= 2.7 that need to be pre-installed and added to PATH.
+
+2. Get the chicagoTools scripts by downloading the repository (downloads tab on left-hand menu). These scripts do not need to be installed further - see chicagoTools/README.md.
+
+3. Install the R packages. An easy way to do this is by using functionality in devtools - run the following R code:
+```{r}
+install.packages("devtools")
+library(devtools)
+install_bitbucket("chicagoTeam/Chicago", subdir="Chicago")
 ```
-#!bash
-
-    Rscript setupChicago.R
-
+Optionally, install the PCHiCdata package at the same time:
+```{r}
+install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
+(This strategy downloads the repository multiple times. To avoid this, you can manually install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
-In some cases, you may need to run setupChicago.R with custom parameters:
+If you encounter any problems, please email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 
-```
-#!bash
-
-    Rscript setupChicago.R [--chicago-path=<Chicago-package-path>] [--data-path=<PCHiCdata-package-path>] [--rlib=<r-lib-dir>] [--bin=<chicagoTools-target-dir>]
-    
-```
-
-The description of these parameters (all of them optional) is as follows:
-
- - chicago-path: the location of the Chicago package (either as a directory or as a tar.gz file). Defaults to the current directory
- - data-path: the location of the PCHiCdata package (either as a directory or as a tar.gz file). Defaults to the current directory
- - rlib: the location of the R library directory (known to R and for which you have write permissions). If not provided, the default R library directory is used (available via .libPaths()[1])
- - bin: if provided, chicagoTools will be moved to this path, alternatively they will be left at their current location. 
+*Contact information*
 
 Chicago is developed and maintained by:
 
