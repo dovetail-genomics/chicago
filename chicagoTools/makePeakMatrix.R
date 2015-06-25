@@ -31,6 +31,7 @@ printMem = function(go){
 
 cat("\n")
 args = commandArgs(trailingOnly=T)
+
 spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample names (1st column) and full paths to input Rds files (2nd column)", 
                 "<output-prefix>", "Output file names prefix (can contain path to folders)"),  byrow=T, ncol=2)
 p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda/Rds files.", name="Rscript makePeakMatrix.R")
@@ -86,14 +87,14 @@ library(Hmisc)
 namesfile = opts[["<names-file>"]]
 prefix = opts[["<output-prefix>"]]
 
-cutoff = opts[["cutoff"]]
+cutoff = as.numeric(opts[["cutoff"]])
 lessThanCutoff = opts[["lessthan"]]
 
 chicagoData = !opts[["vanilla"]] # sic!
 rmapfile = opts[["digestmap"]]
 baitmapfile = opts[["baitmap"]]
 
-maxdist = opts[["maxdist"]]
+maxdist = as.numeric(opts[["maxdist"]])
 scorecol = opts[["scorecol"]]
 noTrans = opts[["notrans"]]
 
@@ -110,7 +111,7 @@ if(is.na(fetchcol)) {
 }
 
 clMethod = opts[["clustmethod"]]
-sampsize = opts[["clustsubset"]]
+sampsize = as.numeric(opts[["clustsubset"]])
 
 peaklistfile  = opts[["peaklist"]]
 
@@ -294,10 +295,16 @@ printMem(shouldPrintMem)
 
 
 if(!twoPass & is.na(peaklistfile)){
-  cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
   scoreCols = names(z)[3:ncol(z)]
-  z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]
-  z = z[rmax>=cutoff]
+  if (lessThanCutoff){
+    cat("Retaining only interactions below the score cutoff", cutoff, "in at least one sample...\n")
+    z[, rmin:=eval(parse(text=paste0("pmin(", paste0(scoreCols, collapse=","),", na.rm=T)")))]  
+    z = z[rmin<=cutoff]
+  }else{
+    cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
+    z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]  
+    z = z[rmax>=cutoff]
+  }
 }
 
 cat("Replacing NAs with zeros...\n")
