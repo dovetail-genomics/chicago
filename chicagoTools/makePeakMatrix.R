@@ -31,6 +31,7 @@ printMem = function(go){
 
 cat("\n")
 args = commandArgs(trailingOnly=T)
+
 spec = matrix(c("<names-file>", "Full path to a tab-separated file with sample names (1st column) and full paths to input Rds files (2nd column)", 
                 "<output-prefix>", "Output file names prefix (can contain path to folders)"),  byrow=T, ncol=2)
 p = arg.parser("Generate a peak matrix and a sample tree from CHiCAGO output Rda/Rds files.", name="Rscript makePeakMatrix.R")
@@ -40,7 +41,8 @@ p = add.argument(p, arg="--scorecol", help = "Column name for the scores", defau
 p = add.argument(p, arg="--cutoff", help = "Score cutoff to use", default = 5, type = "numeric")
 p = add.argument(p, arg="--lessthan", help = "Pick interactions with scorecol *below* the cutoff rather than above", flag = T)
 
-p = add.argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the information that will end up in the final peak matrix. By default, the same as scorecol.", default = NA)
+p = add.argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the information that will end up in the final peak matrix. By default, the same as scorecol. If different,
+the --twopass mode will be enforced", default = NA)
 
 p = add.argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", 
                  default = NA, type="numeric")
@@ -85,24 +87,32 @@ library(Hmisc)
 namesfile = opts[["<names-file>"]]
 prefix = opts[["<output-prefix>"]]
 
-cutoff = opts[["cutoff"]]
+cutoff = as.numeric(opts[["cutoff"]])
 lessThanCutoff = opts[["lessthan"]]
 
 chicagoData = !opts[["vanilla"]] # sic!
 rmapfile = opts[["digestmap"]]
 baitmapfile = opts[["baitmap"]]
 
-maxdist = opts[["maxdist"]]
+maxdist = as.numeric(opts[["maxdist"]])
 scorecol = opts[["scorecol"]]
 noTrans = opts[["notrans"]]
 
+twoPass = opts[["twopass"]]
+
 fetchcol = opts[["fetchcol"]]
-if(is.na(fetchcol)) {fetchcol <- scorecol}
+if(is.na(fetchcol)) {
+	fetchcol <- scorecol
+}else{
+	if (!twoPass & fetchcol != scorecol){
+		message("Fetchcol is different from scorecol, therefore the twoPass mode is switched on\n")
+		twoPass <- TRUE
+	}
+}
 
 clMethod = opts[["clustmethod"]]
-sampsize = opts[["clustsubset"]]
+sampsize = as.numeric(opts[["clustsubset"]])
 
-twoPass = opts[["twopass"]]
 peaklistfile  = opts[["peaklist"]]
 
 rds = !opts[["rda"]]
@@ -285,10 +295,16 @@ printMem(shouldPrintMem)
 
 
 if(!twoPass & is.na(peaklistfile)){
-  cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
   scoreCols = names(z)[3:ncol(z)]
-  z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]
-  z = z[rmax>=cutoff]
+  if (lessThanCutoff){
+    cat("Retaining only interactions below the score cutoff", cutoff, "in at least one sample...\n")
+    z[, rmin:=eval(parse(text=paste0("pmin(", paste0(scoreCols, collapse=","),", na.rm=T)")))]  
+    z = z[rmin<=cutoff]
+  }else{
+    cat("Retaining only interactions exceeding score cutoff", cutoff, "in at least one sample...\n")
+    z[, rmax:=eval(parse(text=paste0("pmax(", paste0(scoreCols, collapse=","),", na.rm=T)")))]  
+    z = z[rmax>=cutoff]
+  }
 }
 
 cat("Replacing NAs with zeros...\n")
