@@ -19,15 +19,15 @@ BiocStyle::markdown()
 
 ## Introduction
 
-This vignette will walk you through a typical CHiCAGO analysis. 
+CHiCAGO is a method for detecting statistically significant interaction events in Capture HiC data. This vignette will walk you through a typical CHiCAGO analysis. 
 
-NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to chicagoTools for more information.
+NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the *chicagoTools* README for more information.
 
-The statistical foundations of CHiCAGO will be presented in a separate paper currently in preparation. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
+The statistical foundations of CHiCAGO will be presented in a separate paper, currently in preparation. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
 
 WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts of the real data sets (two chromosomes each) from published Promoter Capture HiC analyses in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training. 
 
-In this vignette we are going to use the GM12878 data [@Mifsud2015]:
+In this vignette, we use the GM12878 data [@Mifsud2015]:
 
 ```{r}
 library(PCHiCdata)
@@ -41,9 +41,9 @@ Before you start, you will need:
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
 - Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
-- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to ``chicagoTools`` README file for more details.
+- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to the ``chicagoTools`` README file for more details.
 
-It is easiest to put all of these files in the same directory. An examples of a valid design, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
+We recommend that you put all five of these files into the same directory. An examples of a valid design folder, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
 
 ```{r}
 dataPath <- system.file("extdata", package="PCHiCdata")
@@ -51,7 +51,9 @@ testDesignDir <- file.path(dataPath, "hg19TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need your input data files. These files can be obtained from aligned capture HiC BAM files (generated from the raw fastq files, for example, using [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) by running ``bam2chicago.sh``, available as part of ``chicagoTools``. Normally, the names of these input files end with *.chinput*.
+2. You will also need input data files. These should be in CHiCAGO input format, *.chinput*. *.chinput* files can be obtained from aligned Capture HiC BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, run them through a HiC alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
+
+Example *.chinput* files are provided in the PCHiCdata package, as follows:
 
 ```{r}
 testDataPath <- file.path(dataPath, "GMchinputFiles")
@@ -67,7 +69,8 @@ files <- c(
 OPTIONAL: Because this data set is smaller than usual, we need to input some custom settings:
 
 ```{r}
-settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "sGM12878Settings", "sGM12878.settingsFile")
+settingsFile <- file.path(system.file("extdata", package="PCHiCdata"),
+                          "sGM12878Settings", "sGM12878.settingsFile")
 ```
 
 Normally, you will not have to do this.
@@ -119,7 +122,7 @@ outputDirectory <- tempdir()
 exportResults(cd, file.path(outputDirectory, "vignetteOutput"))
 ```
 
-Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is: formally, it is -log(adjusted P-value). Thus, a larger score represents a stronger interaction. In each case, the score threshold of -log(adjusted p-value) of 5 is applied.
+Each called interaction is assigned a score that represents how strong CHiCAGO believes the interaction is (formally, it is based on -log(adjusted P-value)). Thus, a larger score represents a stronger interaction. In each case, the score threshold of 5 is applied.
 
 Summary of output files:
 
@@ -177,7 +180,7 @@ enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_fra
 
 Note the plot produced by this function. For each feature type, the yellow bar represents the number of features that overlap with interaction other ends. The blue bar represents what would be expected by chance, with a 95\% confidence interval for the mean number of overlaps plotted. If the yellow bar lies outside of this interval, we reject the null hypothesis, thus concluding that there is enrichment/depletion of that feature.
 
-In addition, this information is returned in tabular form:
+The information displayed in the plot is also returned in tabular form:
 
 ```{r}
 enrichmentResults
