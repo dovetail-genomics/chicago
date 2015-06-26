@@ -40,3 +40,5 @@ Chicago is developed and maintained by:
 - Mikhail Spivakov ([spivakov@babraham.ac.uk](mailto:spivakov@babraham.ac.uk))
 
 We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk), Cambridge UK.
+
+More details (including the full credits) can be found at regulatorygenomicsgroup.org/chicago.
