@@ -28,7 +28,7 @@ install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
 (This strategy downloads the repository multiple times. To avoid this, you can manually install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
-If you encounter any problems, please email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
+If you encounter any problems, please [post an issue](https://bitbucket.org/chicagoTeam/chicago/issues) or email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 
 *Contact information*
 
