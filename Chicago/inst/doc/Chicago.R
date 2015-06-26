@@ -20,7 +20,8 @@ files <- c(
   )
 
 ## ------------------------------------------------------------------------
-settingsFile <- file.path(system.file("extdata", package="PCHiCdata"), "sGM12878Settings", "sGM12878.settingsFile")
+settingsFile <- file.path(system.file("extdata", package="PCHiCdata"),
+                          "sGM12878Settings", "sGM12878.settingsFile")
 
 ## ---- message=FALSE------------------------------------------------------
 library(Chicago)
