@@ -32,7 +32,7 @@ If you encounter any problems, please [post an issue](https://bitbucket.org/chic
 
 *Contact information*
 
-Chicago is developed and maintained by:
+Chicago is mainly developed and maintained by:
 
 - Jonathan Cairns 
 - Paula Freire Pritchett
@@ -41,4 +41,4 @@ Chicago is developed and maintained by:
 
 We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk), Cambridge UK.
 
-More details (including more extensive credits) can be found on the Chicago webpage [regulatorygenomicsgroup.org/chicago](http://www.regulatorygenomicsgroup.org/chicago).  
+More details (including the full credits) can be found at [regulatorygenomicsgroup.org/chicago](http://www.regulatorygenomicsgroup.org/chicago).
