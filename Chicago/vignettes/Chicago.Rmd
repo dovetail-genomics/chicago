@@ -37,13 +37,13 @@ library(PCHiCdata)
 
 Before you start, you will need: 
 
-1. Five restriction map information files:
+1. Five restriction map information files ("design files"):
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
 - Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
 - *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to the ``chicagoTools`` README file for more details.
 
-We recommend that you put all five of these files into the same directory. An examples of a valid design folder, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
+We recommend that you put all five of these files into the same directory (that we refer to as designDir). An example of a valid design folder, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
 
 ```{r}
 dataPath <- system.file("extdata", package="PCHiCdata")
@@ -51,7 +51,7 @@ testDesignDir <- file.path(dataPath, "hg19TestDesign")
 dir(testDesignDir)
 ```
 
-2. You will also need input data files. These should be in CHiCAGO input format, *.chinput*. *.chinput* files can be obtained from aligned Capture HiC BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, run them through a HiC alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
+2. You will also need input data files. These should be in CHiCAGO input format, *.chinput*. *.chinput* files can be obtained from aligned Capture HiC BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, run them through a HiC alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/).
 
 Example *.chinput* files are provided in the PCHiCdata package, as follows:
 
@@ -128,6 +128,13 @@ Summary of output files:
 
 ibed format (ends with ...ibed):
 
+```{r echo=FALSE}
+
+a <- read.table(file.path(outputDirectory, "vignetteOutput.ibed"), header=TRUE)
+head(a)
+
+```
+
 - each row represents an interaction
 - first four columns give information about the chromosome, start, end and name of the bait fragment
 - next four columns give information about the chromosome, start, end and name of the other end that interacts with the bait fragment
@@ -136,17 +143,50 @@ ibed format (ends with ...ibed):
 
 seqmonk format (ends with ...seqmonk.txt)
 
+```{r echo=FALSE}
+
+a <- read.table(file.path(outputDirectory, "vignetteOutput_seqmonk.txt"), header=FALSE)
+head(a)
+
+```
+
+
 - Can be read by [seqmonk](http://www.bioinformatics.babraham.ac.uk/projects/seqmonk/).
 - An interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
 - Columns are: chromosome, start, end, name, number of reads, interaction score (see above)
 
 washU\_text format (ends with ...washU\_text.txt)
 
+```{r echo=FALSE}
+
+a <- read.table(file.path(outputDirectory, "vignetteOutput_washU_text.txt"), header=FALSE)
+head(a)
+
+```
+
+
 - Can be read by the [WashU browser](http://epigenomegateway.wustl.edu)
 - Upload via the "Got text files instead? Upload them from your computer" link.
 - Note - Advanced users may wish to export to washU\_track format instead. See the help page for ``exportResults()``.
 
 For bait-to-bait interactions, the interaction can be tested either way round (i.e. either fragment can be considered the "bait"). In most output formats, both of these tests are preserved. The exception is washU output, where these scores are consolidated by taking the maximum.
+
+## Visualising interactions
+
+The ``plotBaits()`` function can be used to plot the raw read counts versus linear distance from bait for either specific or random baits, labelling significant interactions in a different colour. By default, 16 random baits are plotted, with interactions within 1 Mb from bait passing the threshold of 5 shown in red and those passing the more lenient threshold of 3 shown in blue.
+
+```{r eval=FALSE}
+
+plottedBaitIDs <- plotBaits(cd, n=6)
+
+```
+
+```{r echo=FALSE, fig.height=10}
+
+invisible(plotBaits(cd, baits=c(415839, 404491, 425847, 417632, 409335, 414114)))
+
+```
+
 
 ## Peak enrichment for features
 

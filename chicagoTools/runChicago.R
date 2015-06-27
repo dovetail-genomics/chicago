@@ -248,9 +248,9 @@ if (!featuresOnly){
   close(logfile)
   
   message("\n\nPlotting examples...\n")
-  baits=plotBaits(cd, outfile=paste0(outPrefix, "_proxExamples.pdf"), xlim=c(-proxLim,proxLim))
+  baits=plotBaits(cd, outfile=paste0(outPrefix, "_proxExamples.pdf"), maxD = proxLim)
   if (plotFull){
-    plotBaits(cd, baits=baits, outfile=paste0(outPrefix, "_examples.pdf"))
+    plotBaits(cd, baits=baits, outfile=paste0(outPrefix, "_examples.pdf"), maxD = NULL)
   }
   
   message("\n\nExporting peak lists...\n")

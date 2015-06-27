@@ -11,7 +11,7 @@ Plot the read counts around baits.
 plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL,
       plotBaitNames = TRUE, plotBprof = FALSE, plevel1 = 5, plevel2 = 3,
       outfile = NULL, removeBait2bait = TRUE, width = 20, height = 20,
-      maxD = NULL, bgCol = "black", lev2Col = "blue", lev1Col = "red",
+      maxD = 1e6, bgCol = "black", lev2Col = "blue", lev1Col = "red",
       bgPch = 1, lev1Pch = 20, lev2Pch = 20, ...)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -48,7 +48,7 @@ If \code{TRUE}, bait-to-bait interactions are not plotted.
 Passed through to \code{\link{pdf}}
 }
   \item{maxD}{
-The maximum distance to plot.
+The maximum (linear) distance each side of the bait to plot (NULL to include the whole chromosome).
 }
   \item{bgCol, lev1Col, lev2Col}{
 Colours to be used for background points, and for the two stringency levels defined by \code{plevel1} and \code{plevel2}, respectively.
