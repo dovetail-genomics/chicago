@@ -1720,7 +1720,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   
   ncols = ceiling(n/4)
   nrows = ceiling(n/ncols)
-  par(mfrow=c(nrows, ncol))
+  par(mfrow=c(nrows, ncols))
   
   setkey(cd@x, baitID)
 
