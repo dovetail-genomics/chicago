@@ -41,6 +41,34 @@ cd <- chicagoPipeline(cd)
 outputDirectory <- tempdir()
 exportResults(cd, file.path(outputDirectory, "vignetteOutput"))
 
+## ----echo=FALSE----------------------------------------------------------
+
+a <- read.table(file.path(outputDirectory, "vignetteOutput.ibed"), header=TRUE)
+head(a)
+
+
+## ----echo=FALSE----------------------------------------------------------
+
+a <- read.table(file.path(outputDirectory, "vignetteOutput_seqmonk.txt"), header=FALSE)
+head(a)
+
+
+## ----echo=FALSE----------------------------------------------------------
+
+a <- read.table(file.path(outputDirectory, "vignetteOutput_washU_text.txt"), header=FALSE)
+head(a)
+
+
+## ----eval=FALSE----------------------------------------------------------
+#  
+#  plottedBaitIDs <- plotBaits(cd, n=6)
+#  
+
+## ----echo=FALSE, fig.height=10-------------------------------------------
+
+invisible(plotBaits(cd, baits=c(415839, 404491, 425847, 417632, 409335, 414114)))
+
+
 ## ------------------------------------------------------------------------
 featuresFolder <- file.path(dataPath, "GMfeatures")
 dir(featuresFolder)

@@ -32,7 +32,7 @@ If you encounter any problems, please [post an issue](https://bitbucket.org/chic
 
 *Contact information*
 
-Chicago is developed and maintained by:
+Chicago is mainly developed and maintained by:
 
 - Jonathan Cairns 
 - Paula Freire Pritchett
