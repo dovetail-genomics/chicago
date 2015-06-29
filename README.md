@@ -28,11 +28,11 @@ install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
 (This strategy downloads the repository multiple times. To avoid this, you can manually install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
-If you encounter any problems, please email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
+If you encounter any problems, please [post an issue](https://bitbucket.org/chicagoTeam/chicago/issues) or email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 
 *Contact information*
 
-Chicago is developed and maintained by:
+Chicago is mainly developed and maintained by:
 
 - Jonathan Cairns 
 - Paula Freire Pritchett
@@ -40,3 +40,5 @@ Chicago is developed and maintained by:
 - Mikhail Spivakov ([spivakov@babraham.ac.uk](mailto:spivakov@babraham.ac.uk))
 
 We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk), Cambridge UK.
+
+More details (including the full credits) can be found at [regulatorygenomicsgroup.org/chicago](http://www.regulatorygenomicsgroup.org/chicago).
