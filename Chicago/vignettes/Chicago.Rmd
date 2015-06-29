@@ -85,7 +85,7 @@ library(Chicago)
 cd <- setExperiment(designDir = testDesignDir, settingsFile = settingsFile)
 ```
 
-The properties of ``chicagoData`` objects are discussed more in [The chicagoData object](#link).
+The properties of ``chicagoData`` objects are discussed more in [The chicagoData object](#cd).
 
 Next, we read in the input data files:
 
@@ -126,7 +126,7 @@ Each called interaction is assigned a score that represents how strong CHiCAGO b
 
 Summary of output files:
 
-ibed format (ends with ...ibed):
+### ibed format (ends with ...ibed):
 
 ```{r echo=FALSE}
 
@@ -141,7 +141,7 @@ head(a)
 - N\_reads is the number of reads
 - score is as defined above
 
-seqmonk format (ends with ...seqmonk.txt)
+### seqmonk format (ends with ...seqmonk.txt):
 
 ```{r echo=FALSE}
 
@@ -155,7 +155,7 @@ head(a)
 - An interaction is represented by two rows: the first row is the bait, the second the other end. Thus, the file alternates: bait1, otherEnd1, bait2, otherEnd2, ...
 - Columns are: chromosome, start, end, name, number of reads, interaction score (see above)
 
-washU\_text format (ends with ...washU\_text.txt)
+### washU\_text format (ends with ...washU\_text.txt):
 
 ```{r echo=FALSE}
 
