@@ -144,8 +144,8 @@ Chicago package documentation for the description of these formats). The option 
 contain the genomic coordinates of the features to compute the enrichment at Chicago significant interactions 
 (Chicago signal cutoff 5 is used by default).   
 - <input-files> - a single .chinput file (produced by ```bam2chicago.sh``` or any other method) or a comma-separated 
-file corresponding to the multiple biological replicates of the same experimental condition.
-Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.
+list of .chinput files corresponding to the multiple biological replicates of the same experimental condition. Note that technical replicates 
+should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.
 - <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.
    
 The full list of the parameters is however more extensive:    
@@ -185,7 +185,9 @@ instead of using the --en-feat-list option)
 - features-only: re-run feature enrichment analysis with Chicago output files. 
 With this option, <input-files> must be either a single Rds file (must contain full Chicago objects) or '-', 
 in which case the file location will be inferred automatically from <output-prefix> and files added to the corresponding folder.   
-- <input-files> - a single .chinput file (produced by bam2chicago.sh or any other method) or a comma-separated file corresponding to the multiple biological replicates of the same experimental condition. Note that technical replicates should instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.   
+- <input-files> - a single .chinput file (produced by bam2chicago.sh or any other method) or a comma-separated list of file names 
+corresponding to the multiple biological replicates of the same experimental condition. Note that technical replicates should 
+instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.   
 - <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.   
       
 **The script for bundling the interaction calls from multiple samples into a single data matrix**  
