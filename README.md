@@ -12,7 +12,11 @@ Please refer to the Chicago R package vignette and the chicagoTools README file 
 
 *Installation instructions*
 
-1. Make sure that you have R version >= 3.1.2. In addition, chicagoTools require bedtools, perl and python >= 2.7 that need to be pre-installed and added to PATH.
+1. Make sure that you have R version >= 3.1.2. chicagoTools requires some additional dependencies: bedtools, perl and python >= 2.7 need to be pre-installed and added to PATH, plus the R package ``argparser`` is required - install with the R code:
+
+```{r}
+install.packages("argparser")
+```
 
 2. Get the chicagoTools scripts by downloading the repository (downloads tab on left-hand menu). These scripts do not need to be installed further - see chicagoTools/README.md.
 
@@ -26,7 +30,7 @@ Optionally, install the PCHiCdata package at the same time:
 ```{r}
 install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
-(This strategy downloads the repository multiple times. To avoid this, you can manually install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
+(This strategy downloads the repository multiple times. To avoid this, you can manually install Chicago's dependencies, then install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
 If you encounter any problems, please [post an issue](https://bitbucket.org/chicagoTeam/chicago/issues) or email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 
