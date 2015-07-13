@@ -83,7 +83,7 @@ the significant set.
 The number of interactions sampled per distance follows the same distribution as the one in the significant set. 
 This is achieved by counting the number of significant interactions per distance bin. In this way, when samples are computed, the number of interactions drawn will depend on each distance bin. Each sample will have the same number of interactions per bin as in the significant set.
 To improve this computation, we recommend a bin size of around 10-20kb, but this number could be larger when looking
-at trans interactions only (up to 200kb). This is established using the parameter \code{no_bins}. For instance, using \code{min_dist=0} and \code{max_dist=1e6}, \code{no_bins} should be set to \code{100} so to obtain 10kb bins.
+at distal interactions only (up to 200kb). This is established using the parameter \code{no_bins}. For instance, using \code{min_dist=0} and \code{max_dist=1e6}, \code{no_bins} should be set to \code{100} so to obtain 10kb bins.
 }
 
 
