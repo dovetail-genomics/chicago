@@ -15,6 +15,7 @@ use Data::Dumper;
 #Option variables
 my %config = (
 	digestfolder => '',
+	features => '',
 	input => '',
 	email => '',
 	help => '',
@@ -25,12 +26,13 @@ my %config = (
 
 my $config_result = GetOptions(    #Stores parameters
 	"digestfolder=s" => \$config{digestfolder},
+	"features" =>	\$config{features},
 	"input=s"   => \$config{input},
 	"email=s"   => \$config{email},
 	"help"   => \$config{help},
 	"hold_jid=s" => \$config{hold_jid},
 	"config=s"   => \$config{config},
-        "settings=s" => \$config{settings}
+     "settings=s" => \$config{settings}
 	);
 
 die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
@@ -53,6 +55,9 @@ if( hasval($config{config}) ) {
 
 check_parameters();
 processInputfile();
+  
+  
+ print Dumper \%config;
   
 #Create a log file
 open(LOG, '>', 'chicagoLog.txt') or die "Could not write to 'chicagoLog.txt' : $!";
@@ -104,79 +109,149 @@ foreach my $array (@inputData){
 #Send step2 jobs to the cluster
 my @submittedStep2Jobs;   #Stores the names of jobs submitted to the cluster in order. Even sent to node 0, odd to node 1
 
-foreach my $prefixStep2 (keys %prefixStep2Files){
-	my $features = $prefixStep2Features{$prefixStep2};
-	
-	my @files = @{ $prefixStep2Files{$prefixStep2} };
-	#@files = step1FileRenamer(@files);
-	my $numberFiles = scalar @files;
-	my $outdir = 'res_' . $prefixStep2 . '_chicago2/';
-	
+if($config{features}){
 
-	$features =~ /(.+\/)/;
-	my $featuresFolder = $1;
-	
-	#Calculate jids (if necessary)
-	my @jids;
-	my $step2_jid_string = '';    #Jobs to wait for as defined by the user
-	if(exists $jids4Step2{$prefixStep2} ){
-		@jids = @{ $jids4Step2{$prefixStep2} };
-		$step2_jid_string = join(',', @jids);
-	}
-	if(hasval ($config{hold_jid}) ){
-		$step2_jid_string = $step2_jid_string . ',' . $config{hold_jid};
-	}	
-	if(hasval ($step2_jid_string) ){
-		$step2_jid_string = "-hold_jid $step2_jid_string";
-	}
-	
-	
-	my $command;
+	#Check prefix2 all unique
+	my $parameters_ok = 1;
+	foreach my $prefixStep2 (keys %prefixStep2Files){
+		my @files = @{ $prefixStep2Files{$prefixStep2} };
+		my $numberFiles = scalar @files;
 
-	my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
-	if (hasval($config{settings})){
-		$params .= " --settings-file $config{settings}";
+		if($numberFiles != 1){
+			warn "Duplicate prefix2: $prefixStep2\n";
+			$parameters_ok = 0;
+		}
 	}
-
-	if($numberFiles == 1){
-		$command = "Rscript $Bin/chicagoTools/runChicago.R $params $files[0] $prefixStep2";		
+	die "When running --features, all prefix 2 entries need to be different.\n" unless ($parameters_ok);
 	
-	}else{
-		my $filenameString = join(',', @files);
-		$command = "Rscript $Bin/chicagoTools/runChicago.R $params $filenameString $prefixStep2";			
-	}
-		my $prefix2Rand = "$prefixStep2." . generateRandomString(6);
+	
+	#Send jobs to cluster
+	foreach my $prefixStep2 (keys %prefixStep2Files){
+		my $features = $prefixStep2Features{$prefixStep2};
 		
-		my $currentJobName = "CHiCAGO2.$prefix2Rand";
-		push (@submittedStep2Jobs, $currentJobName);
-		my $jobSent = scalar @submittedStep2Jobs;
-		my $clusterCommand;	
-			
-		# if($jobSent > 4){
-			# my $jobToWaitFor = $submittedStep2Jobs[$jobSent - 5];
-			# if($jid_string eq ''){
-				# $jid_string = '-hold_jid '; 
-			# }
-			# $jid_string = $jid_string . ',' . $jobToWaitFor;
-			# $jid_string =~ s/hold_jid ,/hold_jid /;
-		# }	
+		my @files = @{ $prefixStep2Files{$prefixStep2} };
+
+		my $numberFiles = scalar @files;
+		my $outdir = 'res_' . $prefixStep2 . '_chicago2/';
 		
-		my $memory_allocation;
-		if($numberFiles == 1){
-			$memory_allocation = 'h_vmem=300G';
-		}else{
-			$memory_allocation = 'h_vmem=500G';
+
+		$features =~ /(.+\/)/;
+		my $featuresFolder = $1;
+		
+		#Calculate jids (if necessary)
+		my @jids;
+		my $step2_jid_string = '';    #Jobs to wait for as defined by the user
+		if(exists $jids4Step2{$prefixStep2} ){
+			@jids = @{ $jids4Step2{$prefixStep2} };
+			$step2_jid_string = join(',', @jids);
+		}
+		if(hasval ($config{hold_jid}) ){
+			$step2_jid_string = $step2_jid_string . ',' . $config{hold_jid};
+		}	
+		if(hasval ($step2_jid_string) ){
+			$step2_jid_string = "-hold_jid $step2_jid_string";
 		}
 		
-		$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l $memory_allocation -o $prefix2Rand.out -j y -N $currentJobName $config{email} $step2_jid_string";	
+
+		my $params = "--features-only --en-feat-folder $featuresFolder --en-feat-list $features";
+		my $command = "Rscript $Bin/chicagoTools/runChicago.R $params $files[0] $prefixStep2";		
+
+			my $prefix2Rand = basename($prefixStep2) . generateRandomString(6);    #To remove forward slashes in the job name (-N)				
+			my $currentJobName = "CHiCAGO2.$prefix2Rand";
+			push (@submittedStep2Jobs, $currentJobName);
+			my $jobSent = scalar @submittedStep2Jobs;
+			my $clusterCommand;	
+						
+			$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=50G -o $prefix2Rand.out -j y -N $currentJobName $config{email} $step2_jid_string";	
+					
+			print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
+			!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
+
+	}
 	
-		#print "$clusterCommand\n";
-	#	print "$command\n";
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+}else{
+
+
+	foreach my $prefixStep2 (keys %prefixStep2Files){
+		my $features = $prefixStep2Features{$prefixStep2};
 		
-	#	!system("$command") or die "Could not run '$command' : $!";
+		my @files = @{ $prefixStep2Files{$prefixStep2} };
+		#@files = step1FileRenamer(@files);
+		my $numberFiles = scalar @files;
+		my $outdir = 'res_' . $prefixStep2 . '_chicago2/';
 		
-		print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
-		!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
+
+		$features =~ /(.+\/)/;
+		my $featuresFolder = $1;
+		
+		#Calculate jids (if necessary)
+		my @jids;
+		my $step2_jid_string = '';    #Jobs to wait for as defined by the user
+		if(exists $jids4Step2{$prefixStep2} ){
+			@jids = @{ $jids4Step2{$prefixStep2} };
+			$step2_jid_string = join(',', @jids);
+		}
+		if(hasval ($config{hold_jid}) ){
+			$step2_jid_string = $step2_jid_string . ',' . $config{hold_jid};
+		}	
+		if(hasval ($step2_jid_string) ){
+			$step2_jid_string = "-hold_jid $step2_jid_string";
+		}
+		
+		
+		my $command;
+
+		my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
+		if (hasval($config{settings})){
+			$params .= " --settings-file $config{settings}";
+		}
+
+		if($numberFiles == 1){
+			$command = "Rscript $Bin/chicagoTools/runChicago.R $params $files[0] $prefixStep2";		
+		
+		}else{
+			my $filenameString = join(',', @files);
+			$command = "Rscript $Bin/chicagoTools/runChicago.R $params $filenameString $prefixStep2";			
+		}
+			
+			my $prefix2Rand = basename($prefixStep2) . generateRandomString(6);    #To remove forward slashes in the job name (-N)				
+			
+			
+			my $currentJobName = "CHiCAGO2.$prefix2Rand";
+			push (@submittedStep2Jobs, $currentJobName);
+			my $jobSent = scalar @submittedStep2Jobs;
+			my $clusterCommand;	
+				
+
+			
+			my $memory_allocation;
+			if($numberFiles == 1){
+				$memory_allocation = 'h_vmem=300G';
+			}else{
+				$memory_allocation = 'h_vmem=500G';
+			}
+			
+			$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l $memory_allocation -o $prefix2Rand.out -j y -N $currentJobName $config{email} $step2_jid_string";	
+					
+			print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
+			!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
+
+	}
 
 }
 		
@@ -459,10 +534,11 @@ TODO
 
 COMMAND LINE OPTIONS
 
---config         Specify the configuration file
---help	         Print program help and exit
---hold_jid       Place jobs on hold until specified cluster jobs have completed
---version        Print the program version and exit
+--config              Specify the configuration file
+--features       Process the features enrichment plots only
+--help	              Print program help and exit
+--hold_jid            Place jobs on hold until specified cluster jobs have completed
+--version             Print the program version and exit
 
 
 
