@@ -169,10 +169,7 @@ if($config{features}){
 
 	}
 	
-	my $params = "--print-memory --output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
-	if (hasval($config{settings})){
-		$params .= " --settings-file $config{settings}";
-	}
+	
 
 }else{
 
@@ -200,7 +197,7 @@ if($config{features}){
 		}	
 		if(hasval ($step2_jid_string) ){
 			$step2_jid_string = "-hold_jid $step2_jid_string";
-
+		}
 		my $memory_allocation;
 		if($numberFiles == 1){
 			$memory_allocation = 'h_vmem=100G';
@@ -232,22 +229,10 @@ if($config{features}){
 		}
 			
 			my $prefix2Rand = basename($prefixStep2) . generateRandomString(6);    #To remove forward slashes in the job name (-N)				
-			
-			
 			my $currentJobName = "CHiCAGO2.$prefix2Rand";
 			push (@submittedStep2Jobs, $currentJobName);
 			my $jobSent = scalar @submittedStep2Jobs;
 			my $clusterCommand;	
-				
-
-			
-			my $memory_allocation;
-			if($numberFiles == 1){
-				$memory_allocation = 'h_vmem=300G';
-			}else{
-				$memory_allocation = 'h_vmem=500G';
-			}
-			
 			$clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l $memory_allocation -o $prefix2Rand.out -j y -N $currentJobName $config{email} $step2_jid_string";	
 					
 			print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
