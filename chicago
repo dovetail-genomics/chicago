@@ -25,7 +25,8 @@ my %config = (
 	help => '',
 	hold_jid => '',
 	config => '',
-	settings => ''
+	settings => '',
+	matrix => ''
 );
 
 my $config_result = GetOptions(    #Stores parameters
@@ -36,7 +37,8 @@ my $config_result = GetOptions(    #Stores parameters
 	"help"   => \$config{help},
 	"hold_jid=s" => \$config{hold_jid},
 	"config=s"   => \$config{config},
-    "settings=s" => \$config{settings}
+    "settings=s" => \$config{settings},
+    "matrix" => \$config{matrix} 
 	);
 
 die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
@@ -50,6 +52,19 @@ if ( $config{help} ) {
     print while (<DATA>);
     exit(0);
 }
+
+if( hasval($config{matrix}) ){    #Running the peak matrix only
+	die "Please specify input files for generating a peak martix.\n" unless @ARGV;
+	my @files = deduplicate_array(@ARGV);
+	check_files_exist(\@files, 'EXISTS');
+	print "Option --matrix selected, generating Peak Matrix only\n";
+	open(LOG, '>', 'chicagoPeakMatrixLog.txt') or die "Could not write to 'chicagoPeakMatrixLog.txt' : $!";
+	run_peak_matrix('MATRIX_ONLY', $config{email}, @files);
+	close LOG or die "Could not close 'chicagoPeakMatrixLog.txt' : $!";
+	print "Processing complete.";
+	exit (0);
+} 
+
 
 if( hasval($config{config}) ) {
 	process_config($config{config}, \%config)
@@ -233,7 +248,7 @@ if($config{features}){
 	}
 }
 
-run_peak_matrix(\%prefixStep2Files, \@submittedStep2Jobs, \%config);
+run_peak_matrix('CALCULATE_INPUTFILES', \%prefixStep2Files, \@submittedStep2Jobs, \%config);
 		
 close LOG or die "Could not close 'chicagoLog.txt' : $!";
 
@@ -249,18 +264,42 @@ exit (0);
 	
 #Create Peak matrix	
 sub run_peak_matrix{
-	my ($prefixStep2Files_hash_ref, $hold_jid_ref, $config_hash_ref) = @_;
+	my $options = $_[0];
 	
 	#Create a peak matrix file for the R script to read
     my ($conf_fh, $conf_filename) = tempfile( 'peak_matrix_input.XXXXXXXX', SUFFIX => '.txt' );
+	my $hold_jid_string = '';
+	my $email = '';
 	
-
-	foreach my $prefix ( keys %{ $prefixStep2Files_hash_ref } ){
-		my $step2_outfile = 'res_' . $prefix . '_chicago2/data/' . "$prefix.RDa";
-		print $conf_fh "$prefix\t$step2_outfile\n"; 
 	
+	if($options eq 'MATRIX_ONLY'){
+		my @files = @_;
+		shift @files;    #Remove options variable
+		my $email = shift @files;  
+	
+		foreach my $file (@files){
+			my $name = $file; 
+			$name =~ s/\.RDa//;
+			print $conf_fh "$name\t$file\n"; 
+		}
+	
+	}elsif($options eq 'CALCULATE_INPUTFILES'){
+	
+		my (undef, $prefixStep2Files_hash_ref, $hold_jid_ref, $config_hash_ref) = @_;
+			
+		foreach my $prefix ( keys %{ $prefixStep2Files_hash_ref } ){
+			my $step2_outfile = 'res_' . $prefix . '_chicago2/data/' . "$prefix.RDa";
+			print $conf_fh "$prefix\t$step2_outfile\n"; 
+		
+		}
+		
+		$hold_jid_string = join(',', @$hold_jid_ref);
+		$hold_jid_string = '-hold_jid ' . $hold_jid_string;
+		$email = $$config_hash_ref{email};
+		
+	}else{
+		die "Subroutine 'run_peak_matrix' passed invalid options parameter: '$options'\n";
 	}
-	
 	close $conf_fh or die "Could not close '$conf_filename' : $!";
 	
 	
@@ -268,14 +307,13 @@ sub run_peak_matrix{
 	my $random_string = generateRandomString(6);
 	my $outfile = "Peak_Matrix.CHiCAGO.$random_string";
 	my $jobname = $outfile;
-	my $hold_jid_string = join(',', @$hold_jid_ref);
+
 	
 	my $command = "Rscript $Bin/chicagoTools/makePeakMatrix.R --twopass $conf_filename $outfile";
-	my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l -l h_vmem=200G -o $jobname.out -j y -N $jobname $$config_hash_ref{email} $hold_jid_string";	
+	my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=200G -o $jobname.out -j y -N $jobname $email $hold_jid_string";	
 	print LOG "$clusterCommand\n";
 	!system($clusterCommand) or die "Could not generate Peak Matrix: '$clusterCommand'\n";
-	unlink $conf_filename or warn "Could not delete $conf_filename\n";
-
+	#unlink $conf_filename or warn "Could not delete $conf_filename\n";   - Don't delete this file, else file will be deleted before cluster job starts
 }	
 	
 
@@ -531,6 +569,66 @@ sub hasval {
 
 
 
+
+
+##########################################
+#Subroutine: check_files_exist
+#Takes a reference to an array containing paths to filenames and verifies they exist
+#Warns of files that do no exit. Returns 1 if all files exist but 0 if this is not
+#the case.
+#
+#Also, takes a second argument:
+#$_[1] should be 'EXISTS' or 'NOT_EXISTS'
+#If 'NOT_EXISTS' warns if file already exists.  Returns '1' if none of the
+#files exists and '0' if one or multiple files already exist
+sub check_files_exist {
+    my $files      = $_[0];    #Reference to array
+    my $check_for  = $_[1];
+    my $all_exist  = 1;
+    my $not_exists = 1;
+
+    if ( $check_for eq 'EXISTS' ) {
+        foreach my $file (@$files) {
+            unless ( -e $file ) {
+                warn "File '$file' does not exist\n";
+                $all_exist = 0;
+            }
+        }
+    } elsif ( $check_for eq 'NOT_EXISTS' ) {
+        foreach my $file (@$files) {
+            if ( -e $file ) {
+                warn "File '$file' already exists\n";
+                $not_exists = 0;
+            }
+        }
+    } else {
+        die "Subroutine 'check_files_exist' requires argument 'EXISTS' or 'NOT_EXISTS'.\n";
+    }
+
+    if ( $check_for eq 'EXISTS' ) {
+        return $all_exist;
+    } else {
+        return $not_exists;
+    }
+}
+
+
+##########################################
+#Subroutine: deduplicate_array
+#Takes and array and returns the array with duplicates removed
+#(keeping 1 copy of each unique entry).
+sub deduplicate_array {
+    my @array = @_;
+    my %uniques;
+
+    foreach (@array) {
+        $uniques{$_} = '';
+    }
+    my @uniques_array = keys %uniques;
+    return @uniques_array;
+}
+
+
 __DATA__
 
 The chicago Perl script controls the other programs in the CHiCAGO pipeline
@@ -545,11 +643,11 @@ TODO
 
 COMMAND LINE OPTIONS
 
---config              Specify the configuration file
---features       Process the features enrichment plots only
---help	              Print program help and exit
---hold_jid            Place jobs on hold until specified cluster jobs have completed
---version             Print the program version and exit
+--config              	Specify the configuration file
+--features       		Process the features enrichment plots only
+--help	              	Print program help and exit
+--hold_jid            	Place jobs on hold until specified cluster jobs have completed
+--version             	Print the program version and exit
 
 
 
