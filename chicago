@@ -6,8 +6,12 @@ use File::Basename;
 use Getopt::Long;
 use FindBin '$Bin';
 use lib $Bin;
+use File::Temp qw/ tempfile tempdir /;
 
 use Data::Dumper;
+
+
+
 
 
 ##########################################################
@@ -32,7 +36,7 @@ my $config_result = GetOptions(    #Stores parameters
 	"help"   => \$config{help},
 	"hold_jid=s" => \$config{hold_jid},
 	"config=s"   => \$config{config},
-     "settings=s" => \$config{settings}
+    "settings=s" => \$config{settings}
 	);
 
 die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
@@ -51,14 +55,11 @@ if( hasval($config{config}) ) {
 	process_config($config{config}, \%config)
 }
 
-#print Dumper \%config;
 
 check_parameters();
 processInputfile();
   
-  
- print Dumper \%config;
-  
+    
 #Create a log file
 open(LOG, '>', 'chicagoLog.txt') or die "Could not write to 'chicagoLog.txt' : $!";
 	
@@ -103,8 +104,6 @@ foreach my $array (@inputData){
 	$prefixStep2Features{$prefixStep2} = $features;
 }
 
-#print Dumper \%prefix2Files;
-#print Dumper \%prefix2Features;
 
 #Send step2 jobs to the cluster
 my @submittedStep2Jobs;   #Stores the names of jobs submitted to the cluster in order. Even sent to node 0, odd to node 1
@@ -166,13 +165,9 @@ if($config{features}){
 					
 			print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
 			!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
-
 	}
 	
-	
-
 }else{
-
 
 	foreach my $prefixStep2 (keys %prefixStep2Files){
 		my $features = $prefixStep2Features{$prefixStep2};
@@ -212,9 +207,7 @@ if($config{features}){
 		}
 		print "Requesting memory allocation: $memory_allocation\n";
 		
-		
 		my $command;
-
 		my $params = "--output-dir $outdir --en-feat-folder $featuresFolder --en-feat-list $features --design-dir $config{digestfolder} --export-format seqMonk,washU_text";
 		if (hasval($config{settings})){
 			$params .= " --settings-file $config{settings}";
@@ -237,16 +230,14 @@ if($config{features}){
 					
 			print LOG "CHiCAGO_Step2:\t$clusterCommand\n";	
 			!system("$clusterCommand") or die "Could not run '$clusterCommand' : $!";	
-
 	}
-
 }
+
+run_peak_matrix(\%prefixStep2Files, \@submittedStep2Jobs, \%config);
 		
 close LOG or die "Could not close 'chicagoLog.txt' : $!";
 
 print "Processing complete.\n";	
-
-#print Dumper \%config;
 	
 exit (0);
 
@@ -255,6 +246,39 @@ exit (0);
 ###########################################################################
 #Subroutines
 ############################################################################
+	
+#Create Peak matrix	
+sub run_peak_matrix{
+	my ($prefixStep2Files_hash_ref, $hold_jid_ref, $config_hash_ref) = @_;
+	
+	#Create a peak matrix file for the R script to read
+    my ($conf_fh, $conf_filename) = tempfile( 'peak_matrix_input.XXXXXXXX', SUFFIX => '.txt' );
+	
+
+	foreach my $prefix ( keys %{ $prefixStep2Files_hash_ref } ){
+		my $step2_outfile = 'res_' . $prefix . '_chicago2/data/' . "$prefix.RDa";
+		print $conf_fh "$prefix\t$step2_outfile\n"; 
+	
+	}
+	
+	close $conf_fh or die "Could not close '$conf_filename' : $!";
+	
+	
+	#Send the job to the cluster
+	my $random_string = generateRandomString(6);
+	my $outfile = "Peak_Matrix.CHiCAGO.$random_string";
+	my $jobname = $outfile;
+	my $hold_jid_string = join(',', @$hold_jid_ref);
+	
+	my $command = "Rscript $Bin/chicagoTools/makePeakMatrix.R --twopass $conf_filename $outfile";
+	my $clusterCommand = "echo \"$command\" | qsub -clear -b n -V -cwd -l -l h_vmem=200G -o $jobname.out -j y -N $jobname $$config_hash_ref{email} $hold_jid_string";	
+	print LOG "$clusterCommand\n";
+	!system($clusterCommand) or die "Could not generate Peak Matrix: '$clusterCommand'\n";
+	unlink $conf_filename or warn "Could not delete $conf_filename\n";
+
+}	
+	
+
 
 #Takes the prefix for Step 1 and calculates the path and name of the
 #file produced by CHiCAGO step1
