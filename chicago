@@ -11,9 +11,6 @@ use File::Temp qw/ tempfile tempdir /;
 use Data::Dumper;
 
 
-
-
-
 ##########################################################
 #Get user-supplied parameters
 #Option variables
@@ -29,6 +26,11 @@ my %config = (
 	matrix => ''
 );
 
+if ( !@ARGV ) {    #No argumnets, no files
+    print while (<DATA>);
+    exit(0);
+}
+
 my $config_result = GetOptions(    #Stores parameters
 	"digestfolder=s" => \$config{digestfolder},
 	"features" =>	\$config{features},
@@ -41,7 +43,9 @@ my $config_result = GetOptions(    #Stores parameters
     "matrix" => \$config{matrix} 
 	);
 
-die "Command line options need to be in the correct format (chicago -help for more details).\n" unless ($config_result);
+die "Command line options need to be in the correct format (chicago --help for more details).\n" unless ($config_result);
+
+
 
 my $baits;
 my $digest;
@@ -52,6 +56,10 @@ if ( $config{help} ) {
     print while (<DATA>);
     exit(0);
 }
+
+
+
+
 
 if( hasval($config{matrix}) ){    #Running the peak matrix only
 	die "Please specify input files for generating a peak martix.\n" unless @ARGV;
@@ -631,26 +639,75 @@ sub deduplicate_array {
 
 __DATA__
 
-The chicago Perl script controls the other programs in the CHiCAGO pipeline
+CHiCAGO Perl script controls the other programs in the CHiCAGO pipeline when using
+The Babraham Institute Computing Cluster
 
 SYNOPSIS
 
 CHiCAGO [OPTIONS]... [Configuration FILE]...
+CHICAGO [OPTIONS] --matrix [CHiCAGO output file for creating Peak Matrix]
 
 FUNCTION
 
-TODO
+1) Creating the input List File
+To run the pipeline create a tab-delimited List File, whose contents has the format:
+Input_File     Step1_Prefix    Step2_Prefix    Features_File
+
+The Input_File will either be a 1) HiCUP output BAM file or 2) a CHiCAGO Step1 output
+file (*.chinput).
+
+Output from CHiCAGO Step1 will be written to a folder named Step1_Prefix, which should 
+be specified by the user.
+
+Output from CHiCAGO Step2 will be written to a folder inluding the name Step1_Prefix.
+This also should be specified by the user.
+
+Provide the list to the Features_File. This file is itself a tab-delimited list of
+all the features files e.g.:
+DNase          C001UY46.DNase.hotspot_v3.20130415.bed
+H3K27ac        C000S5H2.H3K27ac.ppqt_macs2_v2.20130415.bed
+H3K27me3       C001UYH2.H3K27me3.ppqt_macs2_broad_v2.20130415.bed
+H3K36me3       C000S5H2.H3K36me3.ppqt_macs2_broad_v2.20130415.bed
+H3K4me1        C000S5H2.H3K4me1.ppqt_macs2_broad_v2.20130415.bed
+H3K4me3        C000S5H2.H3K4me3.ppqt_macs2_v2.20130415.bed
+hyper_meth     C000S5A1bs.hyper_meth.bs_call.20130415.bed
+
+
+2) Create the configuration file
+This should contain 3 items: i) Path to the Digest Folder that contains the *.baitmap, 
+.baitmap_4col.txt (generated on the fly?), *.rmap, nbaitsperbin.nbpb, nperbin.npb and proxOEfile.poe
+files); ii) address to send emails from Cluster and iii) path to the List File generated in Step1. 
+
+Example content of the configuration file:
+DigestFolder: /bi/home/wingetts/CHiCAGO/Digest_Mouse_NCBIM37_HindIII_None_reference_files
+Email: steven.wingett@babraham.ac.uk
+Input: hiup_paper_chicago_list.txt
+
+3) Run CHiCAGO
+chicago --config chicago.conf
+
+4) Variations
+i) Running Step1 only
+Leave the Step2 and features columns blank (the input should be a BAM file)
+
+
+ii) Running Step2 only
+Leave the Step1 column blank (the input should be a *.chinput file.)
+
+iii) Creating a features overlap plot only
+chicago --config chicago.conf --features
+ 
+iv) Creating a Peak Matrix only
+chicago --matrix --email [Optional email address] [CHiCAGO output files to process]
 
 COMMAND LINE OPTIONS
 
 --config              	Specify the configuration file
---features       		Process the features enrichment plots only
+--email                 Specify address to send email from Cluster (particularly
+                        useful with --matrix option, which does not all this to be
+                        specified using a configuration file						
+--features              Process the features enrichment plots only
 --help	              	Print program help and exit
 --hold_jid            	Place jobs on hold until specified cluster jobs have completed
+--matrix                Process CHiCAGO output files to generate a Peak Matrix file
 --version             	Print the program version and exit
-
-
-
-
-
-
