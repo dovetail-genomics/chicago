@@ -287,7 +287,7 @@ sub run_peak_matrix{
 	
 		foreach my $file (@files){
 			my $name = $file; 
-			$name =~ s/\.RDa//;
+			$name =~ s/\.Rds//;
 			print $conf_fh "$name\t$file\n"; 
 		}
 	
@@ -296,7 +296,7 @@ sub run_peak_matrix{
 		my (undef, $prefixStep2Files_hash_ref, $hold_jid_ref, $config_hash_ref) = @_;
 			
 		foreach my $prefix ( keys %{ $prefixStep2Files_hash_ref } ){
-			my $step2_outfile = 'res_' . $prefix . '_chicago2/data/' . "$prefix.RDa";
+			my $step2_outfile = 'res_' . $prefix . '_chicago2/data/' . "$prefix.Rds";
 			print $conf_fh "$prefix\t$step2_outfile\n"; 
 		
 		}
