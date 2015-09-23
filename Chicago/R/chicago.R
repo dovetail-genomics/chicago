@@ -1726,7 +1726,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
 
   for(i in 1:n){
 
-    this = cd@x[baitID==baits[i]]
+    this = cd@x[J(baits[i])]
     
     
     
