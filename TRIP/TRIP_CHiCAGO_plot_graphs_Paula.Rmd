@@ -1,0 +1,59 @@
+---
+title: Comparing TRIP with CHiCAGO peaks
+output: html_document
+---
+
+```{r}
+#import_data_frame
+TRIP_S1_combined<-read.delim(file="TRIP_S1_CHiCAGO_combined_new.txt",header=T,quote="")
+
+#order factor levels for distance bins
+TRIP_S1_combined$dist.bin<-factor(TRIP_S1_combined$dist.bin, levels = c("(0,2e+04]","(2e+04,4e+04]","(4e+04,6e+04]","(6e+04,8e+04]","(8e+04,1e+05]","(1e+05,1.5e+06]"))
+
+#plot graphs
+#interacting vs non interacting
+boxplot(log2normalised_expression~interacting,TRIP_S1_combined[(TRIP_S1_combined$captured==F),],
+        names=c("not_interacting","interacting"),
+        outline=F)
+t.test(log2normalised_expression~interacting,TRIP_S1_combined[(TRIP_S1_combined$captured==F),])
+wilcox.test(log2normalised_expression~interacting,TRIP_S1_combined[(TRIP_S1_combined$captured==F),])
+
+#singly interacting vs multiply interacting
+boxplot(log2normalised_expression~multiply_interacting,TRIP_S1_combined[(TRIP_S1_combined$captured==F & TRIP_S1_combined$interacting==T),],
+        names=c("singly_interacting","multiply_interacting"),
+        outline=F)
+t.test(log2normalised_expression~multiply_interacting,TRIP_S1_combined[(TRIP_S1_combined$captured==F & TRIP_S1_combined$interacting==T),])
+wilcox.test(log2normalised_expression~multiply_interacting,TRIP_S1_combined[(TRIP_S1_combined$captured==F & TRIP_S1_combined$interacting==T),])
+
+#interacting vs non interacting by distance 20kb bins up to 100kb, then >100kb combined
+default<-par()$mar
+par(mar=default+c(3,0,0,0))
+boxplot(log2normalised_expression~interacting+dist.bin,TRIP_S1_combined[(TRIP_S1_combined$captured==F),],
+names=c("0_20(-)","0_20(+)","20_40(-)","20_40(+)","40_60(-)","40_60(+)","60_80(-)","60_80(+)","80_100(-)","80_100(+)",">100(-)",">100(+)"),
+las=2, col=c("green","blue"),
+#col=colours()[c(382,498)],
+ylim=c(-8,8),ylab="log2 Normalised Read Counts", xlab="",
+outline=F)
+mtext("Distance bins between promoter and other-end",side=1,line = 7)
+library(data.table)
+setDT(TRIP_S1_combined)
+mInt <- TRIP_S1_combined[(interacting)][,median(log2normalised_expression),by=dist.bin]
+mInt[,ord.dist.bin := as.numeric(dist.bin)*2]
+abline(lm(V1~ord.dist.bin,data=mInt),col="darkblue",
+       #col=colours()[94],
+       lwd=3,lty=2)
+mnInt <- TRIP_S1_combined[!(interacting)][,median(log2normalised_expression),by=dist.bin]
+mnInt[,ord.dist.bin := as.numeric(dist.bin)*2-1]
+abline(lm(V1~ord.dist.bin,data=mnInt),col=c("darkgreen"),
+       #col=colours()[414],
+       lwd=3,lty=2)
+legend("topright",pch=c(15,NA,15,NA),lty=c(NA,2,NA,2),col=c("green","darkgreen","blue","darkblue"),
+       #col = colours()[c(382,414,498,94)],
+legend = c("non-interacting (-)","regression line (-)","interacting (+)","regression line (+)"),title="HindIII fragments:")
+
+
+# Regression
+
+summary(lm(log2normalised_expression~distance_to_nearest_bait+interacting, data=TRIP_S1_combined))
+
+```
