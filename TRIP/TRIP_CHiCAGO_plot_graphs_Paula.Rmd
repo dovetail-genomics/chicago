@@ -54,6 +54,11 @@ legend = c("non-interacting (-)","regression line (-)","interacting (+)","regres
 
 # Regression
 
-summary(lm(log2normalised_expression~distance_to_nearest_bait+interacting, data=TRIP_S1_combined))
+model <- lm(log2normalised_expression~distance_to_nearest_bait+interacting, data=TRIP_S1_combined)
+summary(model)
+
+# Odds ratio
+exp(model$coefficients)
+
 
 ```
