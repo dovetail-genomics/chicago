@@ -10,3 +10,4 @@ License: Artistic-2.0
 Depends: R (>= 3.2), Chicago
 Suggests: testthat
 LazyData: true
+biocViews: ExperimentData, Epigenetics, HiC, SequencingData, Homo_sapiens_Data, Mus_musculus_Data, StemCell
