@@ -1,6 +1,5 @@
 \name{chicagoPipeline}
 \alias{chicagoPipeline}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 CHiCAGO pipeline function
 }
@@ -10,7 +9,6 @@ This function runs data through the CHiCAGO pipeline.
 \usage{
 chicagoPipeline(cd, outprefix = NULL, printMemory = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{outprefix}{\code{NULL}, or a character string. If \code{NULL}, diagnostic plots are outputted to the current plotting device. If a character string, then pdfs will be generated for a series of diagnostic plots, in files of form "[outprefix]_[plotname].pdf". For example, \code{outprefix="experiment1"} leads to files experiment1_oeNorm.pdf, etc...}
@@ -41,14 +39,9 @@ It does not export the output. Use \code{\link{exportResults}} for this.
 \value{
 An object of class \code{chicagoData}.
 }
-%\references{
-%% ~put references to the literature/web site here ~
-%}
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 \code{\link{exportResults}}
@@ -100,7 +93,3 @@ function (cd, outprefix, printMemory = FALSE)
     cd
   }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-%\keyword{ ~kwd1 }
-%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

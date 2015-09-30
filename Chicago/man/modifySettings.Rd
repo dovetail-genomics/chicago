@@ -1,6 +1,5 @@
 \name{modifySettings}
 \alias{modifySettings}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Modify Settings
 }
@@ -10,7 +9,6 @@ Modify the settings in a \code{chicagoData} object.
 \usage{
 modifySettings(cd, designDir=NULL, settings=list(), settingsFile=NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{designDir}{The new location of the design directory, e.g "~/resources/path" or NULL if not modified.}
@@ -26,7 +24,6 @@ An object of class \code{chicagoData}.
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 \code{\link{setExperiment}}, \code{\link{defaultSettings}}
@@ -43,7 +40,3 @@ print(cd@settings$maxLBrownEst)
 cd <- modifySettings(cd, settings=list(maxLBrownEst = 3000000L))
 print(cd@settings$maxLBrownEst)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

@@ -1,6 +1,5 @@
 \name{defaultSettings}
 \alias{defaultSettings}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Default CHiCAGO settings
 }
@@ -10,13 +9,6 @@ A function that gives the default settings used for a CHiCAGO experiment.
 \usage{
 defaultSettings()
 }
-%- maybe also 'usage' for other objects documented here.
-%\arguments{
-%  \item{designDir}{A directory containing the digest information (see below).}
-%}
-%\details{
-
-%}
 \value{
 A list of the following settings:
 
@@ -54,8 +46,6 @@ A list of the following settings:
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{setExperiment}}, \code{\link{modifySettings}}
 }
@@ -63,7 +53,3 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 s <- defaultSettings()
 print(s)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

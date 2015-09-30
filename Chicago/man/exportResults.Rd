@@ -12,7 +12,6 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
         format = c("seqMonk", "interBed", "washU_text"),
         order = c("position", "score")[1], removeMT=TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{outfileprefix}{
@@ -55,8 +54,6 @@ NULL
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{chicagoPipeline}}
 }
@@ -72,7 +69,3 @@ tempDirectory <- tempdir()
 print(tempDirectory)
 exportResults(cdUnitTest, outfileprefix = file.path(tempDirectory, "unitTestOutput"))
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

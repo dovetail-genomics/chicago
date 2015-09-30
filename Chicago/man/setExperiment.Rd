@@ -1,6 +1,5 @@
 \name{setExperiment}
 \alias{setExperiment}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Set Experiment
 }
@@ -11,7 +10,6 @@ Creates a template CHiCAGO experiment object. This should be the first function 
 setExperiment(designDir = "", settings = list(),
       settingsFile = NULL, def.settings=defaultSettings())
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{designDir}{
   The location of the design directory, e.g "~/resources/path". (Should not end with a slash.)
@@ -36,8 +34,6 @@ An object of class \code{chicagoData}.
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{defaultSettings}}
 }
@@ -46,7 +42,3 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 
   cd <- setExperiment(designDir)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

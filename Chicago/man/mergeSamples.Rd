@@ -1,6 +1,5 @@
 \name{mergeSamples}
 \alias{mergeSamples}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Merge samples together.
 }
@@ -11,7 +10,6 @@ Merge a number of \code{chicagoData} objects together, summarising their counts 
 mergeSamples(cdl, normalise = TRUE, NcolOut = "N",
       NcolNormPrefix = "NNorm", mergeMethod = c("weightedMean", "mean")[1], repNormCounts = (mergeMethod=="mean"))
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cdl}{A \code{list} of \code{chicagoData} objects.}
   \item{normalise}{
@@ -42,8 +40,6 @@ An object of class \code{chicagoData}, with a \code{@params$s_k} slot added repr
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{readAndMerge}}
 }
@@ -62,7 +58,3 @@ cdB <- readSample(files[2], cdB)
 
 cdMerged <- mergeSamples(list(cdA, cdB))
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
