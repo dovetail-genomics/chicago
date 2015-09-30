@@ -16,9 +16,6 @@ includes all cis read pairs for these two chromosomes and all trans read pairs b
 
 The package includes ChIP-seq data from the ENCODE consortium, also restricted to chr18 and chr19. (The ENCODE Project Consortium, 2012 "An Integrated Encyclopedia of DNA Elements in the Human Genome." Nature 489 (September): 57-74. Data accession numbers: Snyder lab GSM1003750, GSM1003756, GSM1003751; Ren lab GSM1000126, Hardison lab ENCFF001ZJO, ENCFF001ZQY)
 }
-\value{
-A \code{\link{chicagoData}} object.
-}
 \examples{
 data(smESC)
 ##modifications to smESC, ensuring it uses correct design directory
