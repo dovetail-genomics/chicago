@@ -46,3 +46,6 @@ Chicago is mainly developed and maintained by:
 We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk), Cambridge UK.
 
 More details (including the full credits) can be found at [regulatorygenomicsgroup.org/chicago](http://www.regulatorygenomicsgroup.org/chicago).
+
+A preprint presenting CHiCAGO is available on bioRxiv: 
+[biorxiv.org/content/early/2015/10/01/028068](http://biorxiv.org/content/early/2015/10/01/028068).
