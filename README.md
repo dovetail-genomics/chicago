@@ -1,6 +1,6 @@
 **CHiCAGO: Capture HiC Analysis of Genomic Organisation** 
 
-CHiCAGO is a set of tools for Capture HiC data analysis. A preprint describing the statistical algorithm behind Chicago interaction calling will be available in the next few weeks. 
+CHiCAGO is a set of tools for Capture HiC data analysis ([http://dx.doi.org/10.1101/028068](http://dx.doi.org/10.1101/028068)).
 
 This repository contains the following files:
 
@@ -48,5 +48,3 @@ Chicago is mainly developed and maintained by:
 We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgroup.org), [Babraham Institute](http://www.babraham.ac.uk), Cambridge UK.
 
 More details (including the full credits) can be found at [regulatorygenomicsgroup.org/chicago](http://www.regulatorygenomicsgroup.org/chicago).
-
-A preprint presenting CHiCAGO is available on bioRxiv: [http://dx.doi.org/10.1101/028068](http://dx.doi.org/10.1101/028068).
