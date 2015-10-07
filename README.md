@@ -1,6 +1,6 @@
 **CHiCAGO: Capture HiC Analysis of Genomic Organisation** 
 
-CHiCAGO is a set of tools for Capture HiC data analysis. A preprint describing the statistical algorithm behind CHiCAGO is available on bioRxiv: [http://dx.doi.org/10.1101/028068](http://dx.doi.org/10.1101/028068).
+CHiCAGO is a set of tools for Capture HiC data analysis. A preprint describing CHiCAGO's statistical methodology is available on bioRxiv: [http://dx.doi.org/10.1101/028068](http://dx.doi.org/10.1101/028068).
 
 This repository contains the following files:
 
