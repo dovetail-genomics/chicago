@@ -32,6 +32,8 @@ install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
 (This strategy downloads the repository multiple times. To avoid this, you can manually install Chicago's dependencies, then install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
+The R packages have also been submitted to Bioconductor, and installation using ```biocLite()``` will be available upon acceptance.
+
 If you encounter any problems, please [post an issue](https://bitbucket.org/chicagoTeam/chicago/issues) or email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 
 *Contact information*
@@ -47,5 +49,4 @@ We are based at the [Regulatory Genomics Group](http://www.regulatorygenomicsgro
 
 More details (including the full credits) can be found at [regulatorygenomicsgroup.org/chicago](http://www.regulatorygenomicsgroup.org/chicago).
 
-A preprint presenting CHiCAGO is available on bioRxiv: 
-[biorxiv.org/content/early/2015/10/01/028068](http://biorxiv.org/content/early/2015/10/01/028068).
+A preprint presenting CHiCAGO is available on bioRxiv: [http://dx.doi.org/10.1101/028068](http://dx.doi.org/10.1101/028068).
