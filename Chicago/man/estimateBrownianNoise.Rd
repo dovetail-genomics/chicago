@@ -1,6 +1,5 @@
 \name{estimateBrownianNoise}
 \alias{estimateBrownianNoise}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Estimate Brownian Noise
 }
@@ -10,24 +9,18 @@ Estimates the dispersion, and adds a a \code{Bmean} column giving the mean Brown
 \usage{
 estimateBrownianNoise(cd)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
 }
 \section{Warning}{
 The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
 \value{
 An object of class \code{chicagoData}.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 \code{\link{chicagoPipeline}}
@@ -45,6 +38,3 @@ cdUnitTest <- modifySettings(cd=cdUnitTest, settings=list(brownianNoise.subset=N
 
 cdUnitTest <- estimateBrownianNoise(cdUnitTest)
 }
-
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

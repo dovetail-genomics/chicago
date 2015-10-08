@@ -212,7 +212,7 @@ Next, we feed this information into the ``peakEnrichment4Features()`` function.
 As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (by default, the full distance range over which interactions are observed), and divides it into some number of bins. We must select the number of bins; here, we choose that number to ensure that the bin size is approximately 10kb. If the defaults are changed, a different number of bins is more appropriate. See ``?peakEnrichment4Features`` for more information.
 
 ```{r, message=FALSE, fig.width=12, fig.height=7}
-no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
+no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = TRUE)/1e4)
 
 enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
                                              no_bins=no_bins, sample_number=100)

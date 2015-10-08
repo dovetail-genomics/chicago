@@ -1,6 +1,5 @@
 \name{plotBaits}
 \alias{plotBaits}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Plot Baits
 }
@@ -14,7 +13,6 @@ plotBaits(cd, pcol = "score", Ncol = "N", n = 16, baits = NULL,
       maxD = 1e6, bgCol = "black", lev2Col = "blue", lev1Col = "red",
       bgPch = 1, lev1Pch = 20, lev2Pch = 20, ...)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{pcol}{
@@ -60,17 +58,12 @@ Plotting character for background points, and for points exceeding the two strin
 Additional arguments passed to \code{\link{plot}}
 }
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
 \value{
 Vector of the baitIDs plotted (useful if baitIDs were sampled randomly).
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
 data(cdUnitTest)
@@ -81,7 +74,3 @@ cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 
 plotBaits(cdUnitTest)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

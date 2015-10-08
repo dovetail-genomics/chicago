@@ -1,6 +1,5 @@
 \name{normaliseBaits}
 \alias{normaliseBaits}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Normalise Baits
 }
@@ -11,7 +10,6 @@ Calculate normalisation factors \code{s_j} for each bait.
 normaliseBaits(cd, normNcol = "NNb", shrink = FALSE,
       plot = TRUE, outfile = NULL, debug = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{normNcol}{
@@ -41,11 +39,6 @@ An object of class \code{chicagoData}.
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
 \examples{
 data(cdUnitTest)
 
@@ -56,7 +49,3 @@ cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 cdUnitTest <- normaliseBaits(cdUnitTest)
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

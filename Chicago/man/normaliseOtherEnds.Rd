@@ -1,6 +1,5 @@
 \name{normaliseOtherEnds}
 \alias{normaliseOtherEnds}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Normalise Other Ends
 }
@@ -10,7 +9,6 @@ Compute \code{s_i} normalisation factors for other ends, and normalised counts.
 \usage{
 normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{Ncol}{
@@ -37,11 +35,6 @@ An object of class \code{chicagoData}.
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
 \examples{
 ##FIXME: example can be run by loading data package if it is installed, once it exists
 
@@ -62,7 +55,3 @@ if("PCHiCdata" \%in\% rownames(installed.packages()))
 }
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
