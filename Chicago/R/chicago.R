@@ -1,3 +1,14 @@
+##This line prevents data.table syntax being flagged up as a NOTE in R CMD check
+##("no visible binding for global variable")
+utils::globalVariables(c("distSign", "isBait2bait", "otherEndID", "transLength",
+                         "distbin2", "V1", "reads", "distbin3", "udbin2", "iTempVar",
+                         "bin_reads", "otherEndID", "Bmean", "s_j", "s_i", "chr", "baitID", "ntotpb",
+                         "distbin", "binCol", "ntot", "geomean", "bbm","s_iv","shape","rate","shapefit",
+                         "ratefit","s_ivfilt", "J", "N", "refBinMean","tlb","tblb","baitChr",
+                         "otherEndChr","log.p","Tmean","log.w","log.q","score","otherEndLen","nperbait",
+                         "isAdjacent","isAllB2BProx", "samplefilename"))
+
+
 ifnotnull = function(var, res){ if(!is.null(var)){res}}
 
 locateFile = function(what, where, pattern){
