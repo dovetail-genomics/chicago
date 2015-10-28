@@ -1788,7 +1788,9 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   }
   if("washU_track" %in% format)
   {
-    library(Rsamtools)
+    if (!requireNamespace("Rsamtools", quietly = TRUE)) {
+      stop("Package Rsamtools required to export washU_track format.")
+    }
   }
 
   if (! order %in% c("position","score")){
@@ -1945,7 +1947,7 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
 
       Rsamtools::bgzip(paste0(outfileprefix,"_washU_track.txt"),
           dest=paste0(outfileprefix,"_washU_track.txt.gz"))
-      Rsamtools::tabix(paste0(outfileprefix,"_washU_track.txt.gz"))
+      Rsamtools::indexTabix(paste0(outfileprefix,"_washU_track.txt.gz"), format="bed")
 
       ###attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
 #      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
