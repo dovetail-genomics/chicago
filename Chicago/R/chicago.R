@@ -1786,6 +1786,11 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   if (!all(format %in% c("seqMonk","interBed", "washU_track", "washU_text"))){
     stop ("Format must be either seqMonk, interBed, washU_track or washU_text (or a vector containing several of these)\n")
   }
+  if("washU_track" %in% format)
+  {
+    library(Rsamtools)
+  }
+
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
   }
@@ -1937,18 +1942,22 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       })
       res = gsub(" ", "", res)
       writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
-      
-      ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
-      exitcode2 <- 1
-      if(exitcode1 == 0)
-      {
-        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
-      }
-      if(exitcode1 != 0 | exitcode2 != 0)
-      {
-        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
-      }
+
+      Rsamtools::bgzip(paste0(outfileprefix,"_washU_track.txt"),
+          dest=paste0(outfileprefix,"_washU_track.txt.gz"))
+      Rsamtools::tabix(paste0(outfileprefix,"_washU_track.txt.gz"))
+
+      ###attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
+#      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
+#      exitcode2 <- 1
+#      if(exitcode1 == 0)
+#      {
+#        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
+#      }
+#      if(exitcode1 != 0 | exitcode2 != 0)
+#      {
+#        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
+#      }
     }
   }
 }
