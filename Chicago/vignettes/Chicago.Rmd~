@@ -1,7 +1,5 @@
 ---
 title: "CHiCAGO Vignette"
-author: "Jonathan Cairns, Paula Freire-Pritchett, Mikhail Spivakov"
-date: 29th October, 2015
 VignetteIndexEntry: 
 output:
   BiocStyle::html_document:
@@ -23,13 +21,11 @@ BiocStyle::markdown()
 
 CHiCAGO is a method for detecting statistically significant interaction events in Capture HiC data. This vignette will walk you through a typical CHiCAGO analysis. 
 
-A typical Chicago job for two biological replicates of CHi-C data takes 2-3 h wall-clock time (including sample pre-processing from bam files) and uses 50G RAM.
-
 NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the *chicagoTools* README for more information.
 
-The statistical foundations of CHiCAGO will be presented in a separate paper - a preprint is currently available [@ChicagoPreprint]. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
+The statistical foundations of CHiCAGO will be presented in a separate paper, currently in preparation. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts of the real data sets (two chromosomes each) from published Promoter Capture HiC analyses in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] - note that both papers used a different interaction-calling algorithm and we are only reusing raw data from them. Do not use any of these sample input data for purposes other than training. 
+WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts of the real data sets (two chromosomes each) from published Promoter Capture HiC analyses in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] (note that both papers used a different interaction calling algorithm and we are only reusing raw data from them). Do not use any of these sample input data for purposes other than training. 
 
 In this vignette, we use the GM12878 data [@Mifsud2015]:
 
@@ -216,7 +212,7 @@ Next, we feed this information into the ``peakEnrichment4Features()`` function.
 As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (by default, the full distance range over which interactions are observed), and divides it into some number of bins. We must select the number of bins; here, we choose that number to ensure that the bin size is approximately 10kb. If the defaults are changed, a different number of bins is more appropriate. See ``?peakEnrichment4Features`` for more information.
 
 ```{r, message=FALSE, fig.width=12, fig.height=7}
-no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = TRUE)/1e4)
+no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
 
 enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
                                              no_bins=no_bins, sample_number=100)

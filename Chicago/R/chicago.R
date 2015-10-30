@@ -237,7 +237,14 @@ readSample = function(file, cd){
   
   message(paste("Reading", file))
   
-  x = fread(file)
+  ##check for comment line at beginning of file
+  testLine <- readLines(file, 1)
+  if(substr(testLine, 1, 1) == "#")
+  {
+    x = fread(file, skip = 1L)
+  }else{
+    x = fread(file)
+  }
   
   message("Processing input...")
   
@@ -1473,7 +1480,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 #          Amend either setting before running the analysis\n")
 #   }
 
-  npb = fread(s$nperbinfile)
+  npb = fread(s$nperbinfile, skip=1L)
   setnames(npb, names(npb)[1], "baitID")
   for(i in 2:ncol(npb)){
     setnames(npb, names(npb)[i], paste0("bin", i-1))    
@@ -1526,7 +1533,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   #          Amend either setting before running the analysis\n")
   #   }
   
-  nbpb = fread(s$nbaitsperbinfile)
+  nbpb = fread(s$nbaitsperbinfile, skip=1L)
   setnames(nbpb, names(nbpb)[1], "otherEndID")
   for(i in 2:ncol(nbpb)){
     setnames(nbpb, names(nbpb)[i], paste0("bin", i-1))    
@@ -1577,7 +1584,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   #     stop("Bait files used for generating the ProxOE file and defined here do not match. 
   #          Amend either setting before running the analysis\n")
   #   }
-  proxOE = fread(s$proxOEfile)
+  proxOE = fread(s$proxOEfile, skip=1L)
   setnames(proxOE, 1:3, c("baitID", "otherEndID", "dist"))
   proxOE
   }
