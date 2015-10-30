@@ -1,11 +1,13 @@
 Package: PCHiCdata
 Type: Package
 Title: Promoter Capture Hi-C data
-Version: 0.99.0
+Version: 0.99.1
 Date: 2015-05-22
 Author: Paula Freire-Pritchett, Jonathan Cairns, Steven Wingett, Mikhail Spivakov
 Maintainer: Paula Freire-Pritchett <paula.freire-pritchett@babraham.ac.uk>
-Description: Subsets of Promoter Capture Hi-C data conveniently packaged for Chicago users. Data includes interactions detected for chromosomes 20 and 21 in GM12878 cells and for chromosomes 18 and 19 in mESC.
+Description: Subsets of Promoter Capture Hi-C data conveniently packaged for 
+Chicago users. Data includes interactions detected for chromosomes 20 and 21 in 
+GM12878 cells and for chromosomes 18 and 19 in mESC.
 License: Artistic-2.0
 Depends: R (>= 3.2), Chicago
 Suggests: testthat, BiocStyle, knitr
