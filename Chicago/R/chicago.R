@@ -1966,20 +1966,103 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       Rsamtools::bgzip(paste0(outfileprefix,"_washU_track.txt"),
           dest=paste0(outfileprefix,"_washU_track.txt.gz"))
       Rsamtools::indexTabix(paste0(outfileprefix,"_washU_track.txt.gz"), format="bed")
-
-      ###attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-#      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
-#      exitcode2 <- 1
-#      if(exitcode1 == 0)
-#      {
-#        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
-#      }
-#      if(exitcode1 != 0 | exitcode2 != 0)
-#      {
-#        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
-#      }
     }
   }
+}
+
+exportToGI <- function(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                       order=c("position", "score")[1], removeMT=TRUE)
+{
+  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
+    stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
+  }
+
+  if (! order %in% c("position","score")){
+    stop ("Order must be either position (default) or score\n")
+  }
+  if (! removeMT %in% c(TRUE,FALSE)){
+    stop("removeMT must be TRUE or FALSE")
+  }
+  
+  message("Reading the restriction map file...")
+  rmap = fread(cd@settings$rmapfile)
+  setnames(rmap, "V1", "rChr")
+  setnames(rmap, "V2", "rStart")
+  setnames(rmap, "V3", "rEnd")
+  setnames(rmap, "V4", "otherEndID")
+  
+  message("Reading the bait map file...")
+  baitmap = fread(cd@settings$baitmapfile)
+  
+  setnames(baitmap, "V1", "baitChr")
+  setnames(baitmap, "V2", "baitStart")
+  setnames(baitmap, "V3", "baitEnd")
+  setnames(baitmap, cd@settings$baitmapFragIDcol, "baitID")
+  setnames(baitmap, cd@settings$baitmapGeneIDcol, "promID")
+  
+  message("Preparing the output table...")
+  
+  if (is.null(b2bcutoff)){
+    x = cd@x[ get(scoreCol)>=cutoff ]
+  }
+  else{
+    x = cd@x[ (isBait2bait==TRUE & get(scoreCol)>=b2bcutoff ) | 
+                ( isBait2bait==FALSE & get(scoreCol)>=cutoff )]
+  }
+  
+  x = x[, c("baitID", "otherEndID", "N", scoreCol), with=FALSE]
+  
+  setkey(x, otherEndID)
+  setkey(rmap, otherEndID)
+  
+  x = merge(x, rmap, by="otherEndID", allow.cartesian = TRUE)
+  setkey(x, baitID)
+  
+  setkey(baitmap, baitID)  
+  x = merge(x, baitmap, by="baitID", allow.cartesian = TRUE)
+  
+  # note that baitmapGeneIDcol has been renamed into "promID" above 
+  bm2 = baitmap[,c ("baitID", "promID"), with=FALSE]
+  
+  setDF(x)
+  setDF(bm2)
+  
+  # this way we can be sure that the new column will be called promID.y  
+  out = merge(x, bm2, by.x="otherEndID", by.y="baitID", all.x=TRUE, all.y=FALSE, sort=FALSE)
+  out[is.na(out$promID.y), "promID.y"] = "."
+  
+  out = out[,c("baitChr", "baitStart", "baitEnd", "baitID", "promID.x", "rChr", "rStart", "rEnd", "otherEndID", scoreCol, "N", "promID.y")]
+  
+  names(out) = c("bait_chr", "bait_start", "bait_end", "bait_ID", "bait_name", "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_ID", "score", "N_reads", "otherEnd_name")
+  
+  out$N_reads [ is.na(out$N_reads) ] = 0
+  out$score = round(out$score,2)
+  
+  if (order=="position"){
+    out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
+  }
+  if (order=="score"){
+    out = out[order(out$score, decreasing=TRUE), ]
+  }
+  
+  if(removeMT)
+  {
+    ##Remove mitochondrial DNA
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
+    {
+      out <- out[!selMT,]
+    }
+  }
+  
+  #out
+  
+  ##convert out to a GI
+  anchor.one = with(out, GenomicRanges::GRanges(as.character(bait_chr), IRanges::IRanges(start=bait_start, end=bait_end)))
+  anchor.two = with(out, GenomicRanges::GRanges(as.character(otherEnd_chr), IRanges::IRanges(start=otherEnd_start, end=otherEnd_end)))
+  GenomicInteractions::GenomicInteractions(anchor.one, anchor.two, experiment_name="CHiCAGO calls",
+                      counts=out$N_reads, baitName=out$bait_name, otherEndName=out$otherEnd_name,
+                      score= out$score)
 }
 
 copyCD <- function(cd)
