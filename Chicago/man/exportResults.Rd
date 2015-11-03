@@ -6,7 +6,7 @@
 Export Results
 }
 \description{
-Export the results from a \code{chicagoData} object to disk, or to a \code{\link[GenomeInteractions:GenomeInteractions]{GenomeInteractions}} object.
+Export the results from a \code{chicagoData} object to disk, or to a \code{\link[GenomicInteractions:GenomicInteractions]{GenomicInteractions}} object.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
@@ -53,7 +53,7 @@ If all else fails, and you need "washU_track" output, then you can manually perf
 \value{
 \code{exportResults()}: NULL.
 
-\code{exportToGI()}: a \code{\link{GenomeInteractions}} object 
+\code{exportToGI()}: a \code{\link[GenomicInteractions:GenomicInteractions]{GenomicInteractions}} object 
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett

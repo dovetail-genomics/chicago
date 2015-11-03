@@ -14,6 +14,8 @@ Promoter Capture data to be used as a toy example to run all steps of Chicago. T
 including both chromosomes 20 and 21 in order to minimize processing time and memory storage. Thus, this data set
 includes all cis read pairs for these two chromosomes and all trans read pairs between them.
 
+The hg19 genome was used.
+
 The package includes ChIP-seq data from the ENCODE consortium, also restricted to chr20 and chr21. (The ENCODE Project Consortium, 2012 "An Integrated Encyclopedia of DNA Elements in the Human Genome." Nature 489 (September): 57-74. Data accession numbers: Bernstein lab GSM733752, GSM733772, GSM733708, GSM733664, GSM733771, GSM733758)
 }
 \value{

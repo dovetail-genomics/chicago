@@ -9,6 +9,6 @@ License: Artistic-2.0
 Depends: R (>= 3.2), data.table
 Imports: matrixStats, MASS, Hmisc, Delaporte, methods
 Suggests: argparser, BiocStyle, knitr, rmarkdown, PCHiCdata, testthat, Rsamtools,
-  GenomicInteractions, GenomicRanges, IRanges
+  GenomicInteractions, GenomicRanges, IRanges, AnnotationHub
 VignetteBuilder: knitr
 biocViews: Epigenetics, HiC, Sequencing, Software

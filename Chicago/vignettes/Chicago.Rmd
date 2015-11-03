@@ -119,6 +119,8 @@ cd <- chicagoPipeline(cd)
 
 ## Output files
 
+Two main output methods are provided. Here, we discuss the first: exporting to disk. However, it is also possible to export to a GenomeInteractions object, as described in [Further downstream analysis](#further-downstream-analysis).
+
 You can export the results to disk, using ``exportResults()``. (If you use *runChicago.R*, the files appear in ./\<results-folder\>/data). By default, the function outputs three different output file formats:
 
 ```{r}
@@ -228,6 +230,36 @@ The information displayed in the plot is also returned in tabular form:
 
 ```{r}
 enrichmentResults
+```
+
+## Further downstream analysis
+
+We can perform further downstream analysis in R or Bioconductor, using functionality from the `r Biocpkg("GenomicInteractions")` package. First, we export the significant interactions into a GenomicInteractions object:
+
+```{r}
+library(GenomicInteractions)
+library(GenomicRanges)
+gi <- exportToGI(cd)
+```
+
+From here, we can use standard Bioconductor functionality. In the following example, we use `r Biocpkg("AnnotationHub")` to fetch a relevant enhancer mark track (H3K4me1) from the ENCODE project, then find which other ends overlap with the enhancer mark.
+
+```{r}
+otherEnds <- anchorTwo(gi)
+#levels(seqnames(otherEnds)) <- c("chr20","chr21")
+renameSeqlevels(otherEnds, c("chr20","chr21"))
+
+library(AnnotationHub)
+ah <- AnnotationHub()
+hs <- query(ah, c("GRanges", "EncodeDCC", "Homo sapiens", "H3k4me1"))
+enhancerTrack <- hs[["AH23254"]]
+
+findOverlaps(otherEnds, enhancerTrack)
+```
+
+Note that the annotation's genome version should match that of the promoter capture data, namely hg19:
+```{r}
+hs["AH23254"]$genome
 ```
 
 ## The chicagoData object {#cd}
