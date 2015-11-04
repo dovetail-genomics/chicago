@@ -17,7 +17,7 @@ Logical - if \code{TRUE}, then output a diagnostic plot.
   \item{outfile}{\code{NULL}, or a character string. If \code{NULL}, the diagnostic plot is outputted to the current plotting device. If a character string, e.g. \code{outfile="tech.pdf"}, then the plot will be outputted to that file.}
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(cd)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \value{
 An object of class \code{chicagoData}, with additional columns "tlb", "tblb", "Tmean".

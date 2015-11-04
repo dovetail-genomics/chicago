@@ -34,7 +34,7 @@ Report normalised counts for each replicate (by dividing them by s_k) in the <Nc
 Raw per-sample counts will be stored in the N.<sampleNo> column (N.1, N.2, etc.)
 }
 \value{
-An object of class \code{chicagoData}, with a \code{@params$s_k} slot added representing the per-sample scaling factors used in normalisation.
+An object of class \code{chicagoData}, with a \code{params(cd)$s_k} slot added representing the per-sample scaling factors used in normalisation.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett

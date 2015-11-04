@@ -21,7 +21,7 @@ exportToGI(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
   A character string that forms the prefix for each output file.
 }
   \item{scoreCol}{
-  The column of \code{cd@x} that contains the score.
+  The column of \code{intData(cd)} that contains the score.
 }
   \item{cutoff}{
   The score cutoff.

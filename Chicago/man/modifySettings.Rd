@@ -35,8 +35,8 @@ cd <- setExperiment(designDir)
 
 ##Suppose I want to increase the zone in which Brownian noise is assumed to dominate
 ##(by default, 1500000):
-print(cd@settings$maxLBrownEst)
+print(settings(cd)$maxLBrownEst)
 
 cd <- modifySettings(cd, settings=list(maxLBrownEst = 3000000L))
-print(cd@settings$maxLBrownEst)
+print(settings(cd)$maxLBrownEst)
 }

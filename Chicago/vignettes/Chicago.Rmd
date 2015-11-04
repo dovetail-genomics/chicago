@@ -218,7 +218,7 @@ Next, we feed this information into the ``peakEnrichment4Features()`` function.
 As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (by default, the full distance range over which interactions are observed), and divides it into some number of bins. We must select the number of bins; here, we choose that number to ensure that the bin size is approximately 10kb. If the defaults are changed, a different number of bins is more appropriate. See ``?peakEnrichment4Features`` for more information.
 
 ```{r, message=FALSE, fig.width=12, fig.height=7}
-no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = TRUE)/1e4)
+no_bins <- ceiling(max(abs(intData(cd)$distSign), na.rm = TRUE)/1e4)
 
 enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
                                              no_bins=no_bins, sample_number=100)
@@ -266,13 +266,13 @@ hs["AH23254"]$genome
 
 In the above workflows, *cd* is a *chicagoData* object. It contains three elements:
 
-* ``cd@x`` is a `r CRANpkg("data.table")` (note: not a *data.frame*) that contains information about fragment pairs.
-* ``cd@settings`` is a list of settings, usually set with the setExperiment() function.
-* ``cd@params`` is a list of parameters. This list is populated as the pipeline runs, and CHiCAGO estimates them in turn.
+* ``intData(cd)`` is a `r CRANpkg("data.table")` (note: not a *data.frame*) that contains information about fragment pairs.
+* ``settings(cd)`` is a list of settings, usually set with the setExperiment() function.
+* ``params(cd)`` is a list of parameters. This list is populated as the pipeline runs, and CHiCAGO estimates them in turn.
 
-A closer look at ``cd@x``:
+A closer look at ``intData(cd)``:
 ```{r}
-head(cd@x, 2)
+head(intData(cd), 2)
 ```
 
 Columns:
@@ -298,7 +298,7 @@ Columns:
 * log.q: weighted p-value, on log-scale.
 * score: Final CHiCAGO score.
 
-**WARNING:** Many functions in CHiCAGO update ``cd@x`` by reference, which means that ``cd@x`` can change even when you do not explicitly assign to it.
+**WARNING:** Many functions in CHiCAGO update ``intData(cd)`` by reference, which means that ``intData(cd)`` can change even when you do not explicitly assign to it.
 To avoid this behaviour, copy the *chicagoData* object first:
 
 ```{r}

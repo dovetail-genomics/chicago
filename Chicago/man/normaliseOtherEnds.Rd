@@ -12,7 +12,7 @@ normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = 
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{Ncol}{
-The name of an input column in \code{cd@x} that contains counts normalised by bait (i.e. it is output from \code{\link{normaliseBaits}}.
+The name of an input column in \code{intData(cd)} that contains counts normalised by bait (i.e. it is output from \code{\link{normaliseBaits}}.
 }
   \item{normNcol}{
 The name of an output column that will contain counts normalised by other ends (in addition to any normalisation already performed on the \code{Ncol} column). Useful for plotting.
@@ -23,10 +23,10 @@ If \code{TRUE}, output a diagnostic plot.
   \item{outfile}{\code{NULL}, or a character string. If \code{NULL}, the diagnostic plot is outputted to the current plotting device. If a character string, e.g. \code{outfile="tech.pdf"}, then the plot will be outputted to that file.}
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(cd)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \details{
-A \code{chicagoData} object: \code{cd@x} gains new columns \code{s_i}, and normalised output \code{NNboe} (unless the \code{normNcol} parameter is altered).
+A \code{chicagoData} object: \code{intData(cd)} gains new columns \code{s_i}, and normalised output \code{NNboe} (unless the \code{normNcol} parameter is altered).
 }
 \value{
 An object of class \code{chicagoData}.
