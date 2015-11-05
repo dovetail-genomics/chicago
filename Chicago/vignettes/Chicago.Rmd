@@ -1,7 +1,7 @@
 ---
 title: "CHiCAGO Vignette"
 author: "Jonathan Cairns, Paula Freire-Pritchett, Mikhail Spivakov"
-date: 29th October, 2015
+date: 5th November, 2015
 VignetteIndexEntry: 
 output:
   BiocStyle::html_document:
@@ -236,7 +236,7 @@ enrichmentResults
 
 We can perform further downstream analysis in R or Bioconductor, using functionality from the `r Biocpkg("GenomicInteractions")` package. First, we export the significant interactions into a GenomicInteractions object:
 
-```{r}
+```{r, message=FALSE}
 library(GenomicInteractions)
 library(GenomicRanges)
 gi <- exportToGI(cd)
@@ -244,13 +244,15 @@ gi <- exportToGI(cd)
 
 From here, we can use standard Bioconductor functionality. In the following example, we use `r Biocpkg("AnnotationHub")` to fetch a relevant enhancer mark track (H3K4me1) from the ENCODE project, then find which other ends overlap with the enhancer mark.
 
-```{r}
-otherEnds <- anchorTwo(gi)
-#levels(seqnames(otherEnds)) <- c("chr20","chr21")
-renameSeqlevels(otherEnds, c("chr20","chr21"))
-
+```{r, message=FALSE}
 library(AnnotationHub)
 ah <- AnnotationHub()
+```
+
+```{r}
+otherEnds <- anchorTwo(gi)
+otherEnds <- renameSeqlevels(otherEnds, c("chr20","chr21"))
+
 hs <- query(ah, c("GRanges", "EncodeDCC", "Homo sapiens", "H3k4me1"))
 enhancerTrack <- hs[["AH23254"]]
 
