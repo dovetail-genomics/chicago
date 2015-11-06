@@ -88,6 +88,7 @@ setReplaceMethod("intData", c(x="chicagoData"),
                  function(x, value)
                  {
                    x@x <- value
+                   x
                  }
 )
 
@@ -95,5 +96,6 @@ setReplaceMethod("params", c(x="chicagoData"),
                  function(x, value)
                  {
                    x@params <- value
+                   x
                  }
 )
