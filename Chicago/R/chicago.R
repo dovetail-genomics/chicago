@@ -268,7 +268,8 @@ readSample = function(file, cd){
   x = x[otherEndLen %between% c(s$minFragLen,s$maxFragLen)]
   message("minFragLen = ", s$minFragLen, " maxFragLen = ", s$maxFragLen)
   message("Filtered out ", xlen-nrow(x), " interactions involving other ends < minFragLen or > maxFragLen.")
-
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
+  
   setkey(x, baitID)
     
   ## remove baits that have no observations within the proximal range
@@ -278,15 +279,17 @@ readSample = function(file, cd){
   message("minNPerBait = ", s$minNPerBait)
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits with < minNPerBait reads.\n")  
   set(x, NULL , "nperbait", NULL) # fast remove data.table column  
-
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
+  
   ## remove adjacent pairs
   if(s$removeAdjacent){
     x[, isAdjacent:=abs(baitID-otherEndID)==1, by=baitID]
     x = x[isAdjacent==FALSE]
     set(x, NULL, "isAdjacent", NULL)
     message("Removed interactions with fragments adjacent to baits.")
+    if(nrow(x) == 0) stop("All interactions have been filtered out.")
   }
-  
+
   ##remove baits without proximal non-bait2bait interactions
   baitlen = length(unique(x$baitID)) 
   x[, isBait2bait := FALSE]
@@ -298,6 +301,7 @@ readSample = function(file, cd){
   }, by=baitID]
   x = x[isAllB2BProx==FALSE]
   set(x, NULL, "isAllB2BProx", NULL)
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
   
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits without proximal non-Bait2bait interactions\n")  
 

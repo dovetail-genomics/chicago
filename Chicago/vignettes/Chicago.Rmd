@@ -70,18 +70,18 @@ files <- c(
   )
 ```
 
-OPTIONAL: Because this data set is smaller than usual, we need to input some custom settings:
+OPTIONAL: The data set in this vignette requires some additional custom settings, to ensure that the vignette compiles in a reasonable time:
 
 ```{r}
 settingsFile <- file.path(system.file("extdata", package="PCHiCdata"),
                           "sGM12878Settings", "sGM12878.settingsFile")
 ```
 
-Normally, you will not have to do this.
+Omit this step unless you know which settings you wish to alter.
 
 ## Example workflow
 
-We run CHiCAGO on the test data as follows. First, we create a blank ``chicagoData`` object, and we tell it where the design files are. For this example, we also provide the optional settings file.
+We run CHiCAGO on the test data as follows. First, we create a blank ``chicagoData`` object, and we tell it where the design files are. For this example, we also provide the optional settings file - in your analysis, you can omit the ``settingsFile`` argument.
 
 ```{r, message=FALSE}
 library(Chicago)
