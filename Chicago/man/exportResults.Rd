@@ -53,7 +53,7 @@ If all else fails, and you need "washU_track" output, then you can manually perf
 \value{
 \code{exportResults()}: NULL.
 
-\code{exportToGI()}: a \code{\link[GenomicInteractions:GenomicInteractions]{GenomicInteractions}} object 
+\code{exportToGI()}: a \code{\link[GenomicInteractions:GenomicInteractions]{GenomicInteractions}} object. Anchor one is the bait, anchor two is the other end.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett

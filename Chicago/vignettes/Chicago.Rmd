@@ -1,7 +1,7 @@
 ---
 title: "CHiCAGO Vignette"
 author: "Jonathan Cairns, Paula Freire-Pritchett, Mikhail Spivakov"
-date: 5th November, 2015
+date: 17th November, 2015
 VignetteIndexEntry: 
 output:
   BiocStyle::html_document:
@@ -242,24 +242,29 @@ library(GenomicRanges)
 gi <- exportToGI(cd)
 ```
 
-From here, we can use standard Bioconductor functionality. In the following example, we use `r Biocpkg("AnnotationHub")` to fetch a relevant enhancer mark track (H3K4me1) from the ENCODE project, then find which other ends overlap with the enhancer mark.
+From here, we can pass the CHiCAGO results through to other Bioconductor functionality. In the following example, we find out which other ends overlap with the H3K4me1 enhancer mark, using ENCODE data. We use `r Biocpkg("AnnotationHub")` to fetch a relevant enhancer mark track from the ENCODE project:
 
 ```{r, message=FALSE}
 library(AnnotationHub)
 ah <- AnnotationHub()
+hs <- query(ah, c("GRanges", "EncodeDCC", "Homo sapiens", "H3k4me1"))
+enhancerTrack <- hs[["AH23254"]]
 ```
+
+Next, we use the ``anchorTwo()`` function to extract the other end locations from the GenomicInteractions object (``anchorOne()`` would give us the bait locations instead). Note that in this particular instance, the ``seqlevels()`` also need to be changed before performing the comparison, adding "chr" to make them match those of the annotation.
 
 ```{r}
 otherEnds <- anchorTwo(gi)
 otherEnds <- renameSeqlevels(otherEnds, c("chr20","chr21"))
+```
 
-hs <- query(ah, c("GRanges", "EncodeDCC", "Homo sapiens", "H3k4me1"))
-enhancerTrack <- hs[["AH23254"]]
+Finally, we look at which other ends overlap the enhancer marks:
 
+```{r}
 findOverlaps(otherEnds, enhancerTrack)
 ```
 
-Note that the annotation's genome version should match that of the promoter capture data, namely hg19:
+Further note that the annotation's genome version should match that of the promoter capture data, namely hg19:
 ```{r}
 hs["AH23254"]$genome
 ```
