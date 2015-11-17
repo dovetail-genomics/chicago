@@ -1,3 +1,14 @@
+##This line prevents data.table syntax being flagged up as a NOTE in R CMD check
+##("no visible binding for global variable")
+utils::globalVariables(c("distSign", "isBait2bait", "otherEndID", "transLength",
+                         "distbin2", "V1", "reads", "distbin3", "udbin2", "iTempVar",
+                         "bin_reads", "otherEndID", "Bmean", "s_j", "s_i", "chr", "baitID", "ntotpb",
+                         "distbin", "binCol", "ntot", "geomean", "bbm","s_iv","shape","rate","shapefit",
+                         "ratefit","s_ivfilt", "J", "N", "refBinMean","tlb","tblb","baitChr",
+                         "otherEndChr","log.p","Tmean","log.w","log.q","score","otherEndLen","nperbait",
+                         "isAdjacent","isAllB2BProx", "samplefilename"))
+
+
 ifnotnull = function(var, res){ if(!is.null(var)){res}}
 
 locateFile = function(what, where, pattern){
@@ -18,7 +29,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   cd = normaliseBaits(cd)
 
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }
   
   message("\n*** Running normaliseOtherEnds...\n")
@@ -27,7 +38,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
                           )
   
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }
   
   message("\n*** Running estimateTechnicalNoise...\n")
@@ -36,7 +47,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
                               )
   
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }
   
   message("\n*** Running estimateDistFun...\n")
@@ -47,7 +58,7 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   )
 
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }
   
   ### Note that f is saved as cd@params$f and  
@@ -56,21 +67,21 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   cd = estimateBrownianNoise(cd)
 
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }  
   
   message("\n*** Running getPvals...\n")
   cd = getPvals(cd)
   
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }  
   
   message("\n*** Running getScores...\n")
   cd = getScores(cd)
   
   if(printMemory){
-    print(gc(reset=T))
+    print(gc(reset=TRUE))
   }  
   
   cd
@@ -226,7 +237,14 @@ readSample = function(file, cd){
   
   message(paste("Reading", file))
   
-  x = fread(file)
+  ##check for comment line at beginning of file
+  testLine <- readLines(file, 1)
+  if(substr(testLine, 1, 1) == "#")
+  {
+    x = fread(file, skip = 1L)
+  }else{
+    x = fread(file)
+  }
   
   message("Processing input...")
   
@@ -250,7 +268,8 @@ readSample = function(file, cd){
   x = x[otherEndLen %between% c(s$minFragLen,s$maxFragLen)]
   message("minFragLen = ", s$minFragLen, " maxFragLen = ", s$maxFragLen)
   message("Filtered out ", xlen-nrow(x), " interactions involving other ends < minFragLen or > maxFragLen.")
-
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
+  
   setkey(x, baitID)
     
   ## remove baits that have no observations within the proximal range
@@ -260,15 +279,17 @@ readSample = function(file, cd){
   message("minNPerBait = ", s$minNPerBait)
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits with < minNPerBait reads.\n")  
   set(x, NULL , "nperbait", NULL) # fast remove data.table column  
-
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
+  
   ## remove adjacent pairs
   if(s$removeAdjacent){
     x[, isAdjacent:=abs(baitID-otherEndID)==1, by=baitID]
     x = x[isAdjacent==FALSE]
     set(x, NULL, "isAdjacent", NULL)
     message("Removed interactions with fragments adjacent to baits.")
+    if(nrow(x) == 0) stop("All interactions have been filtered out.")
   }
-  
+
   ##remove baits without proximal non-bait2bait interactions
   baitlen = length(unique(x$baitID)) 
   x[, isBait2bait := FALSE]
@@ -280,6 +301,7 @@ readSample = function(file, cd){
   }, by=baitID]
   x = x[isAllB2BProx==FALSE]
   set(x, NULL, "isAllB2BProx", NULL)
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
   
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits without proximal non-Bait2bait interactions\n")  
 
@@ -347,10 +369,10 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
       }
     }
     
-    Ncol = grep("^N$", names(x[[i]]), value=T)
+    Ncol = grep("^N$", names(x[[i]]), value=TRUE)
     if (!length(Ncol)){ 
       #In case names have already been changed to N.<k> - this being data.table
-      Ncol = grep("^N\\.", names(x[[i]]), value=T) 
+      Ncol = grep("^N\\.", names(x[[i]]), value=TRUE) 
       if (length(Ncol)==1){
         warning("Could not find column name \"N\" in element ", i, " of the input list. Using \"", Ncol, "\" instead\n")
       }
@@ -380,7 +402,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   
   message("Merging samples...")
   
-  xmerge = Reduce(function(...) merge(..., by=c("baitID", "otherEndID"), all=T), x)
+  xmerge = Reduce(function(...) merge(..., by=c("baitID", "otherEndID"), all=TRUE), x)
   
   setkey(xmerge, baitID, otherEndID)
   xmerge = attr[xmerge]
@@ -450,7 +472,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     stop("xs must be a data table. If starting from a list of separate samples, use mergeSamples instead\n")
   }
   
-  Ncols = grep("^N\\.(\\d+)", names(xs), value=T) ##matches "N.[integer]"
+  Ncols = grep("^N\\.(\\d+)", names(xs), value=TRUE) ##matches "N.[integer]"
   ns = as.numeric(gsub("N\\.(\\d+)", "\\1", Ncols)) ##collects [integer]s from the above
   n = max(ns)
 
@@ -484,11 +506,11 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
     baitMeans[[ s_kjcols[k] ]] = xs[,sum(get(Ncols[k]))/ntotpb[1],by=baitID]$V1
   }
   
-  baitMeans$geo_mean = apply(baitMeans[, s_kjcols, with=F], 1,
+  baitMeans$geo_mean = apply(baitMeans[, s_kjcols, with=FALSE], 1,
                              function(x)if(any(x==0)){NA}else{geo_mean(x)})
   s_k = vector("numeric")
   for (k in 1:n){
-    s_k [ k ] = median(baitMeans[[ s_kjcols[k] ]] / baitMeans [[  "geo_mean" ]], na.rm=T)
+    s_k [ k ] = median(baitMeans[[ s_kjcols[k] ]] / baitMeans [[  "geo_mean" ]], na.rm=TRUE)
   }
 
   names(s_k) = Ncols
@@ -515,10 +537,10 @@ normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=N
   
   if(debug){
     ##returns sbbm and not Chicago object! 
-    .normaliseFragmentSets(x=cd@x, s=cd@settings, npb=.readNPBfile(s=cd@settings), viewpoint="bait", idcol="baitID", Ncol="N", adjBait2bait=adjBait2bait, shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=T)
+    .normaliseFragmentSets(x=cd@x, s=cd@settings, npb=.readNPBfile(s=cd@settings), viewpoint="bait", idcol="baitID", Ncol="N", adjBait2bait=adjBait2bait, shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=TRUE)
   }
   else{
-    cd@x = .normaliseFragmentSets(x=cd@x, s=cd@settings, npb=.readNPBfile(s=cd@settings), viewpoint="bait", idcol="baitID", Ncol="N", adjBait2bait=adjBait2bait, shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=F)
+    cd@x = .normaliseFragmentSets(x=cd@x, s=cd@settings, npb=.readNPBfile(s=cd@settings), viewpoint="bait", idcol="baitID", Ncol="N", adjBait2bait=adjBait2bait, shrink=shrink, refExcludeSuffix=NULL, plot=plot, outfile=outfile, debug=FALSE)
     
   }
   
@@ -542,7 +564,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   # In this case, the call to .addTLB() will be substituted with something like .addLMGB() [to be written] 
 
   cd@x = .addTLB(cd)
-  x = cd@x[abs(distSign)<=cd@settings$maxLBrownEst & is.na(distSign)==F]
+  x = cd@x[abs(distSign)<=cd@settings$maxLBrownEst & is.na(distSign)==FALSE]
   
   message("Computing total bait counts...")
   nbpb = .readNbaitsPBfile(s=cd@settings)
@@ -594,7 +616,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
     set(cd@x, NULL, "s_i", NULL)
   }
   
-  cd@x = merge(cd@x, x, all.x=T, by="tlb")
+  cd@x = merge(cd@x, x, all.x=TRUE, by="tlb")
   #setnames(xAll, "V1", "s_i")
   
   # if we can't estimate s_i robustly, assume it to be one
@@ -626,7 +648,7 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   # Get f(d_b)
   #   f.d <- unique(x[!is.na(x$refBinMean),c("distbin", "refBinMean")]) ##delete rows with NAs from baits that are too far away
   setkey(cd@x, distbin, refBinMean)
-  f.d <- unique(cd@x)[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=F]
+  f.d <- unique(cd@x)[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=FALSE]
   
   #   f.d <- f.d[order(f.d$refBinMean, decreasing=TRUE),]
   f.d <- f.d[order(refBinMean, decreasing=TRUE)]
@@ -784,7 +806,7 @@ estimateBrownianNoise <- function(cd) {
   
   ##consider proximal region only...
   setkey(x, distSign)
-  x = x[abs(distSign)<maxLBrownEst & is.na(distSign)==F,] # will have NA for distal and trans interactions
+  x = x[abs(distSign)<maxLBrownEst & is.na(distSign)==FALSE,] # will have NA for distal and trans interactions
   
   ##remove bait2bait...
   if (adjBait2bait){
@@ -960,7 +982,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
   setnames(Ntrans, "V2", "nobs")
   
   message("Computing the total number of possible interactions per pool...")
-  message("Preparing the data...", appendLF = F)
+  message("Preparing the data...", appendLF = FALSE)
   
   # Now adding the zeros based on how many trans-interactions are possible in each (tlb, tblb) bin
   baitmap = fread(cd@settings$baitmapfile)
@@ -971,7 +993,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
   setnames(rmap, "V4", "otherEndID")
   setnames(baitmap, "V4", "baitID")
   
-  message(".", appendLF=F)
+  message(".", appendLF=FALSE)
   
   baitmap = baitmap[,c("baitID", "chr"), with=FALSE]
   rmap = rmap[,c("otherEndID", "chr"), with=FALSE]
@@ -979,7 +1001,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
   setkey(baitmap, baitID)
   setkey(rmap, otherEndID)
 
-  message(".", appendLF=F)
+  message(".", appendLF=FALSE)
   
   setkey(cd@x, baitID)
   cd@x = baitmap[cd@x]
@@ -1275,7 +1297,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
         x[, isBait2bait := FALSE]
         x[wb2b(otherEndID), isBait2bait:= TRUE] 
       }
-    	x = x[isBait2bait==F]
+    	x = x[isBait2bait==FALSE]
   	}
   
   	# x is the data table used to compute the scaling factors
@@ -1406,7 +1428,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
     setnames(gm, "V1", "refBinMean")
     setkeyv(gm, "distbin")
     setkeyv(xAll, "distbin")
-    xAll = merge(xAll, gm, all.x=T) 
+    xAll = merge(xAll, gm, all.x=TRUE) 
   }
   
   xAll
@@ -1462,7 +1484,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 #          Amend either setting before running the analysis\n")
 #   }
 
-  npb = fread(s$nperbinfile)
+  npb = fread(s$nperbinfile, skip=1L)
   setnames(npb, names(npb)[1], "baitID")
   for(i in 2:ncol(npb)){
     setnames(npb, names(npb)[i], paste0("bin", i-1))    
@@ -1515,7 +1537,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   #          Amend either setting before running the analysis\n")
   #   }
   
-  nbpb = fread(s$nbaitsperbinfile)
+  nbpb = fread(s$nbaitsperbinfile, skip=1L)
   setnames(nbpb, names(nbpb)[1], "otherEndID")
   for(i in 2:ncol(nbpb)){
     setnames(nbpb, names(nbpb)[i], paste0("bin", i-1))    
@@ -1566,7 +1588,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   #     stop("Bait files used for generating the ProxOE file and defined here do not match. 
   #          Amend either setting before running the analysis\n")
   #   }
-  proxOE = fread(s$proxOEfile)
+  proxOE = fread(s$proxOEfile, skip=1L)
   setnames(proxOE, 1:3, c("baitID", "otherEndID", "dist"))
   proxOE
   }
@@ -1588,7 +1610,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   transNA = FALSE
   if(any(is.na(x$distSign))){
     transNA = TRUE
-    transD = max(x[is.na(distSign)==F]$distSign)+s$binsize
+    transD = max(x[is.na(distSign)==FALSE]$distSign)+s$binsize
     x[is.na(distSign), distSign := transD]
   }
   else{
@@ -1638,14 +1660,14 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if (adjBait2bait){
     transLen0 = transLen
-    transLen = transLen0[isBait2bait==F]
-    transLenB2B = transLen0[isBait2bait==T]
+    transLen = transLen0[isBait2bait==FALSE]
+    transLenB2B = transLen0[isBait2bait==TRUE]
   }
   
   message("Binning...")
   
   cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
-              m=minProxOEPerBin, onlycuts=T)
+              m=minProxOEPerBin, onlycuts=TRUE)
   # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
   # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
   if (min(cuts)>min(transLen$transLength)){
@@ -1654,12 +1676,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   if (max(cuts)<max(transLen$transLength)){
     cuts[length(cuts)] = max(transLen$transLength)
   }
-  set(transLen, NULL, "tlb" , cut(transLen$transLength, breaks=cuts, include.lowest=T))
+  set(transLen, NULL, "tlb" , cut(transLen$transLength, breaks=cuts, include.lowest=TRUE))
   
   if (adjBait2bait){
     
     cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
-                   m=minProxB2BPerBin, onlycuts=T)
+                   m=minProxB2BPerBin, onlycuts=TRUE)
     # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
     # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
     if (min(cutsB2B)>min(transLenB2B$transLength)){
@@ -1668,7 +1690,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
     if (max(cutsB2B)<max(transLenB2B$transLength)){
       cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
     }
-    set(transLenB2B, NULL, "tlb", cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=T))
+    set(transLenB2B, NULL, "tlb", cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE))
     levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
     
     transLen = rbind(transLen, transLenB2B)
@@ -1726,7 +1748,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
 
   for(i in 1:n){
 
-    this = cd@x[baitID==baits[i]]
+    this = cd@x[J(baits[i])]
     
     
     
@@ -1754,7 +1776,7 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     
     title = paste(baits[i], sep="")
     if(plotBaitNames){
-         baitName = baitmap[baitmap$V4==baits[i]][, cd@settings$baitmapGeneIDcol, with=F]
+         baitName = baitmap[baitmap$V4==baits[i]][, cd@settings$baitmapGeneIDcol, with=FALSE]
          if (length(grep(",",baitName))){
              baitName = gsub("(\\S+,).+","\\1", baitName)
              baitName = paste0(baitName, "...")
@@ -1786,6 +1808,13 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   if (!all(format %in% c("seqMonk","interBed", "washU_track", "washU_text"))){
     stop ("Format must be either seqMonk, interBed, washU_track or washU_text (or a vector containing several of these)\n")
   }
+  if("washU_track" %in% format)
+  {
+    if (!requireNamespace("Rsamtools", quietly = TRUE)) {
+      stop("Package Rsamtools required to export washU_track format.")
+    }
+  }
+
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
   }
@@ -1815,29 +1844,29 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     x = cd@x[ get(scoreCol)>=cutoff ]
   }
   else{
-    x = cd@x[ (isBait2bait==T & get(scoreCol)>=b2bcutoff ) | 
-                ( isBait2bait==F & get(scoreCol)>=cutoff )]
+    x = cd@x[ (isBait2bait==TRUE & get(scoreCol)>=b2bcutoff ) | 
+                ( isBait2bait==FALSE & get(scoreCol)>=cutoff )]
   }
   
-  x = x[, c("baitID", "otherEndID", "N", scoreCol), with=F]
+  x = x[, c("baitID", "otherEndID", "N", scoreCol), with=FALSE]
   
   setkey(x, otherEndID)
   setkey(rmap, otherEndID)
   
-  x = merge(x, rmap, by="otherEndID", allow.cartesian = T)
+  x = merge(x, rmap, by="otherEndID", allow.cartesian = TRUE)
   setkey(x, baitID)
   
   setkey(baitmap, baitID)  
-  x = merge(x, baitmap, by="baitID", allow.cartesian = T)
+  x = merge(x, baitmap, by="baitID", allow.cartesian = TRUE)
   
   # note that baitmapGeneIDcol has been renamed into "promID" above 
-  bm2 = baitmap[,c ("baitID", "promID"), with=F]
+  bm2 = baitmap[,c ("baitID", "promID"), with=FALSE]
   
   setDF(x)
   setDF(bm2)
   
   # this way we can be sure that the new column will be called promID.y  
-  out = merge(x, bm2, by.x="otherEndID", by.y="baitID", all.x=T, all.y=F, sort=F)
+  out = merge(x, bm2, by.x="otherEndID", by.y="baitID", all.x=TRUE, all.y=FALSE, sort=FALSE)
   out[is.na(out$promID.y), "promID.y"] = "."
   
   out = out[,c("baitChr", "baitStart", "baitEnd", "promID.x", "rChr", "rStart", "rEnd", "otherEndID", scoreCol, "N", "promID.y")]
@@ -1851,7 +1880,7 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
     out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
   }
   if (order=="score"){
-    out = out[order(out$score, decreasing=T), ]
+    out = out[order(out$score, decreasing=TRUE), ]
   }
   
   if(removeMT)
@@ -1868,19 +1897,19 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   
   if ("seqMonk" %in% format){
     message("Writing out for seqMonk...")
-    out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=T)
+    out[,"bait_name"] = gsub(",", "|", out[,"bait_name"], fixed=TRUE)
     
     out$newLineOEChr = paste("\n",out[,"otherEnd_chr"], sep="")    
     out = out[,c("bait_chr", "bait_start", "bait_end", "bait_name", "N_reads", "score", "newLineOEChr", "otherEnd_start", "otherEnd_end", "otherEnd_name", "N_reads", "score")]
     
-    write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=F, row.names=F, col.names=F)
+    write.table(out, paste0(outfileprefix,"_seqmonk.txt"), sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
   }  
   if ("interBed" %in% format){
     message("Writing out interBed...")
     out = out0[,c("bait_chr", "bait_start", "bait_end", "bait_name", 
                   "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_name", 
                   "N_reads", "score")]
-    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=F, row.names=F)  
+    write.table(out, paste0(outfileprefix,".ibed"), sep="\t", quote=FALSE, row.names=FALSE)
   }
   
   if(any(c("washU_text", "washU_track") %in% format)){
@@ -1937,20 +1966,107 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       })
       res = gsub(" ", "", res)
       writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
-      
-      ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
-      exitcode2 <- 1
-      if(exitcode1 == 0)
-      {
-        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
-      }
-      if(exitcode1 != 0 | exitcode2 != 0)
-      {
-        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
-      }
+
+      Rsamtools::bgzip(paste0(outfileprefix,"_washU_track.txt"),
+          dest=paste0(outfileprefix,"_washU_track.txt.gz"))
+      Rsamtools::indexTabix(paste0(outfileprefix,"_washU_track.txt.gz"), format="bed")
     }
   }
+}
+
+exportToGI <- function(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                       order=c("position", "score")[1], removeMT=TRUE)
+{
+  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
+    stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
+  }
+
+  if (! order %in% c("position","score")){
+    stop ("Order must be either position (default) or score\n")
+  }
+  if (! removeMT %in% c(TRUE,FALSE)){
+    stop("removeMT must be TRUE or FALSE")
+  }
+  
+  message("Reading the restriction map file...")
+  rmap = fread(cd@settings$rmapfile)
+  setnames(rmap, "V1", "rChr")
+  setnames(rmap, "V2", "rStart")
+  setnames(rmap, "V3", "rEnd")
+  setnames(rmap, "V4", "otherEndID")
+  
+  message("Reading the bait map file...")
+  baitmap = fread(cd@settings$baitmapfile)
+  
+  setnames(baitmap, "V1", "baitChr")
+  setnames(baitmap, "V2", "baitStart")
+  setnames(baitmap, "V3", "baitEnd")
+  setnames(baitmap, cd@settings$baitmapFragIDcol, "baitID")
+  setnames(baitmap, cd@settings$baitmapGeneIDcol, "promID")
+  
+  message("Preparing the output table...")
+  
+  if (is.null(b2bcutoff)){
+    x = cd@x[ get(scoreCol)>=cutoff ]
+  }
+  else{
+    x = cd@x[ (isBait2bait==TRUE & get(scoreCol)>=b2bcutoff ) | 
+                ( isBait2bait==FALSE & get(scoreCol)>=cutoff )]
+  }
+  
+  x = x[, c("baitID", "otherEndID", "N", scoreCol), with=FALSE]
+  
+  setkey(x, otherEndID)
+  setkey(rmap, otherEndID)
+  
+  x = merge(x, rmap, by="otherEndID", allow.cartesian = TRUE)
+  setkey(x, baitID)
+  
+  setkey(baitmap, baitID)  
+  x = merge(x, baitmap, by="baitID", allow.cartesian = TRUE)
+  
+  # note that baitmapGeneIDcol has been renamed into "promID" above 
+  bm2 = baitmap[,c ("baitID", "promID"), with=FALSE]
+  
+  setDF(x)
+  setDF(bm2)
+  
+  # this way we can be sure that the new column will be called promID.y  
+  out = merge(x, bm2, by.x="otherEndID", by.y="baitID", all.x=TRUE, all.y=FALSE, sort=FALSE)
+  out[is.na(out$promID.y), "promID.y"] = "."
+  
+  out = out[,c("baitChr", "baitStart", "baitEnd", "baitID", "promID.x", "rChr", "rStart", "rEnd", "otherEndID", scoreCol, "N", "promID.y")]
+  
+  names(out) = c("bait_chr", "bait_start", "bait_end", "bait_ID", "bait_name", "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_ID", "score", "N_reads", "otherEnd_name")
+  
+  out$N_reads [ is.na(out$N_reads) ] = 0
+  out$score = round(out$score,2)
+  
+  if (order=="position"){
+    out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
+  }
+  if (order=="score"){
+    out = out[order(out$score, decreasing=TRUE), ]
+  }
+  
+  if(removeMT)
+  {
+    ##Remove mitochondrial DNA
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
+    {
+      out <- out[!selMT,]
+    }
+  }
+  
+  #out
+  
+  ##convert out to a GI
+  anchor.one = with(out, GenomicRanges::GRanges(as.character(bait_chr), IRanges::IRanges(start=bait_start, end=bait_end)))
+  anchor.two = with(out, GenomicRanges::GRanges(as.character(otherEnd_chr), IRanges::IRanges(start=otherEnd_start, end=otherEnd_end)))
+  GenomicInteractions::GenomicInteractions(anchor.one, anchor.two, experiment_name="CHiCAGO calls",
+                      counts=out$N_reads, baitName=out$bait_name, otherEndName=out$otherEnd_name,
+                      score= out$score)
 }
 
 copyCD <- function(cd)

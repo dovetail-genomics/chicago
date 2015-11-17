@@ -148,7 +148,7 @@ peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample
   bin_reads2 <- sign[,length(dist), by="distbin2"]
   setkey(bin_reads2,distbin2)
   bin_reads2[bin_reads]->bin_reads2
-  bin_reads2[,bin_reads:=sum(V1,reads,na.rm = T),by=distbin2]
+  bin_reads2[,bin_reads:=sum(V1,reads,na.rm = TRUE),by=distbin2]
   bin_reads2[,reads:=NULL]
   bin_reads2[,V1:=NULL]
 
@@ -186,12 +186,12 @@ peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample
   setkey(x1_nonsign, distbin3)
   setkey(bin_reads2, distbin3)
   
-  x1_nonsign<-x1_nonsign[bin_reads2[,udbin2:=NULL],allow.cartesian=T]
+  x1_nonsign<-x1_nonsign[bin_reads2[,udbin2:=NULL],allow.cartesian=TRUE]
  
   x1_nonsign[is.na(bin_reads),bin_reads:=0]
   
   # Provide correct indexing for non-sign paired-end reads
-  x1_nonsign[,i:=seq(1,nrow(x1_nonsign))]
+  x1_nonsign[,iTempVar:=seq(1,nrow(x1_nonsign))]
   
   return(x1_nonsign)
 }
@@ -200,8 +200,8 @@ peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample
   if(!is.data.table(x1_nonsign)){setDT(x1_nonsign)}  
   setkey(x1_nonsign,distbin3)
   sample_NP <-  lapply(1:sample_number, function(j) {
-    b <- x1_nonsign[,.I[sample(1:length(.I),bin_reads[1],replace=TRUE)],by="distbin3"]
-    s1 <- x1_nonsign[b$V1]
+    bTempVar <- x1_nonsign[,.I[sample(1:length(.I),bin_reads[1],replace=TRUE)],by="distbin3"]
+    s1 <- x1_nonsign[bTempVar$V1]
     
     if(unique){
       s1<-s1[!duplicated(otherEndID)]
@@ -228,11 +228,11 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, position_othe
     x <- x@x   
   }
   
-  Digest <- .readBedList(folder=NULL, list_frag = c(Digest=position_otherEnd), sep=sep, rm.MT = T,is.Digest=TRUE)[[1]]
+  Digest <- .readBedList(folder=NULL, list_frag = c(Digest=position_otherEnd), sep=sep, rm.MT = TRUE,is.Digest=TRUE)[[1]]
   setnames(Digest, names(Digest)[4], "otherEndID")
   
   # Get Features to overlap
-  features <- .readBedList(folder=folder, list_frag=list_frag, rm.MT = T)
+  features <- .readBedList(folder=folder, list_frag=list_frag, rm.MT = TRUE)
   
   featuresMapped2Digest<-lapply(features, function(feat) {
     setkeyv(feat, names(feat)[1:3])
@@ -240,8 +240,8 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, position_othe
                                                                                       # nomatch = NA is equivalent to merge(..., all=T)
   })
   
-  for ( i in 1:length(featuresMapped2Digest)) {
-    x[, names(featuresMapped2Digest)[i]:= otherEndID %in% featuresMapped2Digest[[i]]$otherEndID]
+  for ( iTempIndex in 1:length(featuresMapped2Digest)) {
+    x[, names(featuresMapped2Digest)[iTempIndex]:= otherEndID %in% featuresMapped2Digest[[iTempIndex]]$otherEndID]
   }
   return(x)  
 }
@@ -250,7 +250,7 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, position_othe
   if("distbin2" %in% names(x_sign)){x_sign[,distbin2:=NULL]}
   if("dist" %in% names(x_sign)){x_sign[,dist:=NULL]}
 
-  x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign),with=FALSE],na.rm = T)
+  x_sign<-colSums(x_sign[,(ncol(x_sign)-length(files)+1):ncol(x_sign),with=FALSE],na.rm = TRUE)
   
   sample_number<- length(s)
   featureSumsMatrix <- matrix(rep(0),length(files)*sample_number,nrow=sample_number,ncol=length(files))
@@ -259,8 +259,8 @@ overlapFragWithFeatures <- function(x=NULL,folder=NULL, list_frag, position_othe
     if("dist" %in% names(x)){x[,dist:=NULL]}
     if("distbin3" %in% names(x)){x[,distbin3:=NULL]}
     if("bin_reads" %in% names(x)){x[,bin_reads:=NULL]}
-    if("i" %in% names(x)){x[,i:=NULL]}
-    featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x),with=FALSE],na.rm = T)
+    if("iTempVar" %in% names(x)){x[,iTempVar:=NULL]}
+    featureSums <- colSums(x[,(ncol(x)-length(files)+1):ncol(x),with=FALSE],na.rm = TRUE)
     featureSumsMatrix[k,]<-featureSums
   }
   colnames(featureSumsMatrix)<-names(files)

@@ -1,6 +1,5 @@
 \name{defaultSettings}
 \alias{defaultSettings}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Default CHiCAGO settings
 }
@@ -10,13 +9,6 @@ A function that gives the default settings used for a CHiCAGO experiment.
 \usage{
 defaultSettings()
 }
-%- maybe also 'usage' for other objects documented here.
-%\arguments{
-%  \item{designDir}{A directory containing the digest information (see below).}
-%}
-%\details{
-
-%}
 \value{
 A list of the following settings:
 
@@ -25,7 +17,7 @@ A list of the following settings:
 \item{nperbinfile}{Default: NA. See vignette.}
 \item{nbaitsperbinfile}{Default: NA. See vignette.}
 \item{proxOEfile}{Default: NA. See vignette.}
-\item{Ncol}{Default: "N". The column in cd@x that contains the number of reads.}
+\item{Ncol}{Default: "N". The column in intData(cd) that contains the number of reads.}
 \item{baitmapFragIDcol}{Default: 4. In the bait map file, the number of the column that specifies the fragment ID of each bait.}
 \item{baitmapGeneIDcol}{Default: 5. In the bait map file, the number of the column that specifies which gene(s) are on each fragment.}
 \item{maxLBrownEst}{Default: 1500000. The maximum distance away from the bait for which Brownian noise is assumed to dominate.}
@@ -41,10 +33,10 @@ A list of the following settings:
 \item{techNoise.minBaitsPerBin}{Default: 1000}
 \item{brownianNoise.subset}{Default: 1000. Number of baits sampled from when estimating the Brownian noise dispersion. If set to NA, then all baits are used.}
 \item{brownianNoise.seed}{Default: NA. If not NA, then \code{brownianNoise.seed} is used as the random number generator seed when subsampling baits. Set this to make your analysis reproducible.}
-\item{baitIDcol}{Default: "baitID". The name of the baitID column in cd@x.}
-\item{otherEndIDcol}{Default: "otherEndID". The name of the otherEndID column in cd@x.}
-\item{otherEndLencol}{Default: "otherEndLen". The name of the column in cd@x that contains the lengths of the other end fragments.}
-\item{distcol}{Default: "distSign". The name of the column in cd@x that contains the genomic distance that an interaction spans.}
+\item{baitIDcol}{Default: "baitID". The name of the baitID column in intData(cd).}
+\item{otherEndIDcol}{Default: "otherEndID". The name of the otherEndID column in intData(cd).}
+\item{otherEndLencol}{Default: "otherEndLen". The name of the column in intData(cd) that contains the lengths of the other end fragments.}
+\item{distcol}{Default: "distSign". The name of the column in intData(cd) that contains the genomic distance that an interaction spans.}
 \item{weightAlpha}{Default: 34.1157346557331. This, and the following parameters, are used in the p-value weighting procedure.}
 \item{weightBeta}{Default: -2.58688050486759}
 \item{weightGamma}{Default: -17.1347845819659}
@@ -54,8 +46,6 @@ A list of the following settings:
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{setExperiment}}, \code{\link{modifySettings}}
 }
@@ -63,7 +53,3 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 s <- defaultSettings()
 print(s)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

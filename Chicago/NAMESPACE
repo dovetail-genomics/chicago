@@ -1,7 +1,8 @@
 export(chicagoPipeline, copyCD, defaultSettings, estimateBrownianNoise, estimateDistFun, estimateTechnicalNoise, 
-       exportResults, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
+       exportResults, exportToGI, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
        normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, overlapFragWithFeatures,
        peakEnrichment4Features, chicagoData, getSkOnly)
+exportMethods(intData, settings, params, "intData<-", "params<-")
 
 
 import(data.table)

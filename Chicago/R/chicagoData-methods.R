@@ -75,3 +75,27 @@ setMethod("show", "chicagoData",
             describeNonDefaultSettings(object)
           }
 )
+
+##accessors
+
+setMethod("intData", "chicagoData", function(x){x@x})
+setMethod("settings", "chicagoData", function(x){x@settings})
+setMethod("params", "chicagoData", function(x){x@params})
+
+##replacers
+
+setReplaceMethod("intData", c(x="chicagoData"), 
+                 function(x, value)
+                 {
+                   x@x <- value
+                   x
+                 }
+)
+
+setReplaceMethod("params", c(x="chicagoData"), 
+                 function(x, value)
+                 {
+                   x@params <- value
+                   x
+                 }
+)

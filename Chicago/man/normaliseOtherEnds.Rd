@@ -1,6 +1,5 @@
 \name{normaliseOtherEnds}
 \alias{normaliseOtherEnds}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Normalise Other Ends
 }
@@ -10,11 +9,10 @@ Compute \code{s_i} normalisation factors for other ends, and normalised counts.
 \usage{
 normaliseOtherEnds(cd, Ncol = "NNb", normNcol = "NNboe", plot = TRUE, outfile = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{Ncol}{
-The name of an input column in \code{cd@x} that contains counts normalised by bait (i.e. it is output from \code{\link{normaliseBaits}}.
+The name of an input column in \code{intData(cd)} that contains counts normalised by bait (i.e. it is output from \code{\link{normaliseBaits}}.
 }
   \item{normNcol}{
 The name of an output column that will contain counts normalised by other ends (in addition to any normalisation already performed on the \code{Ncol} column). Useful for plotting.
@@ -25,10 +23,10 @@ If \code{TRUE}, output a diagnostic plot.
   \item{outfile}{\code{NULL}, or a character string. If \code{NULL}, the diagnostic plot is outputted to the current plotting device. If a character string, e.g. \code{outfile="tech.pdf"}, then the plot will be outputted to that file.}
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(cd)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \details{
-A \code{chicagoData} object: \code{cd@x} gains new columns \code{s_i}, and normalised output \code{NNboe} (unless the \code{normNcol} parameter is altered).
+A \code{chicagoData} object: \code{intData(cd)} gains new columns \code{s_i}, and normalised output \code{NNboe} (unless the \code{normNcol} parameter is altered).
 }
 \value{
 An object of class \code{chicagoData}.
@@ -37,11 +35,6 @@ An object of class \code{chicagoData}.
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
 \examples{
 ##FIXME: example can be run by loading data package if it is installed, once it exists
 
@@ -62,7 +55,3 @@ if("PCHiCdata" \%in\% rownames(installed.packages()))
 }
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

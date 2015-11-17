@@ -1,6 +1,5 @@
 \name{readAndMerge}
 \alias{readAndMerge}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Read And Merge
 }
@@ -10,7 +9,6 @@ A wrapper that calls readSample() on a number of files, then mergeSamples().
 \usage{
 readAndMerge(files, cd, ...)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{files}{
   Character vector containing the locations of the files to read in.
@@ -22,18 +20,12 @@ readAndMerge(files, cd, ...)
   Further arguments passed to \code{\link{mergeSamples}}.
 }
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
 \value{
 An object of class \code{chicagoData}.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{readSample}}, \code{\link{mergeSamples}}
 }
@@ -47,7 +39,3 @@ designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesig
 cd <- setExperiment(designDir=designDir)
 cd <- readAndMerge(files, cd)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

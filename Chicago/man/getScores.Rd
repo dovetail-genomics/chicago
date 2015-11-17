@@ -10,7 +10,6 @@ Converts p-values into a CHiCAGO score, using p-value weighting.
 getScores(cd, method = "weightedRelative", 
       includeTrans = TRUE, plot = TRUE, outfile = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{method}{
@@ -27,7 +26,7 @@ getScores(cd, method = "weightedRelative",
 }
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(cd)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \details{
 Weighting is performed using the parameters \code{weightAlpha}, \code{weightBeta}, \code{weightGamma}, \code{weightDelta}. Briefly, this function calculates weights \code{w} that decrease with increasing distance. Then, we construct weighted p-values \code{p/w}. As a result, the significance of long-range interactions is upweighted, and the significance of short-range interactions is downweighted.
@@ -46,8 +45,6 @@ Genovese, C. R., Roeder, K., and Wasserman, L. (2006). False discovery control w
 Jonathan Cairns
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{chicagoPipeline}}
 }
@@ -60,7 +57,3 @@ cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 
 cdUnitTest <- getScores(cdUnitTest)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

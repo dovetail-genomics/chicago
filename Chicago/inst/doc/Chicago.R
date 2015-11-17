@@ -80,7 +80,7 @@ names(featuresList) <- featuresTable$V1
 featuresList
 
 ## ---- message=FALSE, fig.width=12, fig.height=7--------------------------
-no_bins <- ceiling(max(abs(cd@x$distSign), na.rm = T)/1e4)
+no_bins <- ceiling(max(abs(intData(cd)$distSign), na.rm = TRUE)/1e4)
 
 enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
                                              no_bins=no_bins, sample_number=100)
@@ -88,8 +88,29 @@ enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_fra
 ## ------------------------------------------------------------------------
 enrichmentResults
 
+## ---- message=FALSE------------------------------------------------------
+library(GenomicInteractions)
+library(GenomicRanges)
+gi <- exportToGI(cd)
+
+## ---- message=FALSE------------------------------------------------------
+library(AnnotationHub)
+ah <- AnnotationHub()
+hs <- query(ah, c("GRanges", "EncodeDCC", "Homo sapiens", "H3k4me1"))
+enhancerTrack <- hs[["AH23254"]]
+
 ## ------------------------------------------------------------------------
-head(cd@x, 2)
+otherEnds <- anchorTwo(gi)
+otherEnds <- renameSeqlevels(otherEnds, c("chr20","chr21"))
+
+## ------------------------------------------------------------------------
+findOverlaps(otherEnds, enhancerTrack)
+
+## ------------------------------------------------------------------------
+hs["AH23254"]$genome
+
+## ------------------------------------------------------------------------
+head(intData(cd), 2)
 
 ## ------------------------------------------------------------------------
 newCd = copyCD(cd)
