@@ -1,3 +1,14 @@
+##This line prevents data.table syntax being flagged up as a NOTE in R CMD check
+##("no visible binding for global variable")
+utils::globalVariables(c("distSign", "isBait2bait", "otherEndID", "transLength",
+                         "distbin2", "V1", "reads", "distbin3", "udbin2", "iTempVar",
+                         "bin_reads", "otherEndID", "Bmean", "s_j", "s_i", "chr", "baitID", "ntotpb",
+                         "distbin", "binCol", "ntot", "geomean", "bbm","s_iv","shape","rate","shapefit",
+                         "ratefit","s_ivfilt", "J", "N", "refBinMean","tlb","tblb","baitChr",
+                         "otherEndChr","log.p","Tmean","log.w","log.q","score","otherEndLen","nperbait",
+                         "isAdjacent","isAllB2BProx", "samplefilename"))
+
+
 ifnotnull = function(var, res){ if(!is.null(var)){res}}
 
 locateFile = function(what, where, pattern){
@@ -226,7 +237,14 @@ readSample = function(file, cd){
   
   message(paste("Reading", file))
   
-  x = fread(file)
+  ##check for comment line at beginning of file
+  testLine <- readLines(file, 1)
+  if(substr(testLine, 1, 1) == "#")
+  {
+    x = fread(file, skip = 1L)
+  }else{
+    x = fread(file)
+  }
   
   message("Processing input...")
   
@@ -250,7 +268,8 @@ readSample = function(file, cd){
   x = x[otherEndLen %between% c(s$minFragLen,s$maxFragLen)]
   message("minFragLen = ", s$minFragLen, " maxFragLen = ", s$maxFragLen)
   message("Filtered out ", xlen-nrow(x), " interactions involving other ends < minFragLen or > maxFragLen.")
-
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
+  
   setkey(x, baitID)
     
   ## remove baits that have no observations within the proximal range
@@ -260,15 +279,17 @@ readSample = function(file, cd){
   message("minNPerBait = ", s$minNPerBait)
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits with < minNPerBait reads.\n")  
   set(x, NULL , "nperbait", NULL) # fast remove data.table column  
-
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
+  
   ## remove adjacent pairs
   if(s$removeAdjacent){
     x[, isAdjacent:=abs(baitID-otherEndID)==1, by=baitID]
     x = x[isAdjacent==FALSE]
     set(x, NULL, "isAdjacent", NULL)
     message("Removed interactions with fragments adjacent to baits.")
+    if(nrow(x) == 0) stop("All interactions have been filtered out.")
   }
-  
+
   ##remove baits without proximal non-bait2bait interactions
   baitlen = length(unique(x$baitID)) 
   x[, isBait2bait := FALSE]
@@ -280,6 +301,7 @@ readSample = function(file, cd){
   }, by=baitID]
   x = x[isAllB2BProx==FALSE]
   set(x, NULL, "isAllB2BProx", NULL)
+  if(nrow(x) == 0) stop("All interactions have been filtered out.")
   
   message("Filtered out ", baitlen-length(unique(x$baitID)), " baits without proximal non-Bait2bait interactions\n")  
 
@@ -1462,7 +1484,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 #          Amend either setting before running the analysis\n")
 #   }
 
-  npb = fread(s$nperbinfile)
+  npb = fread(s$nperbinfile, skip=1L)
   setnames(npb, names(npb)[1], "baitID")
   for(i in 2:ncol(npb)){
     setnames(npb, names(npb)[i], paste0("bin", i-1))    
@@ -1515,7 +1537,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   #          Amend either setting before running the analysis\n")
   #   }
   
-  nbpb = fread(s$nbaitsperbinfile)
+  nbpb = fread(s$nbaitsperbinfile, skip=1L)
   setnames(nbpb, names(nbpb)[1], "otherEndID")
   for(i in 2:ncol(nbpb)){
     setnames(nbpb, names(nbpb)[i], paste0("bin", i-1))    
@@ -1566,7 +1588,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   #     stop("Bait files used for generating the ProxOE file and defined here do not match. 
   #          Amend either setting before running the analysis\n")
   #   }
-  proxOE = fread(s$proxOEfile)
+  proxOE = fread(s$proxOEfile, skip=1L)
   setnames(proxOE, 1:3, c("baitID", "otherEndID", "dist"))
   proxOE
   }
@@ -1786,6 +1808,13 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   if (!all(format %in% c("seqMonk","interBed", "washU_track", "washU_text"))){
     stop ("Format must be either seqMonk, interBed, washU_track or washU_text (or a vector containing several of these)\n")
   }
+  if("washU_track" %in% format)
+  {
+    if (!requireNamespace("Rsamtools", quietly = TRUE)) {
+      stop("Package Rsamtools required to export washU_track format.")
+    }
+  }
+
   if (! order %in% c("position","score")){
     stop ("Order must be either position (default) or score\n")
   }
@@ -1937,20 +1966,107 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       })
       res = gsub(" ", "", res)
       writeLines(res, con=paste0(outfileprefix,"_washU_track.txt"))
-      
-      ##attempt to perform steps 2, 3 as described http://washugb.blogspot.co.uk/2012/09/prepare-custom-long-range-interaction.html
-      exitcode1 <- system2("bgzip", paste0("-f ", outfileprefix,"_washU_track.txt"))
-      exitcode2 <- 1
-      if(exitcode1 == 0)
-      {
-        exitcode2 <- system2("tabix", paste0("-p bed ", outfileprefix,"_washU_track.txt.gz"))
-      }
-      if(exitcode1 != 0 | exitcode2 != 0)
-      {
-        warning("WashU Browser track format could not be finalized due to absence of bgzip or tabix. If you need this format, please see ?exportResults for help.")
-      }
+
+      Rsamtools::bgzip(paste0(outfileprefix,"_washU_track.txt"),
+          dest=paste0(outfileprefix,"_washU_track.txt.gz"))
+      Rsamtools::indexTabix(paste0(outfileprefix,"_washU_track.txt.gz"), format="bed")
     }
   }
+}
+
+exportToGI <- function(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                       order=c("position", "score")[1], removeMT=TRUE)
+{
+  if (any(c("rChr", "rStart", "rEnd", "rID", "bChr", "bStart", "bEnd", "bID") %in% colnames(cd@x))){
+    stop ("Colnames x shouldn't contain rChr, rStart, rEnd, rID, bChr, bStart, bEnd, bSign, bID\n") 
+  }
+
+  if (! order %in% c("position","score")){
+    stop ("Order must be either position (default) or score\n")
+  }
+  if (! removeMT %in% c(TRUE,FALSE)){
+    stop("removeMT must be TRUE or FALSE")
+  }
+  
+  message("Reading the restriction map file...")
+  rmap = fread(cd@settings$rmapfile)
+  setnames(rmap, "V1", "rChr")
+  setnames(rmap, "V2", "rStart")
+  setnames(rmap, "V3", "rEnd")
+  setnames(rmap, "V4", "otherEndID")
+  
+  message("Reading the bait map file...")
+  baitmap = fread(cd@settings$baitmapfile)
+  
+  setnames(baitmap, "V1", "baitChr")
+  setnames(baitmap, "V2", "baitStart")
+  setnames(baitmap, "V3", "baitEnd")
+  setnames(baitmap, cd@settings$baitmapFragIDcol, "baitID")
+  setnames(baitmap, cd@settings$baitmapGeneIDcol, "promID")
+  
+  message("Preparing the output table...")
+  
+  if (is.null(b2bcutoff)){
+    x = cd@x[ get(scoreCol)>=cutoff ]
+  }
+  else{
+    x = cd@x[ (isBait2bait==TRUE & get(scoreCol)>=b2bcutoff ) | 
+                ( isBait2bait==FALSE & get(scoreCol)>=cutoff )]
+  }
+  
+  x = x[, c("baitID", "otherEndID", "N", scoreCol), with=FALSE]
+  
+  setkey(x, otherEndID)
+  setkey(rmap, otherEndID)
+  
+  x = merge(x, rmap, by="otherEndID", allow.cartesian = TRUE)
+  setkey(x, baitID)
+  
+  setkey(baitmap, baitID)  
+  x = merge(x, baitmap, by="baitID", allow.cartesian = TRUE)
+  
+  # note that baitmapGeneIDcol has been renamed into "promID" above 
+  bm2 = baitmap[,c ("baitID", "promID"), with=FALSE]
+  
+  setDF(x)
+  setDF(bm2)
+  
+  # this way we can be sure that the new column will be called promID.y  
+  out = merge(x, bm2, by.x="otherEndID", by.y="baitID", all.x=TRUE, all.y=FALSE, sort=FALSE)
+  out[is.na(out$promID.y), "promID.y"] = "."
+  
+  out = out[,c("baitChr", "baitStart", "baitEnd", "baitID", "promID.x", "rChr", "rStart", "rEnd", "otherEndID", scoreCol, "N", "promID.y")]
+  
+  names(out) = c("bait_chr", "bait_start", "bait_end", "bait_ID", "bait_name", "otherEnd_chr", "otherEnd_start", "otherEnd_end", "otherEnd_ID", "score", "N_reads", "otherEnd_name")
+  
+  out$N_reads [ is.na(out$N_reads) ] = 0
+  out$score = round(out$score,2)
+  
+  if (order=="position"){
+    out = out[order(out$bait_chr, out$bait_start, out$bait_end, out$otherEnd_chr, out$otherEnd_start, out$otherEnd_end), ]
+  }
+  if (order=="score"){
+    out = out[order(out$score, decreasing=TRUE), ]
+  }
+  
+  if(removeMT)
+  {
+    ##Remove mitochondrial DNA
+    selMT <- tolower(out$bait_chr) == c("chrmt")
+    if(any(selMT))
+    {
+      out <- out[!selMT,]
+    }
+  }
+  
+  #out
+  
+  ##convert out to a GI
+  anchor.one = with(out, GenomicRanges::GRanges(as.character(bait_chr), IRanges::IRanges(start=bait_start, end=bait_end)))
+  anchor.two = with(out, GenomicRanges::GRanges(as.character(otherEnd_chr), IRanges::IRanges(start=otherEnd_start, end=otherEnd_end)))
+  GenomicInteractions::GenomicInteractions(anchor.one, anchor.two, experiment_name="CHiCAGO calls",
+                      counts=out$N_reads, baitName=out$bait_name, otherEndName=out$otherEnd_name,
+                      score= out$score)
 }
 
 copyCD <- function(cd)

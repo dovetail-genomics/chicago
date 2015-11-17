@@ -26,7 +26,7 @@ getScores(cd, method = "weightedRelative",
 }
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(cd)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \details{
 Weighting is performed using the parameters \code{weightAlpha}, \code{weightBeta}, \code{weightGamma}, \code{weightDelta}. Briefly, this function calculates weights \code{w} that decrease with increasing distance. Then, we construct weighted p-values \code{p/w}. As a result, the significance of long-range interactions is upweighted, and the significance of short-range interactions is downweighted.

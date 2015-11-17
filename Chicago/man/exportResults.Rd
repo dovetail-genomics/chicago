@@ -1,16 +1,19 @@
 \name{exportResults}
 \alias{exportResults}
+\alias{exportToGI}
 
 \title{
 Export Results
 }
 \description{
-Export the results from a \code{chicagoData} object to disk.
+Export the results from a \code{chicagoData} object to disk, or to a \code{\link[GenomicInteractions:GenomicInteractions]{GenomicInteractions}} object.
 }
 \usage{
 exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NULL,
         format = c("seqMonk", "interBed", "washU_text"),
         order = c("position", "score")[1], removeMT=TRUE)
+exportToGI(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
+                       order=c("position", "score")[1], removeMT=TRUE)
 }
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
@@ -18,7 +21,7 @@ exportResults(cd, outfileprefix, scoreCol = "score", cutoff = 5, b2bcutoff = NUL
   A character string that forms the prefix for each output file.
 }
   \item{scoreCol}{
-  The column of \code{cd@x} that contains the score.
+  The column of \code{intData(cd)} that contains the score.
 }
   \item{cutoff}{
   The score cutoff.
@@ -48,7 +51,9 @@ If you get the warning "WashU Browser track format could not be finalized due to
 If all else fails, and you need "washU_track" output, then you can manually perform the final steps yourself by running: \code{bgzip <outfileprefix>_washU_track.txt} and \code{tabix -p bed <outfileprefix>.txt.gz}.
 }
 \value{
-NULL
+\code{exportResults()}: NULL.
+
+\code{exportToGI()}: a \code{\link[GenomicInteractions:GenomicInteractions]{GenomicInteractions}} object. Anchor one is the bait, anchor two is the other end.
 }
 \author{
 Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
@@ -68,4 +73,6 @@ cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 tempDirectory <- tempdir()
 print(tempDirectory)
 exportResults(cdUnitTest, outfileprefix = file.path(tempDirectory, "unitTestOutput"))
+
+GI <- exportToGI(cdUnitTest)
 }

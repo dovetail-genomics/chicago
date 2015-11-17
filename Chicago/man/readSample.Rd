@@ -16,7 +16,7 @@ The location of an input file FIXME more details!
   \item{cd}{A \code{chicagoData} object.}
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(x)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \value{
 An object of class \code{chicagoData}.

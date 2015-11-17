@@ -15,7 +15,7 @@ chicagoPipeline(cd, outprefix = NULL, printMemory = FALSE)
   \item{printMemory}{Set to \code{TRUE} for memory diagnostics.}
 }
 \section{Warning}{
-The object \code{cd@x} is updated by reference. Thus, \code{cd@x} will be altered. See vignette for further information.
+The object \code{intData(cd)} is updated by reference. Thus, \code{intData(cd)} will be altered. See vignette for further information.
 }
 \details{
 This pipeline runs the following functions in order:
