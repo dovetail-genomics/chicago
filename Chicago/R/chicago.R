@@ -1668,13 +1668,19 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
               m=minProxOEPerBin, onlycuts=TRUE)
-  # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-  # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-  if (min(cuts)>min(transLen$transLength)){
-    cuts[1] = min(transLen$transLength)
-  }
-  if (max(cuts)<max(transLen$transLength)){
-    cuts[length(cuts)] = max(transLen$transLength)
+  # for really depleted data sets, cuts is 0.
+  if(length(cuts) == 1)
+  {
+    cuts <- c(min(transLen$transLength),max(transLen$transLength))
+  } else {
+    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+    if (min(cuts)>min(transLen$transLength)){
+      cuts[1] = min(transLen$transLength)
+    }
+    if (max(cuts)<max(transLen$transLength)){
+      cuts[length(cuts)] = max(transLen$transLength)
+    }
   }
   set(transLen, NULL, "tlb" , cut(transLen$transLength, breaks=cuts, include.lowest=TRUE))
   
@@ -1682,13 +1688,19 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
     
     cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
                    m=minProxB2BPerBin, onlycuts=TRUE)
-    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-    if (min(cutsB2B)>min(transLenB2B$transLength)){
-      cutsB2B[1] = min(transLenB2B$transLength)
-    }
-    if (max(cutsB2B)<max(transLenB2B$transLength)){
-      cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
+    # for really depleted data sets, cutsB2B is 0.
+    if(length(cutsB2B) == 1)
+    {
+      cutsB2B <- c(min(transLenB2B$transLength),max(transLenB2B$transLength))
+    } else {
+      # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+      # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+      if (min(cutsB2B)>min(transLenB2B$transLength)){
+        cutsB2B[1] = min(transLenB2B$transLength)
+      }
+      if (max(cutsB2B)<max(transLenB2B$transLength)){
+        cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
+      }
     }
     set(transLenB2B, NULL, "tlb", cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE))
     levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
