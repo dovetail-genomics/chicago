@@ -521,7 +521,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
 normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   
-  ##test to see if s_j, distbin, refBinMean columns exist, warn & delete if so
+  ##test to see if s_j, refBinMean columns exist, warn & delete if so
   replacedCols <- c("s_j", "refBinMean")
   sel <- replacedCols %in% colnames(cd@x)
   if(any(sel))
@@ -938,7 +938,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     
   message("Estimating technical noise based on trans-counts...")
 
-  ##test to see if s_j, distbin, refBinMean columns exist, warn & delete if so
+  ##test to see if tblb, Tmean columns exist, warn & delete if so
   replacedCols <- c("tblb", "Tmean")
   sel <- replacedCols %in% colnames(cd@x)
   if(any(sel))
