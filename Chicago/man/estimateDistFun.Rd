@@ -14,7 +14,7 @@ estimateDistFun(cd, method = "cubic", plot = TRUE, outfile = NULL)
 \arguments{
   \item{cd}{A \code{chicagoData} object.}
   \item{method}{
-Choice of method: "cubic" is currently the only allowed option, which fits a cubic spline with linear extrapolation.
+Choice of method: "cubic" is currently the only allowed option, which fits a cubic function with linear extrapolation, on a log-log scale.
 }
 %  \item{n.obs.head}{
 %If \code{method="lm"}, the number of observations in the head (see details).
