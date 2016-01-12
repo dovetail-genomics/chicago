@@ -5,6 +5,8 @@ Estimate Brownian Noise
 }
 \description{
 Estimates the dispersion, and adds a a \code{Bmean} column giving the mean Brownian noise.
+
+Usually, the dispersion is not calculated on the full dataset - rather, a subsample of baits is taken, and the dispersion is calculated on that. The number of baits used is taken from \code{brownianNoise.subset} (with an \code{NA} value meaning that the entire dataset is used, and no subsampling is performed).
 }
 \usage{
 estimateBrownianNoise(cd)
