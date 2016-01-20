@@ -109,6 +109,7 @@ defaultSettings <- function()
     tlb.minProxOEPerBin=1000, 
     tlb.minProxB2BPerBin=100,
     techNoise.minBaitsPerBin=1000, 
+    brownianNoise.samples=5,
     brownianNoise.subset=1000,
     brownianNoise.seed=NA,
     baitIDcol = "baitID",
@@ -764,12 +765,19 @@ estimateBrownianNoise <- function(cd) {
   
   s = cd@settings
   adjBait2bait=s$adjBait2bait
-  subset=s$brownianNoise.subset
-  seed = s$brownianNoise.seed
+  samples <- s$brownianNoise.samples
+  subset <- s$brownianNoise.subset
+  seed <- s$brownianNoise.seed
   maxLBrownEst = s$maxLBrownEst
   
   if (!is.na(seed)){
     set.seed(seed)
+  }
+  
+  if(is.null(samples))
+  {
+    warning("brownianNoise.samples setting missing - cd was made using an old version of Chicago. Setting brownianNoise.samples to 5, which you can change using modifySettings()")
+    cd@settings$brownianNoise.samples <- 5
   }
   
   siPresent <- "s_i" %in% colnames(cd@x)
@@ -780,6 +788,22 @@ estimateBrownianNoise <- function(cd) {
     message("s_i factors NOT found - variance will increase, estimating Brownian noise anyway...")
   }
   
+  cd@params$dispersion.samples <- replicate(samples, .estimateDispersion(cd))
+  cd@params$dispersion <- mean(cd@params$dispersion.samples)
+  
+  cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams) ##NB: Different results from invocation of .estimateBMean() in .estimateDispersion.
+  cd
+}
+
+.estimateDispersion <- function(cd)
+{
+  siPresent <- "s_i" %in% colnames(cd@x)
+
+  s = cd@settings
+  adjBait2bait=s$adjBait2bait
+  samples <- s$brownianNoise.samples
+  subset <- s$brownianNoise.subset
+  maxLBrownEst = s$maxLBrownEst
   
   ##Pre-filtering: get subset of data, store as x
   ##---------------------------------------------
@@ -875,7 +899,7 @@ estimateBrownianNoise <- function(cd) {
     if(any(is.na(x$s_i)))
     {
       ##If we don't have any information on a particular other end's s_i then...
-#       warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
+      #       warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
       x[,s_i := ifelse(is.na(s_i), 1, s_i)]
     }
   }
@@ -902,10 +926,9 @@ estimateBrownianNoise <- function(cd) {
   ##----------------
   
   ##NB Parametrization: var = mu + (mu^2)/dispersion
-  cd@params$dispersion <- model$theta
-  cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams)
-  cd
+  model$theta
 }
+
 
 .estimateBMean = function(x, distFunParams) {
   

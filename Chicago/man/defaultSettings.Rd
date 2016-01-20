@@ -31,6 +31,7 @@ A list of the following settings:
 \item{tlb.minProxOEPerBin}{Default: 1000}
 \item{tlb.minProxB2BPerBin}{Default: 100}
 \item{techNoise.minBaitsPerBin}{Default: 1000}
+\item{brownianNoise.samples}{Default: 5. Number of times subsampling occurs when estimating the Brownian noise dispersion.}
 \item{brownianNoise.subset}{Default: 1000. Number of baits sampled from when estimating the Brownian noise dispersion. If set to NA, then all baits are used.}
 \item{brownianNoise.seed}{Default: NA. If not NA, then \code{brownianNoise.seed} is used as the random number generator seed when subsampling baits. Set this to make your analysis reproducible.}
 \item{baitIDcol}{Default: "baitID". The name of the baitID column in intData(cd).}
