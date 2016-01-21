@@ -788,14 +788,33 @@ estimateBrownianNoise <- function(cd) {
     message("s_i factors NOT found - variance will increase, estimating Brownian noise anyway...")
   }
   
-  cd@params$dispersion.samples <- replicate(samples, .estimateDispersion(cd))
+  ##check if we are going to use the whole data set
+  if(!is.na(subset))
+  {
+    if(!class(subset) %in% c("numeric","integer")) {stop("'subset' must be an integer.")}
+    
+    ##much faster than in situ data.frame calculation
+    setkey(cd@x, baitID)
+    if(nrow(cd@x[, .I[1], by=baitID]) <= subset){ 
+      warning("subset > number of baits in data, so used the full dataset.\n")
+      subset=NA
+    }
+  }
+  ##if we're using the whole data set, there's no point repeatedly subsampling
+  if(is.na(subset) & samples != 1){
+    warning("We're using the whole data set to calculate dispersion. There's no reason to sample repeatedly in this case, so overriding brownianNoise.samples to 1.")
+    samples <- 1
+  }
+  proxOE <- .readProxOEfile(s)
+  cd@params$dispersion.samples <- replicate(samples, .estimateDispersion(cd, proxOE))
+  message("Getting consensus dispersion estimate...")
   cd@params$dispersion <- mean(cd@params$dispersion.samples)
   
   cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams) ##NB: Different results from invocation of .estimateBMean() in .estimateDispersion.
   cd
 }
 
-.estimateDispersion <- function(cd)
+.estimateDispersion <- function(cd, proxOE)
 {
   siPresent <- "s_i" %in% colnames(cd@x)
 
@@ -810,8 +829,6 @@ estimateBrownianNoise <- function(cd) {
   
   if(!is.na(subset))
   {
-    if(!class(subset) %in% c("numeric","integer")) {stop("'subset' must be an integer.")}
-    
     ##much faster than in situ data.frame calculation
     setkey(cd@x, baitID)
     if( nrow(cd@x[, .I[1], by=baitID])>subset){ 
@@ -819,15 +836,15 @@ estimateBrownianNoise <- function(cd) {
       x <- cd@x[J(sel.sub)]
     }
     else{
+      ##Use whole data set (a warning was triggered earlier)
       x <- cd@x
       subset=NA
-      warning("subset > number of baits in data, so used the full dataset.\n")
     }
   }
   else{
     x <- cd@x
   }
-  
+
   ##consider proximal region only...
   setkey(x, distSign)
   x = x[abs(distSign)<maxLBrownEst & is.na(distSign)==FALSE,] # will have NA for distal and trans interactions
@@ -843,10 +860,7 @@ estimateBrownianNoise <- function(cd) {
   
   ##1) Reinstate zeros:
   ##----------------
-  ##1A) Grab precomputed data.table: baitID, otherends in range, distance
-  proxOE <- .readProxOEfile(s)
-  
-  ##1B) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
+  ##1A) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
   ##   censored bait2bait pairs (etc...) already taken care of in pre-computation of ProxOE.  
   
   if(!is.na(subset)) {
@@ -859,7 +873,7 @@ estimateBrownianNoise <- function(cd) {
   setkey(proxOE, baitID)
   proxOE <- proxOE[J(sel.baits),]
   
-  ##1C) Merge with our data, thus reinstating zero pairs.
+  ##1B) Merge with our data, thus reinstating zero pairs.
   setkey(x, baitID, otherEndID)
   
   ##(make some lookup tables so we can get s_is, s_js later)
@@ -885,7 +899,7 @@ estimateBrownianNoise <- function(cd) {
     x <- merge(x, proxOE, all.y=TRUE)[,c("baitID","s_j","N","distSign","dist"), with=FALSE]
   }
   ##Merging like this means that we are missing N, s_i, s_j information for most of the rows. So:
-  ##1D) Repopulate table with information...
+  ##1C) Repopulate table with information...
   
   # TODO: Recast following, avoid lookup tables, instead subset and assign by reference
   ## - 0s in Ncol
@@ -919,7 +933,7 @@ estimateBrownianNoise <- function(cd) {
   
   ##3)Fit model
   ##---------
-  message("Calculating dispersion...")
+  message("Sampling the dispersion...")
   model <- glm.nb(formula= x$N ~ offset(log(x$Bmean)) + 0) 
   
   ##Construct Output
