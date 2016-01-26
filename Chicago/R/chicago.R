@@ -521,7 +521,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
 normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   
-  ##test to see if s_j, distbin, refBinMean columns exist, warn & delete if so
+  ##test to see if s_j, refBinMean columns exist, warn & delete if so
   replacedCols <- c("s_j", "refBinMean")
   sel <- replacedCols %in% colnames(cd@x)
   if(any(sel))
@@ -938,7 +938,7 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
     
   message("Estimating technical noise based on trans-counts...")
 
-  ##test to see if s_j, distbin, refBinMean columns exist, warn & delete if so
+  ##test to see if tblb, Tmean columns exist, warn & delete if so
   replacedCols <- c("tblb", "Tmean")
   sel <- replacedCols %in% colnames(cd@x)
   if(any(sel))
@@ -1633,6 +1633,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 
     # MEMORY-HUNGRY CODE
     # Watch this thread for possible solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1#comment46288765_29022185
+    # Note that B2B interactions appear twice, once each way - this means that by=otherEndID is fine (no need for a by=baitID fudge).
     transLen = x[, list(sum(distSign==transD), isBait2bait[1], distSign[1]), by=otherEndID]
     
     setnames(transLen, "V2", "isBait2bait")
@@ -1647,7 +1648,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   setnames(transLen, "V1", "transLength")
   
   transLen0 = transLen
-  transLen = transLen[transLength<quantile(transLen$transLength,1-filterTopPercent/100)] 
+  transLen = transLen[transLength<=quantile(transLen$transLength,1-filterTopPercent/100)] 
   filteredLen = nrow(transLen0[!otherEndID %in% transLen$otherEndID])
   message("Filtering out ", filteredLen, " other ends with top ", filterTopPercent, "% number of trans-interactions")
   
@@ -1668,29 +1669,43 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
               m=minProxOEPerBin, onlycuts=TRUE)
-  # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-  # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-  if (min(cuts)>min(transLen$transLength)){
-    cuts[1] = min(transLen$transLength)
+  # for really depleted data sets, cuts is a single number, usually 0.
+  if(length(cuts) == 1)
+  {
+    tlbClasses <- factor(rep(cuts, nrow(transLen)))
+  } else {
+    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+    if (min(cuts)>min(transLen$transLength)){
+      cuts[1] = min(transLen$transLength)
+    }
+    if (max(cuts)<max(transLen$transLength)){
+      cuts[length(cuts)] = max(transLen$transLength)
+    }
+    tlbClasses <- cut(transLen$transLength, breaks=cuts, include.lowest=TRUE)
   }
-  if (max(cuts)<max(transLen$transLength)){
-    cuts[length(cuts)] = max(transLen$transLength)
-  }
-  set(transLen, NULL, "tlb" , cut(transLen$transLength, breaks=cuts, include.lowest=TRUE))
+  set(transLen, NULL, "tlb" , tlbClasses)
   
   if (adjBait2bait){
     
     cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
                    m=minProxB2BPerBin, onlycuts=TRUE)
-    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-    if (min(cutsB2B)>min(transLenB2B$transLength)){
-      cutsB2B[1] = min(transLenB2B$transLength)
+    # for really depleted data sets, cutsB2B is a single number, usually 0.
+    if(length(cutsB2B) == 1)
+    {
+      tlbClassesB2B <- factor(rep(cutsB2B, nrow(transLenB2B)))
+    } else {
+      # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+      # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+      if (min(cutsB2B)>min(transLenB2B$transLength)){
+        cutsB2B[1] = min(transLenB2B$transLength)
+      }
+      if (max(cutsB2B)<max(transLenB2B$transLength)){
+        cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
+      }
+      tlbClassesB2B <- cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE)
     }
-    if (max(cutsB2B)<max(transLenB2B$transLength)){
-      cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
-    }
-    set(transLenB2B, NULL, "tlb", cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE))
+    set(transLenB2B, NULL, "tlb", tlbClassesB2B)
     levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
     
     transLen = rbind(transLen, transLenB2B)
