@@ -12,20 +12,20 @@ library(argparser)
 
 args = commandArgs(trailingOnly=TRUE)
 
-p = arg.parser("Get the parameters for the p-value weighting curve (alpha through delta). Specify '--inputs' OR '--summaryInput'.", name="Rscript fitDistCurve.R")
+p = arg_parser("Get the parameters for the p-value weighting curve (alpha through delta). Specify '--inputs' OR '--summaryInput'.", name="Rscript fitDistCurve.R")
 
-p = add.argument(p, arg="<output-prefix>", help = "Output files: settings file for use in CHiCAGO, summary object, and plot.", default = "fitDistCurve.settingsFile")
-p = add.argument(p, arg="--inputs", help = "Comma-separated list: locations of saved CHiCAGO objects (either .Rda or .Rds).")
-p = add.argument(p, arg="--summaryInput", help = "An .Rda file of summary information -- the max P-val for each putative interaction, and the location of the .rmap file. This file will be generated if it wasn't provided.")
-p = add.argument(p, arg="--threshold", help = "Threshold applied to -log(p) values (NB: not the CHiCAGO score!).", default = -10)
-p = add.argument(p, arg="--subsets", help = "Number of subsets to partition the data into. Parameters estimated on subsets, median taken.", default = 5)
+p = add_argument(p, arg="<output-prefix>", help = "Output files: settings file for use in CHiCAGO, summary object, and plot.", default = "fitDistCurve.settingsFile")
+p = add_argument(p, arg="--inputs", help = "Comma-separated list: locations of saved CHiCAGO objects (either .Rda or .Rds).")
+p = add_argument(p, arg="--summaryInput", help = "An .Rda file of summary information -- the max P-val for each putative interaction, and the location of the .rmap file. This file will be generated if it wasn't provided.")
+p = add_argument(p, arg="--threshold", help = "Threshold applied to -log(p) values (NB: not the CHiCAGO score!).", default = -10)
+p = add_argument(p, arg="--subsets", help = "Number of subsets to partition the data into. Parameters estimated on subsets, median taken.", default = 5)
 
-p = add.argument(p, arg="--largeBinSize", help = "Largest bin size to consider", default = 1E6L)
-p = add.argument(p, arg="--binNumber", help = "Number of large bins", default = 16L)
-p = add.argument(p, arg="--halfNumber", help = "First bin is subdivided into halves - the number of times to do this", type = "integer", default = as.integer(5L))
+p = add_argument(p, arg="--largeBinSize", help = "Largest bin size to consider", default = 1E6L)
+p = add_argument(p, arg="--binNumber", help = "Number of large bins", default = 16L)
+p = add_argument(p, arg="--halfNumber", help = "First bin is subdivided into halves - the number of times to do this", type = "integer", default = as.integer(5L))
 
 
-opts = parse.args(p, args)
+opts = parse_args(p, args)
 
 print(opts)
 
