@@ -1473,11 +1473,11 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 }  
 
 .readRmap = function(s){
-  fread(s$rmapfile)
+  fread(s$rmapfile, colClasses = list(character=1))
 }
 
 .readBaitmap = function(s){
-  fread(s$baitmapfile)
+  fread(s$baitmapfile, colClasses = list(character=1))
 }
 
 .readNPBfile = function(s){
