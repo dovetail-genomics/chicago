@@ -225,7 +225,7 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
     }
   }
   
-  bm = fread(def.settings[["baitmapfile"]])
+  bm = .readBaitmap(def.settings)
   if(ncol(bm)<max(c(def.settings[["baitmapFragIDcol"]], def.settings[["baitmapGeneIDcol"]]))){
     stop("There are fewer columns in the baitmapfile than expected. Check that this file lists both the IDs and names for each baited fragment,
 and that the corresponding columns are specified in baitmapFragIDcol and baitmapGeneIDcol, respectively.")
@@ -1022,8 +1022,8 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
   message("Preparing the data...", appendLF = FALSE)
   
   # Now adding the zeros based on how many trans-interactions are possible in each (tlb, tblb) bin
-  baitmap = fread(cd@settings$baitmapfile)
-  rmap = fread(cd@settings$rmapfile)
+  baitmap = .readBaitmap(cd@settings)
+  rmap = .readRmap(cd@settings)
     
   setnames(rmap, "V1", "chr")
   setnames(baitmap, "V1", "chr")
@@ -1192,9 +1192,9 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(!is.null(rmapfile))
   {
-    rmap <- fread(rmapfile)
+    rmap <- .readRmap(list(rmapfile=rmapfile))
   } else {
-    rmap = fread(cd@settings$rmapfile)
+    rmap = .readRmap(cd@settings)
   }
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
@@ -1211,12 +1211,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   set <- cd@settings
   
   ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
-  rmap = fread(set$rmapfile)
+  rmap = .readRmap(set)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   chrMax <- rmap[,max(end),by="chr"] ##length of each chr
   
-  baitmap = fread(set$baitmapfile)
+  baitmap = .readBaitmap(set)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
   avgFragLen <- .getAvgFragLength(cd) ##average fragment length
@@ -1249,12 +1249,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   delta = set$weightDelta
   
   ##2. Get genomic/fragment map information
-  rmap = fread(set$rmapfile)
+  rmap = .readRmap(set)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   chrMax <- rmap[,max(end),by="chr"] ##length of each chr
   
-  baitmap = fread(set$baitmapfile)
+  baitmap = .readBaitmap(set)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
   chr <- as.character(names(nBaits))
@@ -1471,6 +1471,14 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   xAll
   
 }  
+
+.readRmap = function(s){
+  fread(s$rmapfile)
+}
+
+.readBaitmap = function(s){
+  fread(s$baitmapfile)
+}
 
 .readNPBfile = function(s){
   
@@ -1775,7 +1783,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=1e6, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
 {
   if(plotBaitNames){
-    baitmap = fread(cd@settings$baitmapfile)
+    baitmap = .readBaitmap(cd@settings)
   }
   if (is.null(baits)){
     baits = sample(unique(cd@x$baitID),n)
@@ -1875,14 +1883,14 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   }
   
   message("Reading the restriction map file...")
-  rmap = fread(cd@settings$rmapfile)
+  rmap = .readRmap(cd@settings)
   setnames(rmap, "V1", "rChr")
   setnames(rmap, "V2", "rStart")
   setnames(rmap, "V3", "rEnd")
   setnames(rmap, "V4", "otherEndID")
   
   message("Reading the bait map file...")
-  baitmap = fread(cd@settings$baitmapfile)
+  baitmap = .readBaitmap(cd@settings)
   
   setnames(baitmap, "V1", "baitChr")
   setnames(baitmap, "V2", "baitStart")
@@ -2041,14 +2049,14 @@ exportToGI <- function(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
   }
   
   message("Reading the restriction map file...")
-  rmap = fread(cd@settings$rmapfile)
+  rmap = .readRmap(cd@settings)
   setnames(rmap, "V1", "rChr")
   setnames(rmap, "V2", "rStart")
   setnames(rmap, "V3", "rEnd")
   setnames(rmap, "V4", "otherEndID")
   
   message("Reading the bait map file...")
-  baitmap = fread(cd@settings$baitmapfile)
+  baitmap = .readBaitmap(cd@settings)
   
   setnames(baitmap, "V1", "baitChr")
   setnames(baitmap, "V2", "baitStart")
@@ -2131,7 +2139,7 @@ copyCD <- function(cd)
 wb2b = function(oeID, s, baitmap=NULL){
   # s is the current chicagoData object's settings list
   if (is.null(baitmap)){
-    baitmap = fread(s$baitmapfile)
+    baitmap = .readBaitmap(s)
   }
   which(oeID %in% baitmap[[s$baitmapFragIDcol]])
 }
