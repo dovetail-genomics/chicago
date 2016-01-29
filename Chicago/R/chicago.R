@@ -145,7 +145,7 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
   cd@settings = .updateSettings(designDir, settings, settingsFile, def.settings=cd@settings, updateDesign=TRUE)   
 
   ##test validity of new object
-  validObject(cd)
+  #validObject(cd)
   
   cd
 }
