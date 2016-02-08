@@ -77,7 +77,7 @@ settingsFile <- file.path(system.file("extdata", package="PCHiCdata"),
                           "sGM12878Settings", "sGM12878.settingsFile")
 ```
 
-Omit this step unless you know which settings you wish to alter.
+Omit this step unless you know which settings you wish to alter. If you are using non-human samples, or a very unusual cell type, one set of options that you might want to change is the weighting parameters: see [Using different weights](#using-different-weights).
 
 ## Example workflow
 
@@ -311,6 +311,23 @@ To avoid this behaviour, copy the *chicagoData* object first:
 ```{r}
 newCd = copyCD(cd)
 ```
+
+##Using different weights
+
+CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. This procedure has four tuning parameters.
+
+The default values of these tuning parameters were calibrated on calls from seven human Macrophage data sets. Provided that your cell type is not too dissimilar to these calibration data, it should be fine to leave the parameters at their default settings. However, if your data set is from a different species or an unusual cell type, you may wish to recalibrate these parameters using data from cell types similar to yours. You can do this with the fitDistCurve.R script in *chicagoTools*.
+
+First, run all of the samples through ``chicagoPipeline()``, saving each ``chicagoData`` object in individual .rds files (see ``saveRDS()``). Alternatively, if you are using the runChicago.R wrapper, .rds files should be generated automatically.
+
+Second, run the fitDistCurve.R script. An example with three biological replicates might look like this:
+
+```{r, engine='bash', eval=FALSE}
+Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds 
+```
+
+This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
+[Input files required](#input-files-required) section.
 
 ##Session info
 
