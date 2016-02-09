@@ -756,6 +756,17 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   exp(out)
 }
 
+plotDistFun <- function(cd, ...){
+  ##TODO: alternative method where we get the observed values too
+  params <- cd@params$distFunParams
+
+  my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
+  my.d <- exp(my.log.d)
+  plot(my.log.d, log(Chicago:::.distFun(my.d, params)), type = "l", 
+       main = "Distance function estimate", xlab = "log(distance)", 
+       ylab = "log(f(d))", col = "Red", ...)
+}
+
 estimateBrownianNoise <- function(cd) {
   ##1) Reinstate zeros
   ##2) Add a "Bmean" column to x, giving expected Brownian noise.
