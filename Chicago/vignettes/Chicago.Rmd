@@ -316,18 +316,20 @@ newCd = copyCD(cd)
 
 CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. This procedure has four tuning parameters.
 
-The default values of these tuning parameters were calibrated on calls from seven human Macrophage data sets. Provided that your cell type is not too dissimilar to these calibration data, it should be fine to leave the parameters at their default settings. However, if your data set is from a different species or an unusual cell type, you may wish to recalibrate these parameters using data from cell types similar to yours. You can do this with the fitDistCurve.R script in *chicagoTools*.
+The default values of these tuning parameters were calibrated on calls from seven human Macrophage data sets. Provided that your cell type is not too dissimilar to these calibration data, it should be fine to leave the parameters at their default settings. However, if your data set is from a different species or an unusual cell type, you may wish to recalibrate these parameters using data from cell types similar to yours. You can do this with the fitDistCurve.R script in *chicagoTools*, which we demonstrate in this section.
 
 First, run all of the samples through ``chicagoPipeline()``, saving each ``chicagoData`` object in individual .rds files (see ``saveRDS()``). Alternatively, if you are using the runChicago.R wrapper, .rds files should be generated automatically.
 
-Second, run the fitDistCurve.R script. As an example, if we had three biological replicates of mESC cells, we might run the following script in BASH:
+Second, run the fitDistCurve.R script. As an example, if we had three biological replicates of mESC cells, we might run the following script at the Unix command prompt:
 
 ```{r, engine='bash', eval=FALSE}
 Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds 
 ```
 
 This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
-[Input files required](#input-files-required) section. Some example weights are provided in the package:
+[Input files required](#input-files-required) section.
+
+Additionally, a set of precomputed weights are provided in the package:
 
 ```{r}
 weightsPath <- file.path(system.file("extdata", package="Chicago"),
