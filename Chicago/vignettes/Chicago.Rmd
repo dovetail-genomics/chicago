@@ -330,16 +330,16 @@ This script produces the file mESC.settingsFile, which you can read in to ``modi
 [Input files required](#input-files-required) section. Some example weights are provided in the package:
 
 ```{r}
-dataPath <- system.file("extdata", package="PCHiCdata")
-testDesignDir <- file.path(dataPath, "hg19TestDesign")
-dir(testDesignDir)
-
+weightsPath <- file.path(system.file("extdata", package="Chicago"),
+                         "weights")
+dir(weightsPath)
 ```
 
-For example, to use the GM12878 weights, do the following:
+For example, to use the GM12878 weights, supply the appropriate settings file to ``setExperiment()`` as per the following:
 
 ```{r}
-
+weightSettings <- file.path(weightsPath, "GM12878-3reps.settings")
+cd <- setExperiment(designDir = testDesignDir, settingsFile = weightSettings)
 ```
 
 ##Session info
