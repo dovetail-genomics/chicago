@@ -320,14 +320,27 @@ The default values of these tuning parameters were calibrated on calls from seve
 
 First, run all of the samples through ``chicagoPipeline()``, saving each ``chicagoData`` object in individual .rds files (see ``saveRDS()``). Alternatively, if you are using the runChicago.R wrapper, .rds files should be generated automatically.
 
-Second, run the fitDistCurve.R script. An example with three biological replicates might look like this:
+Second, run the fitDistCurve.R script. As an example, if we had three biological replicates of mESC cells, we might run the following script in BASH:
 
 ```{r, engine='bash', eval=FALSE}
 Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds 
 ```
 
 This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
-[Input files required](#input-files-required) section.
+[Input files required](#input-files-required) section. Some example weights are provided in the package:
+
+```{r}
+dataPath <- system.file("extdata", package="PCHiCdata")
+testDesignDir <- file.path(dataPath, "hg19TestDesign")
+dir(testDesignDir)
+
+```
+
+For example, to use the GM12878 weights, do the following:
+
+```{r}
+
+```
 
 ##Session info
 
