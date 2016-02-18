@@ -2,11 +2,14 @@ chicagoTools are an assorted set of scripts associated with the Chicago R packag
 
 Currently it includes the following software:
 
-- Scripts for preparing "design files" needed for the Chicago package:  
+- The script for preparing "design files" needed for the Chicago package:
+       + makeDesignFiles.py
+
+- Deprecated individual scripts for preparing the same "design files":  
        + makeNBaitsPerBinFile.py  
        + makeNPerBinFile.py  
        + makeProxOEFile.py  
-    
+          
 - The script for processing BAM files into Chicago input files:  
        + bam2chicago.sh  
    
@@ -19,17 +22,15 @@ Currently it includes the following software:
 - The script for reestimating Chicago p-value weighting parameters based on user data:
        + fitDistCurve.R  
   
-**Scripts for preparing the "design files" needed for the Chicago package**
+**The script for preparing the "design files" needed for the Chicago package**
   
 A new set of design files needs to be generated for each combination of restriction enzyme and captured baits (i.e., when
 .baitmap and/or .rmap files are updated). (Note that it is possible to also create "virtual digests" in the same way, 
-where the actual restriction fragments are pooled into larger "virtual" fragments). Each python script (makeNPerBinFile.py, makeNBaitsPerBinFile.py,
-makeProxOEFile.py) prepares one type of design file, respectively. They are compatible with python version 2.7+ (but not 3.x).  
+where the actual restriction fragments are pooled into larger "virtual" fragments). The python script makeDesignFiles.py prepares all of these file. The script os compatible with python version 2.7+ (but not 3.x).  
 
-**Important**: All of these scripts need to be re-run (in any order or in parallel) when updating the experimental design with respect to  
-either restriction enzyme, capture design or Chicago settings with respect to binning, proximal distance range and/or restriction fragment filtering. 
+**Important**: The makeDesignFiles.py script needs to be re-run when updating the experimental design with respect to either restriction enzyme, capture design or Chicago settings with respect to binning, proximal distance range and/or restriction fragment filtering. 
   
-These scripts take the following input files:  
+The script uses as input the following files:  
   
 - rmap file (```.rmap```): a tab-separated file of the format ```<chr> <start> <end> <numeric ID>```, describing the restriction digest (or "virtual digest" 
   if pooled fragments are used). These numeric IDs are referred to as "otherEndID" in Chicago. All fragments mapping outside of the digest coordinates will be disregarded 
@@ -38,7 +39,7 @@ These scripts take the following input files:
   baited/captured restriction fragments (should be a subset of the fragments listed in rmapfile), their numeric IDs (should match those listed in 
   rmapfile for the corresponding fragments) and their annotations (such as, for example, the names of baited promoters). The numeric IDs are referred to as "baitID" in Chicago.    
   
-These files are ASCII files containing the following information:  
+The files it generates are ASCII files containing the following information:  
   
 - NPerBin file (.npb): <baitID> <Total no. valid restriction fragments in distance bin 1> ... <Total no. valid restriction fragments in distance bin N>,  
 where the bins map within the "proximal" distance range from each bait (0; maxLBrownEst] and bin size is defined by the binsize parameter.  
@@ -48,13 +49,13 @@ where the bins map within the "proximal" distance range from each other end (0; 
 for all combinations of baits and other ends that map within the "proximal" distance range from each other (0; maxLBrownEst].  
 Data in each file is preceded by a comment line listing the input parameters used to generate them.  
    
-All three scripts take the same input parameters:  
+The script takes the following input parameters:  
    
 ``` python makeNPerBinFile.py / makeNBaitsPerBinFile.py / makeProxOEFile.py  
 	[--designDir=.]  
     [--rmapfile=designDir/*.rmap]  
 	[--baitmapfile=designDir/*.baitmap]  
-	[--outfile=designDir/<rmapfileName>.<npb|nbpb|poe>]  
+	[--outfilePrefix=designDir/<rmapfileName>]  
     [--minFragLen=150]   
     [--maxFragLen=40000]   
     [--maxLBrownEst=1500000]  
@@ -65,12 +66,12 @@ All three scripts take the same input parameters:
 - The following parameters specify the input files that need to be created prior to running these scripts and the output file name:  
     + rmapfile: path to rmap file   
     + baitmapfile: path to baitmap file        
-    + outfile: the name of the output file (if not provided, will have the same name as the rmap file and the extension specific to each of the
-  three file types: .npb (makeNPerBinFile.py), .nbpb (makeNBaitsPerBinFile.py) and .poe (makeProxOEFile.py), respectively.   
-    + designDir: if rmapfile, baitmapfile and/or outfile are not explicitly specified, the scripts will automatically look for rmapfile and baitmapfile at this location (under the extensions 
+    + outfilePrefix: the name of the output file prefix, including the path (if not provided, will have the same name as the rmap file and the extension specific to each of the
+  three file types: .npb, .nbpb and .poe, respectively.   
+    + designDir: if rmapfile, baitmapfile and/or outfile are not explicitly specified, the script will automatically look for rmapfile and baitmapfile at this location (under the extensions 
 .rmap and .baitmap, respectively), and will also place the output files there.   
           
-- The following options should be consistent with the corresponding settings in the Chicago R package, and the scripts need to be rerun whenever these settings are modified:   
+- The following options should be consistent with the corresponding settings in the Chicago R package, and the script needs to be rerun whenever these settings are modified:   
     + binsize: the size of the bins (in bps) for pooling restriction fragments   
     + minFragLen: the min fragment length cutoff    
     + maxFragLen: the max fragment length cutoff   
