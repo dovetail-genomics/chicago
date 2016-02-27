@@ -3,6 +3,7 @@ import sys
 import random
 import fnmatch
 import os
+from collections import Counter
 
 class Unbuffered(object):
    def __init__(self, stream):
@@ -30,8 +31,8 @@ outfilePrefix = ""
 designDir=""
 
 def usage():
-  print "Usage: python makeAuxFiles.py [--minFragLen=%d] [--maxFragLen=%d]  [--maxLBrownEst=%d] [--binsize=%d] [removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=designDir/*.rmap]\n\t[--baitmapfile=designDir/*.baitmap]\n\t[--designDir=.]\n\t[--outfilePrefix]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output files will be saved in the designDir unless explicitly specified." \
-  % (maxLBrownEst, binsize)
+  print "Usage: python makeAuxFiles.py [--minFragLen=%d] [--maxFragLen=%d]  [--maxLBrownEst=%d] [--binsize=%d] [removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=<designDir>/*.rmap]\n\t[--baitmapfile=<designDir>/*.baitmap]\n\t[--designDir=.]\n\t[--outfilePrefix]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output files will be saved in the designDir unless explicitly specified." \
+  % (minFragLen, maxFragLen, maxLBrownEst, binsize)
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'l:b:jr:b:o:d:', \
@@ -119,14 +120,27 @@ chr = []
 st = []
 end = []
 id = []
+r_row = set()
 for line in a:
   line = line.strip()
+  r_row.add(line)
   l = line.split("\t")
+  if len(l)!=4:
+    print "Error: rmap file should have 4 columns: <chr> <start> <end> <id>. Got %d:" % len(l)
+    print l
+    sys.exit(0)
   chr.append(l[0])
   st.append(int(l[1]))
   end.append(int(l[2]))
   id.append(int(l[3]))
 a.close()
+
+if len(set(id)) != len(id):
+  z = [k for k,v in Counter(id).items() if v>1]
+  print "Error: duplicate IDs found in rmap:"
+  print z
+  print "Exiting...\n"
+  sys.exit(1)
 
 b = open(baitmapfile)
 print "Reading baitmap..."
@@ -134,10 +148,31 @@ bid = []
 for line in b:
   line = line.strip()
   l = line.split("\t")
+  if len(l)!=5:
+    print "Error: baitmap file should have 5 columns: <chr> <start> <end> <id> <annotation>. Got %d:" % len(l)
+    print l
+    sys.exit(1)
+  if "\t".join(l[0:4]) not in r_row:
+    print "Error - the following entry in baitmapfile is not found in rmap:"
+    print l[0:4]
+    print "Exiting...\n"
+    sys.exit(1)
   bid.append(int(l[3]))
 b.close()
 
+del r_row
+
+bid0 = bid
 bid = set(bid)
+
+if len(bid) != len(bid0):
+  z = [k for k,v in Counter(bid0).items() if v>1]
+  print "Error: duplicate IDs found in baitmap:"
+  print z
+  print "Exiting...\n"
+  sys.exit(1)
+
+del bid0
 
 print "Sorting rmap..."
 
