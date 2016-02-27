@@ -23,6 +23,35 @@ digestbed=$3
 samplename=$4
 nodelete=$5
 
+awk 'BEGIN{
+   print "Checking rmap and baitmap files..." 
+   ok=1
+}{
+ if(FNR==NR){
+   if(!id[$4]){
+     id[$4]=1;
+   }else{
+     print "Error! Duplicated fragment IDs found in rmap file at line "FNR; 
+     ok=0;
+   } 
+   rmap[$1"_"$2"_"$3"_"$4] = 1;
+ }else{
+   if(!bid[$4]){
+     bid[$4]=1;
+   }else{
+     print "Error! Duplicated fragment IDs found in baitmap file at line "FNR;
+     ok=0;
+   }
+   if(!rmap[$1"_"$2"_"$3"_"$4]){
+     print "Error! Baitmap entry at line "FNR" not found in rmap. (Check that <baitmapfile> and <rmapfile> are given as the 2nd and 3rd arguments respectively, and not the other way round).";  
+     ok=0;
+   }
+ }
+}END{
+ if (ok){print "Rmap and baitmap files checked successfully";}
+ else{print "Checking completed with errors"; exit 1;}
+}' ${digestbed} ${baitfendsid}
+
 mkdir -p ${samplename}
 
 echo "Processing sample ${samplename}..."
