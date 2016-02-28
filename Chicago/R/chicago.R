@@ -225,12 +225,42 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
     }
   }
   
+  message("Checking the design files...")
+
   bm = .readBaitmap(def.settings)
   if(ncol(bm)<max(c(def.settings[["baitmapFragIDcol"]], def.settings[["baitmapGeneIDcol"]]))){
-    stop("There are fewer columns in the baitmapfile than expected. Check that this file lists both the IDs and names for each baited fragment,
+    stop("There are fewer columns in the baitmapfile than expected. Check that this file lists the genomic coordinates as well as both the IDs and names for each baited fragment,
 and that the corresponding columns are specified in baitmapFragIDcol and baitmapGeneIDcol, respectively.")
   }
+  rmap = .readRmap(def.settings)
+  if (ncol(rmap)<4){
+    stop("There are fewer columns in the rmap file than expected. This file should have 4 columns, listing the genomic coordinates and IDs for each restriction fragment.")
+  }
+  if (ncol(rmap)>4){
+    stop("There are more columns in the rmap file than expected. This file should have 4 columns, listing the genomic coordinates and IDs for each restriction fragment. Check that rmapfile and baitmap files aren't swapped round\n")
+  }
   
+  if (any(duplicated(bm[[def.settings[["baitmapFragIDcol"]]]]))){
+    stop(paste("Duplicated fragment IDs found in baitmapfile (listed below). 
+               Check that the baitmapFragIDcol (usually 4) and baitmapGeneIDcol 
+               (usually 5) aren't swapped round:\n", 
+               paste(bm[[def.settings[["baitmapFragIDcol"]]]][duplicated(bm[[def.settings[["baitmapFragIDcol"]]]])], 
+                     collapse=",")))
+  }
+
+  if (any(duplicated(rmap[[4]]))){
+    stop(paste("Duplicated fragment IDs found in rmapfile (listed below):\n", 
+               paste(rmap[[4]][duplicated(rmap[[4]])], collapse=",")))
+  }
+
+  setkeyv(rmap, names(rmap))
+  setkeyv(bm, names(bm[c(1:3, def.settings[["baitmapFragIDcol"]])]))
+  if (nrow(merge(rmap, bm))!=nrow(bm)){ 
+     message("Error: Some entries of baitmap are not present in baitmap (listed below).\n") 
+     print(bm[!merge(bm, rmap)])
+     stop()
+  }
+
   def.settings
 }
 
@@ -246,7 +276,7 @@ readSample = function(file, cd){
   }else{
     x = fread(file)
   }
-  
+    
   message("Processing input...")
   
   s = cd@settings
@@ -264,7 +294,17 @@ readSample = function(file, cd){
   setnames(x, s$Ncol, "N")
   setnames(x, s$distcol, "distSign")
   setnames(x, s$otherEndLencol, "otherEndLen")
-    
+
+  ## check that the file looks like it is produced with the specified array design
+  bm = .readBaitmap(s)
+  if (!all(x$baitID %in% bm[[s$baitmapFragIDcol]])){
+    stop("Some entries of the input file have baitIDs not in the baitmapfile. Check that the specified design files are correct.\n")
+  }
+  rmap = .readRmap(s)
+  if (!all(x$otherEndIDcol %in% rmap[[4]])){
+    stop("Some entries of the input file have oeIDs not in the rmapfile. Check that the specified design files are correct.\n")
+  }
+  
   xlen = nrow(x)
   x = x[otherEndLen %between% c(s$minFragLen,s$maxFragLen)]
   message("minFragLen = ", s$minFragLen, " maxFragLen = ", s$maxFragLen)
