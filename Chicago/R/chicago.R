@@ -302,7 +302,7 @@ readSample = function(file, cd){
   }
   rmap = .readRmap(s)
   if (!all(x$otherEndIDcol %in% rmap[[4]])){
-    stop("Some entries of the input file have oeIDs not in the rmapfile. Check that the specified design files are correct.\n")
+    stop("Some entries of the input file have otherEndIDs not in the rmapfile. Check that the specified design files are correct.\n")
   }
   
   xlen = nrow(x)
