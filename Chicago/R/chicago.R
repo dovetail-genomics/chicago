@@ -256,7 +256,7 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
   setkeyv(rmap, names(rmap))
   setkeyv(bm, names(bm[c(1:3, def.settings[["baitmapFragIDcol"]])]))
   if (nrow(merge(rmap, bm))!=nrow(bm)){ 
-     message("Error: Some entries of baitmap are not present in baitmap (listed below).\n") 
+     message("Error: Some entries of baitmap are not present in rmap (listed below).\n") 
      print(bm[!merge(bm, rmap)])
      stop()
   }
