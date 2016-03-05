@@ -1,4 +1,4 @@
-peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample_number, position_otherEnd= NULL,colname_dist=NULL,
+peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins=NULL, sample_number, position_otherEnd= NULL,colname_dist=NULL,
                                     score=5, colname_score="score",min_dist=0, max_dist=NULL,  sep="\t", filterB2B=TRUE, 
                                     b2bcol="isBait2bait", unique=TRUE,plot_name=NULL, trans=FALSE, plotPeakDensity=FALSE) {
   # Check that all features have different names
@@ -120,7 +120,7 @@ peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample
   return(result_5) 
 }
 # This function bins results assigns probabilities to bins depending on their distance from bait
-.binning <- function(sign, no_bins, x1_nonsign,min_dist=NULL, max_dist=NULL) {
+.binning <- function(sign, no_bins=NULL, x1_nonsign,min_dist=NULL, max_dist=NULL) {
   if(!is.data.table(sign)){setDT(sign)}
   # Bin distances from bait in sign - 100 bins
   
@@ -134,6 +134,12 @@ peakEnrichment4Features <- function(x1, folder=NULL,  list_frag, no_bins, sample
   
   if(is.null(max_dist)){
     max_dist=max(sign$dist)
+  }
+  
+  if(is.null(no_bins)){
+    cat("no_bins not specified.\nParameter will be specified so that bin size is approximately 10kb.\nIn addition, if the computed number falls below 5 bins, no_bins will be set to 5.\n")
+    no_bins <- max(5, ceiling((max_dist - min_dist)/1e4))
+    cat(paste0("no_bins was set to ",no_bins,".\n"))
   }
   
   
