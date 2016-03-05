@@ -312,7 +312,14 @@ readSample = function(file, cd){
   if(nrow(x) == 0) stop("All interactions have been filtered out.")
   
   setkey(x, baitID)
-    
+
+  ## remove self-ligation events
+  oldlen = nrow(x)
+  x = x[distSign!=0 | is.na(distSign)]
+  if(oldlen>nrow(x)){
+     message("Filtered out ", oldlen-nrow(x), " self-ligation events.\n")
+  }
+  
   ## remove baits that have no observations within the proximal range
   baitlen = length(unique(x$baitID)) 
   x = x[, nperbait:=sum(N), by=baitID]
