@@ -1864,6 +1864,12 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   
   setkey(cd@x, baitID)
 
+  if(!is.null(xlim)){
+	if(abs(xlim[1])>maxD | abs(xlim[2])>maxD){
+		maxD = max(abs(xlim[1]), abs(xlim[2]))
+	}
+  }
+
   for(i in 1:n){
 
     this = cd@x[J(baits[i])]
