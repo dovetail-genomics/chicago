@@ -1864,9 +1864,12 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   
   setkey(cd@x, baitID)
 
-  if(!is.null(xlim)){
-	if(abs(xlim[1])>maxD | abs(xlim[2])>maxD){
-		maxD = max(abs(xlim[1]), abs(xlim[2]))
+  myArgs = list(...)
+  xlimInArgs = ("xlim" %in% names(myArgs))
+
+  if(xlimInArgs){
+	if(abs(myArgs$xlim[1])>maxD | abs(myArgs$xlim[2])>maxD){
+		maxD = max(abs(myArgs$xlim[1]), abs(myArgs$xlim[2]))
 	}
   }
 
