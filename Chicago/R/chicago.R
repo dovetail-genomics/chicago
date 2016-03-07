@@ -1867,9 +1867,13 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   myArgs = list(...)
   xlimInArgs = ("xlim" %in% names(myArgs))
 
+  minD = NULL
   if(xlimInArgs){
-	if(abs(myArgs$xlim[1])>maxD | abs(myArgs$xlim[2])>maxD){
-		maxD = max(abs(myArgs$xlim[1]), abs(myArgs$xlim[2]))
+        minD = myArgs$xlim[1]
+	maxD = myArgs$xlim[2]
+  }else{
+        if(!is.null(maxD)){
+		minD = -maxD
 	}
   }
 
@@ -1882,7 +1886,10 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     this = this[is.na(distSign)==FALSE]
 
     if (!is.null(maxD)){
-       this = this[abs(distSign)<=maxD]
+       this = this[distSign<=maxD]
+    }
+    if(!is.null(minD)){
+       this = this[distSign>=minD]
     }
      
     if (removeBait2bait){
