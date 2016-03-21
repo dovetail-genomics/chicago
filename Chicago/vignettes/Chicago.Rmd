@@ -340,7 +340,7 @@ dir(weightsPath)
 For example, to use the GM12878 weights, supply the appropriate settings file to ``setExperiment()`` as per the following:
 
 ```{r}
-weightSettings <- file.path(weightsPath, "GM12878-3reps.settings")
+weightSettings <- file.path(weightsPath, "GM12878-2reps.settings")
 cd <- setExperiment(designDir = testDesignDir, settingsFile = weightSettings)
 ```
 
