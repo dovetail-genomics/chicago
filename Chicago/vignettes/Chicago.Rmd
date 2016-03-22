@@ -1,7 +1,7 @@
 ---
 title: "CHiCAGO Vignette"
 author: "Jonathan Cairns, Paula Freire-Pritchett, Mikhail Spivakov"
-date: 17th November, 2015
+date: 22nd March, 2016
 VignetteIndexEntry: 
 output:
   BiocStyle::html_document:
@@ -107,15 +107,31 @@ cd <- chicagoPipeline(cd)
 
 ``chicagoPipeline()`` produces a number of plots. You can save these to disk by setting the ``outprefix`` argument in ``chicagoPipeline()``.
 
-The plots are as follows:
-
-1. Brownian noise other end factors: The adjustment made to the mean Brownian noise count, based on the class of the other end. ("tlb" refers to the number of trans reads the other end has, in total. "B2B" stands for a "bait-to-bait" interaction.)
-2. Technical noise estimates: The mean number of technical noise reads expected for other ends and baits, respectively, in certain classes. These classes, displayed on the x axis, again refer to the number of trans reads that the other end has.
-3. Distance function: The mean number of Brownian noise reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
+The plots are as follows (an explanation follows):
 
 ```{r, echo=FALSE, message=FALSE}
 cd <- chicagoPipeline(cd)
 ```
+
+### Interpreting the plots
+In this section, we show and describe the expected properties of pre-computed plots from the entire GM12878 data [@Mifsud2015].
+
+1. *Brownian noise other end factors*: The adjustment made to the mean Brownian noise count, based on the class of the other end. ("tlb" refers to the number of trans reads the other end has, in total. "B2B" stands for a "bait-to-bait" interaction.)
+
+- The red bars should generally increase in height from left to right. 
+- The blue bars should be higher than the red bars on average, and should also increase in height from left to right.
+![Other End normalisation](figures/GM_merge_oeNorm.png)
+
+2. *Technical noise estimates*: The mean number of technical noise reads expected for other ends and baits, respectively, in certain classes. These classes, displayed on the x axis, again refer to the number of trans reads that the other end has.
+
+- The distributions' median and variance should trend upwards as we move from left to right.
+- In the lower subplot, the bait-to-bait estimates (here, the five bars on the far right) should be higher, on average, than the others. Both groups should also have medians and variances that trend upwards, moving from left to right.
+![Technical Noise](figures/GM_merge_techNoise.png)
+
+3. *Distance function*: The mean number of Brownian noise reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
+
+- The curve should fit the points reasonably well.
+![Distance Function](figures/GM_merge_distFun.png)
 
 ## Output files
 
@@ -339,7 +355,7 @@ dir(weightsPath)
 
 For example, to use the GM12878 weights, supply the appropriate settings file to ``setExperiment()`` as per the following:
 
-```{r}
+```{r, message=FALSE}
 weightSettings <- file.path(weightsPath, "GM12878-2reps.settings")
 cd <- setExperiment(designDir = testDesignDir, settingsFile = weightSettings)
 ```

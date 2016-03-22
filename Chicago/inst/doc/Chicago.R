@@ -116,5 +116,14 @@ head(intData(cd), 2)
 newCd = copyCD(cd)
 
 ## ------------------------------------------------------------------------
+weightsPath <- file.path(system.file("extdata", package="Chicago"),
+                         "weights")
+dir(weightsPath)
+
+## ---- message=FALSE------------------------------------------------------
+weightSettings <- file.path(weightsPath, "GM12878-2reps.settings")
+cd <- setExperiment(designDir = testDesignDir, settingsFile = weightSettings)
+
+## ------------------------------------------------------------------------
 sessionInfo()
 
