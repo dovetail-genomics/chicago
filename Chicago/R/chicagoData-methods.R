@@ -38,14 +38,14 @@ describeNonDefaultSettings <- function(cd)
   sel.extraneous <- qnames[!qnames %in% rnames]
 
   if(length(sel.missing) > 0)
-  {
-    warning("Missing setting(s): ", paste(sel.missing, collapse= ", "))
+  { 
+    msg <- paste("Missing setting(s): ", paste(sel.missing, collapse= ", "))
+    if ("brownianNoise.samples" %in% sel.missing){
+      msg <- paste0(msg, "\n(The missing brownianNoise.samples setting likely indicates that it was equal to 1 in the original analysis).")
+    }
+    warning(msg)
   }
 
-  if("brownianNoise.samples" %in% sel.missing){
-    message("(The missing brownianNoise.samples setting indicates that it was equal to 1 in the original analysis).\n")
-  }
-  
   if(length(sel.extraneous) > 0)
   {
     warning("Extraneous setting(s): ", paste(sel.extraneous, collapse= ", "))
