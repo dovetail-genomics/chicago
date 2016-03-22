@@ -224,7 +224,12 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
       stop(paste("No proxOE file found at the specified location", def.settings[["proxOEfile"]]))
     }
   }
-  
+ 
+  if (def.settings[["maxLBrownEst"]] %% def.settings[["binsize"]]){
+      message("Warning: the supplied maxLBrownEst=", def.settings[["maxLBrownEst"]], " is not a multiple of binsize=", def.settings[["binsize"]], ". Will be truncated to the nearest bin boundary.\n")
+      def.settings[["maxLBrownEst"]] = floor(def.settings[["maxLBrownEst"]]/def.settings[["binsize"]])*def.settings[["binsize"]]     
+  }
+ 
   message("Checking the design files...")
 
   bm = .readBaitmap(def.settings)
