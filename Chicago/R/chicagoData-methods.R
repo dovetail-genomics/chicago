@@ -41,6 +41,10 @@ describeNonDefaultSettings <- function(cd)
   {
     warning("Missing setting(s): ", paste(sel.missing, collapse= ", "))
   }
+
+  if("brownianNoise.samples" %in% sel.missing){
+    message("(The missing brownianNoise.samples setting indicates that it was equal to 1 in the original analysis).\n")
+  }
   
   if(length(sel.extraneous) > 0)
   {
