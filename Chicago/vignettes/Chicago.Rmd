@@ -116,7 +116,7 @@ cd <- chicagoPipeline(cd)
 ### Interpreting the plots
 In this section, we describe the expected properties of the diagnostic plots. 
 
-Note that the diagnostic plots above are computed on the fly for a small fraction of the full GM12878 dataset and using a small number of fragment pools in parameter estimation. The trends we describe below should generally be more pronounced with real-world, genome-wide datasets.
+Note that the diagnostic plots above are computed on the fly using only a small fraction of the full GM12878 dataset. In real-world, genome-wide datasets, more fragment pools will be visible and thus the trends described below should be more pronounced.
 
 1. *Brownian noise other end factors*: The adjustment made to the mean Brownian noise count, estimated in the pools of other ends. ("tlb" refers to the number of trans-chromosomal reads that the other end accumulates in total. "B2B" stands for a "bait-to-bait" interactions).
 
@@ -126,11 +126,11 @@ Note that the diagnostic plots above are computed on the fly for a small fractio
 2. *Technical noise estimates*: The mean number of technical noise reads expected for other ends and baits, respectively, per pools of fragments. These pools, displayed on the x axis, again refer to the number of trans-chromosomal reads that the fragments accumulate.
 
 - The distributions' median and variance should trend upwards as we move from left to right.
-- In the lower subplot, the bait-to-bait estimates (here, the five bars on the far right) should be higher, on average, than the others. Both groups should also have medians and variances that trend upwards, moving from left to right.
+- In the lower subplot, the bait-to-bait estimates (here, the four bars on the far right) should be higher, on average, than the others. Both groups should also have medians and variances that trend upwards, moving from left to right.
 
 3. *Distance function*: The mean number of Brownian noise reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
 
-- The function should be monotonously decreasing.
+- The function should monotonically decrease.
 - The curve should fit the points reasonably well.
 
 ## Output files
@@ -345,7 +345,9 @@ Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds
 This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
 [Input files required](#input-files-required) section.
 
-Additionally, a set of precomputed weights are provided in the package:
+Additionally, the script produces a plot, mESC_mediancurveFit.pdf, that can be used to diagnose unreliable estimates. By default, five coloured lines are shown, each representing a parameter estimate from a subset of the data. An unreliable fit is typically diagnosed when the coloured lines are highly dissimilar to each other, and thus the black median line is not representative of them. (One coloured line dissimilar to the others is OK, since the median is robust to this.)
+
+For the user's convenience, a set of precomputed weights are also provided in the package:
 
 ```{r}
 weightsPath <- file.path(system.file("extdata", package="Chicago"),
