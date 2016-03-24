@@ -193,6 +193,11 @@ head(a)
 
 For bait-to-bait interactions, the interaction can be tested either way round (i.e. either fragment can be considered the "bait"). In most output formats, both of these tests are preserved. The exception is washU output, where these scores are consolidated by taking the maximum.
 
+------ ---------------------------------------------------------
+*NOTE* When comparing interactions detected between multiple replicates, the degree of overlap may appear to be lower than expected. This is due to the undersampled nature of most CHi-C datasets. Sampling error can drive down the sensitivity, particularly for interactions that span large distances and have low read counts. As such, low overlap is not necessarily an indication of a high false discovery rate. <br><br> Undersampling needs to be taken into consideration when interpreting CHiCAGO results. In particular, we recommend performing comparisons at the score-level rather than at the level of thresholded interaction calls. Potentially, differential analysis algorithms for sequencing data such as *DESeq2* [@deseq2] may also be used to formally compare the enrichment at CHiCAGO-detected interactions between conditions at the count level, although power will generally be a limiting factor. <br><br> Formal methods such as *sdef* [@sdef] may provide a more balanced view of the consistency between replicates. Alternatively, additional filtering based on the mean number of reads per detected interaction (e.g. removing calls with N<10 reads) will reduce the impact of undersampling on the observed overlap, but at the cost of decreasing the power to detect longer-range interactions.
+
+----------------------------------------------------------------
+
 ## Visualising interactions
 
 The ``plotBaits()`` function can be used to plot the raw read counts versus linear distance from bait for either specific or random baits, labelling significant interactions in a different colour. By default, 16 random baits are plotted, with interactions within 1 Mb from bait passing the threshold of 5 shown in red and those passing the more lenient threshold of 3 shown in blue.
@@ -345,7 +350,7 @@ Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds
 This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
 [Input files required](#input-files-required) section.
 
-Additionally, the script produces a plot, mESC_mediancurveFit.pdf, that can be used to diagnose unreliable estimates. By default, five coloured lines are shown, each representing a parameter estimate from a subset of the data. An unreliable fit is typically diagnosed when the coloured lines are highly dissimilar to each other, and thus the black median line is not representative of them. (One coloured line dissimilar to the others is OK, since the median is robust to this.)
+Additionally, the script produces a plot, mESC_mediancurveFit.pdf, that can be used to diagnose unreliable estimates. By default, five coloured lines are shown, each representing a parameter estimate from a subset of the data. An unreliable fit is typically diagnosed when the coloured lines are highly dissimilar to each other, and thus the black median line is not representative of them. (Some dissimilarity may be OK, since the median confers robustness.)
 
 For the user's convenience, a set of precomputed weights are also provided in the package:
 
