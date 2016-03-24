@@ -33,7 +33,7 @@ WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. 
 
 In this vignette, we use the GM12878 data [@Mifsud2015]:
 
-```{r}
+```{r, message=FALSE}
 library(PCHiCdata)
 ```
 
@@ -241,8 +241,8 @@ As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (b
 ```{r, message=FALSE, fig.width=12, fig.height=7}
 no_bins <- ceiling(max(abs(intData(cd)$distSign), na.rm = TRUE)/1e4)
 
-enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
-                                             no_bins=no_bins, sample_number=100)
+enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder,
+              list_frag=featuresList, no_bins=no_bins, sample_number=100)
 ```
 
 Note the plot produced by this function. For each feature type, the yellow bar represents the number of features that overlap with interaction other ends. The blue bar represents what would be expected by chance, with a 95\% confidence interval for the mean number of overlaps plotted. If the yellow bar lies outside of this interval, we reject the null hypothesis, thus concluding that there is enrichment/depletion of that feature.
