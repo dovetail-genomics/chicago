@@ -43,7 +43,7 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 }
 
 \seealso{
-\code{\link{chicagoPipeline}}
+\code{\link{chicagoPipeline}}, \code{\link{plotDistFun}}
 }
 \examples{
 data(cdUnitTest)

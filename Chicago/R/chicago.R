@@ -109,6 +109,7 @@ defaultSettings <- function()
     tlb.minProxOEPerBin=1000, 
     tlb.minProxB2BPerBin=100,
     techNoise.minBaitsPerBin=1000, 
+    brownianNoise.samples=5,
     brownianNoise.subset=1000,
     brownianNoise.seed=NA,
     baitIDcol = "baitID",
@@ -144,7 +145,7 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
   cd@settings = .updateSettings(designDir, settings, settingsFile, def.settings=cd@settings, updateDesign=TRUE)   
 
   ##test validity of new object
-  validObject(cd)
+  #validObject(cd)
   
   cd
 }
@@ -223,13 +224,48 @@ modifySettings = function(cd, designDir=NULL, settings=list(), settingsFile=NULL
       stop(paste("No proxOE file found at the specified location", def.settings[["proxOEfile"]]))
     }
   }
-  
-  bm = fread(def.settings[["baitmapfile"]])
+ 
+  if (def.settings[["maxLBrownEst"]] %% def.settings[["binsize"]]){
+      message("Warning: the supplied maxLBrownEst=", def.settings[["maxLBrownEst"]], " is not a multiple of binsize=", def.settings[["binsize"]], ". Will be truncated to the nearest bin boundary.\n")
+      def.settings[["maxLBrownEst"]] = floor(def.settings[["maxLBrownEst"]]/def.settings[["binsize"]])*def.settings[["binsize"]]     
+  }
+ 
+  message("Checking the design files...")
+
+  bm = .readBaitmap(def.settings)
   if(ncol(bm)<max(c(def.settings[["baitmapFragIDcol"]], def.settings[["baitmapGeneIDcol"]]))){
-    stop("There are fewer columns in the baitmapfile than expected. Check that this file lists both the IDs and names for each baited fragment,
+    stop("There are fewer columns in the baitmapfile than expected. Check that this file lists the genomic coordinates as well as both the IDs and names for each baited fragment,
 and that the corresponding columns are specified in baitmapFragIDcol and baitmapGeneIDcol, respectively.")
   }
+  rmap = .readRmap(def.settings)
+  if (ncol(rmap)<4){
+    stop("There are fewer columns in the rmap file than expected. This file should have 4 columns, listing the genomic coordinates and IDs for each restriction fragment.")
+  }
+  if (ncol(rmap)>4){
+    stop("There are more columns in the rmap file than expected. This file should have 4 columns, listing the genomic coordinates and IDs for each restriction fragment. Check that rmapfile and baitmap files aren't swapped round\n")
+  }
   
+  if (any(duplicated(bm[[def.settings[["baitmapFragIDcol"]]]]))){
+    stop(paste("Duplicated fragment IDs found in baitmapfile (listed below). 
+               Check that the baitmapFragIDcol (usually 4) and baitmapGeneIDcol 
+               (usually 5) aren't swapped round:\n", 
+               paste(bm[[def.settings[["baitmapFragIDcol"]]]][duplicated(bm[[def.settings[["baitmapFragIDcol"]]]])], 
+                     collapse=",")))
+  }
+
+  if (any(duplicated(rmap[[4]]))){
+    stop(paste("Duplicated fragment IDs found in rmapfile (listed below):\n", 
+               paste(rmap[[4]][duplicated(rmap[[4]])], collapse=",")))
+  }
+
+  setkeyv(rmap, names(rmap))
+  setkeyv(bm, names(bm[c(1:3, def.settings[["baitmapFragIDcol"]])]))
+  if (nrow(merge(rmap, bm))!=nrow(bm)){ 
+     message("Error: Some entries of baitmap are not present in rmap (listed below).\n") 
+     print(bm[!merge(bm, rmap)])
+     stop()
+  }
+
   def.settings
 }
 
@@ -245,7 +281,7 @@ readSample = function(file, cd){
   }else{
     x = fread(file)
   }
-  
+    
   message("Processing input...")
   
   s = cd@settings
@@ -263,7 +299,17 @@ readSample = function(file, cd){
   setnames(x, s$Ncol, "N")
   setnames(x, s$distcol, "distSign")
   setnames(x, s$otherEndLencol, "otherEndLen")
-    
+
+  ## check that the file looks like it is produced with the specified array design
+  bm = .readBaitmap(s)
+  if (!all(x$baitID %in% bm[[s$baitmapFragIDcol]])){
+    stop("Some entries of the input file have baitIDs not in the baitmapfile. Check that the specified design files are correct.\n")
+  }
+  rmap = .readRmap(s)
+  if (!all(x$otherEndIDcol %in% rmap[[4]])){
+    stop("Some entries of the input file have otherEndIDs not in the rmapfile. Check that the specified design files are correct.\n")
+  }
+  
   xlen = nrow(x)
   x = x[otherEndLen %between% c(s$minFragLen,s$maxFragLen)]
   message("minFragLen = ", s$minFragLen, " maxFragLen = ", s$maxFragLen)
@@ -271,7 +317,14 @@ readSample = function(file, cd){
   if(nrow(x) == 0) stop("All interactions have been filtered out.")
   
   setkey(x, baitID)
-    
+
+  ## remove self-ligation events
+  oldlen = nrow(x)
+  x = x[distSign!=0 | is.na(distSign)]
+  if(oldlen>nrow(x)){
+     message("Filtered out ", oldlen-nrow(x), " self-ligation events.\n")
+  }
+  
   ## remove baits that have no observations within the proximal range
   baitlen = length(unique(x$baitID)) 
   x = x[, nperbait:=sum(N), by=baitID]
@@ -696,28 +749,30 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
     
   }
   
+  cd@params$distFunParams <- distFunParams
   
   if(plot)
   {
     if (!is.null(outfile)){ 
       pdf(outfile)
     }
-    my.log.d <- seq(from=obs.min, to=obs.max, length.out = 101)
-    my.d <- exp(my.log.d)
-    plot(my.log.d, log(.distFun(my.d, distFunParams)),
-         type="l",
-         main = "Distance function estimate",
-         xlab = "log(distance)",
-         ylab = "log(f(d))",
-         col = "Red")
-    with(f.d, points(log(midpoint), log(refBinMean)))
-    legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
+    
+    plotDistFun(cd)
+#     my.log.d <- seq(from=obs.min, to=obs.max, length.out = 101)
+#     my.d <- exp(my.log.d)
+#     plot(my.log.d, log(.distFun(my.d, distFunParams)),
+#          type="l",
+#          main = "Distance function estimate",
+#          xlab = "log distance",
+#          ylab = "log f",
+#          col = "Red")
+     with(f.d, points(log(midpoint), log(refBinMean)))
+     legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
     if (!is.null(outfile)){
       dev.off()
     }
   }
   
-  cd@params$distFunParams <- distFunParams
   cd
 }
 
@@ -755,6 +810,17 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   exp(out)
 }
 
+plotDistFun <- function(cd, ...){
+  ##TODO: alternative method where we get the observed values too
+  params <- cd@params$distFunParams
+
+  my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
+  my.d <- exp(my.log.d)
+  plot(my.log.d, log(.distFun(my.d, params)), type = "l", 
+       main = "Distance function estimate", xlab = "log distance", 
+       ylab = "log f", col = "Red", ...)
+}
+
 estimateBrownianNoise <- function(cd) {
   ##1) Reinstate zeros
   ##2) Add a "Bmean" column to x, giving expected Brownian noise.
@@ -764,12 +830,19 @@ estimateBrownianNoise <- function(cd) {
   
   s = cd@settings
   adjBait2bait=s$adjBait2bait
-  subset=s$brownianNoise.subset
-  seed = s$brownianNoise.seed
+  samples <- s$brownianNoise.samples
+  subset <- s$brownianNoise.subset
+  seed <- s$brownianNoise.seed
   maxLBrownEst = s$maxLBrownEst
   
   if (!is.na(seed)){
     set.seed(seed)
+  }
+  
+  if(is.null(samples))
+  {
+    warning("brownianNoise.samples setting missing - cd was made using an old version of Chicago. Setting brownianNoise.samples to 5, which you can change using modifySettings()")
+    cd@settings$brownianNoise.samples <- 5
   }
   
   siPresent <- "s_i" %in% colnames(cd@x)
@@ -780,14 +853,47 @@ estimateBrownianNoise <- function(cd) {
     message("s_i factors NOT found - variance will increase, estimating Brownian noise anyway...")
   }
   
+  ##check if we are going to use the whole data set
+  if(!is.na(subset))
+  {
+    if(!class(subset) %in% c("numeric","integer")) {stop("'subset' must be an integer.")}
+    
+    ##much faster than in situ data.frame calculation
+    setkey(cd@x, baitID)
+    if(nrow(cd@x[, .I[1], by=baitID]) <= subset){ 
+      warning("subset > number of baits in data, so used the full dataset.\n")
+      subset=NA
+    }
+  }
+  ##if we're using the whole data set, there's no point repeatedly subsampling
+  if(is.na(subset) & samples != 1){
+    warning("We're using the whole data set to calculate dispersion. There's no reason to sample repeatedly in this case, so overriding brownianNoise.samples to 1.")
+    samples <- 1
+  }
+  proxOE <- .readProxOEfile(s)
+  cd@params$dispersion.samples <- replicate(samples, .estimateDispersion(cd, proxOE))
+  message("Getting consensus dispersion estimate...")
+  cd@params$dispersion <- mean(cd@params$dispersion.samples)
+  
+  cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams) ##NB: Different results from invocation of .estimateBMean() in .estimateDispersion.
+  cd
+}
+
+.estimateDispersion <- function(cd, proxOE)
+{
+  siPresent <- "s_i" %in% colnames(cd@x)
+
+  s = cd@settings
+  adjBait2bait=s$adjBait2bait
+  samples <- s$brownianNoise.samples
+  subset <- s$brownianNoise.subset
+  maxLBrownEst = s$maxLBrownEst
   
   ##Pre-filtering: get subset of data, store as x
   ##---------------------------------------------
   
   if(!is.na(subset))
   {
-    if(!class(subset) %in% c("numeric","integer")) {stop("'subset' must be an integer.")}
-    
     ##much faster than in situ data.frame calculation
     setkey(cd@x, baitID)
     if( nrow(cd@x[, .I[1], by=baitID])>subset){ 
@@ -795,15 +901,15 @@ estimateBrownianNoise <- function(cd) {
       x <- cd@x[J(sel.sub)]
     }
     else{
+      ##Use whole data set (a warning was triggered earlier)
       x <- cd@x
       subset=NA
-      warning("subset > number of baits in data, so used the full dataset.\n")
     }
   }
   else{
     x <- cd@x
   }
-  
+
   ##consider proximal region only...
   setkey(x, distSign)
   x = x[abs(distSign)<maxLBrownEst & is.na(distSign)==FALSE,] # will have NA for distal and trans interactions
@@ -819,10 +925,7 @@ estimateBrownianNoise <- function(cd) {
   
   ##1) Reinstate zeros:
   ##----------------
-  ##1A) Grab precomputed data.table: baitID, otherends in range, distance
-  proxOE <- .readProxOEfile(s)
-  
-  ##1B) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
+  ##1A) Choose some (uncensored) baits. Pick relevant proxOE rows. Note: censored fragments,
   ##   censored bait2bait pairs (etc...) already taken care of in pre-computation of ProxOE.  
   
   if(!is.na(subset)) {
@@ -835,7 +938,7 @@ estimateBrownianNoise <- function(cd) {
   setkey(proxOE, baitID)
   proxOE <- proxOE[J(sel.baits),]
   
-  ##1C) Merge with our data, thus reinstating zero pairs.
+  ##1B) Merge with our data, thus reinstating zero pairs.
   setkey(x, baitID, otherEndID)
   
   ##(make some lookup tables so we can get s_is, s_js later)
@@ -861,7 +964,7 @@ estimateBrownianNoise <- function(cd) {
     x <- merge(x, proxOE, all.y=TRUE)[,c("baitID","s_j","N","distSign","dist"), with=FALSE]
   }
   ##Merging like this means that we are missing N, s_i, s_j information for most of the rows. So:
-  ##1D) Repopulate table with information...
+  ##1C) Repopulate table with information...
   
   # TODO: Recast following, avoid lookup tables, instead subset and assign by reference
   ## - 0s in Ncol
@@ -875,7 +978,7 @@ estimateBrownianNoise <- function(cd) {
     if(any(is.na(x$s_i)))
     {
       ##If we don't have any information on a particular other end's s_i then...
-#       warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
+      #       warning("Some other ends did not have s_i factors. Assuming s_i = 1 for these.")
       x[,s_i := ifelse(is.na(s_i), 1, s_i)]
     }
   }
@@ -895,17 +998,16 @@ estimateBrownianNoise <- function(cd) {
   
   ##3)Fit model
   ##---------
-  message("Calculating dispersion...")
+  message("Sampling the dispersion...")
   model <- glm.nb(formula= x$N ~ offset(log(x$Bmean)) + 0) 
   
   ##Construct Output
   ##----------------
   
   ##NB Parametrization: var = mu + (mu^2)/dispersion
-  cd@params$dispersion <- model$theta
-  cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams)
-  cd
+  model$theta
 }
+
 
 .estimateBMean = function(x, distFunParams) {
   
@@ -985,8 +1087,8 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
   message("Preparing the data...", appendLF = FALSE)
   
   # Now adding the zeros based on how many trans-interactions are possible in each (tlb, tblb) bin
-  baitmap = fread(cd@settings$baitmapfile)
-  rmap = fread(cd@settings$rmapfile)
+  baitmap = .readBaitmap(cd@settings)
+  rmap = .readRmap(cd@settings)
     
   setnames(rmap, "V1", "chr")
   setnames(baitmap, "V1", "chr")
@@ -1155,9 +1257,9 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(!is.null(rmapfile))
   {
-    rmap <- fread(rmapfile)
+    rmap <- .readRmap(list(rmapfile=rmapfile))
   } else {
-    rmap = fread(cd@settings$rmapfile)
+    rmap = .readRmap(cd@settings)
   }
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
@@ -1174,12 +1276,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   set <- cd@settings
   
   ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
-  rmap = fread(set$rmapfile)
+  rmap = .readRmap(set)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   chrMax <- rmap[,max(end),by="chr"] ##length of each chr
   
-  baitmap = fread(set$baitmapfile)
+  baitmap = .readBaitmap(set)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
   avgFragLen <- .getAvgFragLength(cd) ##average fragment length
@@ -1212,12 +1314,12 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   delta = set$weightDelta
   
   ##2. Get genomic/fragment map information
-  rmap = fread(set$rmapfile)
+  rmap = .readRmap(set)
   setnames(rmap, "V1", "chr")
   setnames(rmap, "V3", "end")
   chrMax <- rmap[,max(end),by="chr"] ##length of each chr
   
-  baitmap = fread(set$baitmapfile)
+  baitmap = .readBaitmap(set)
   nBaits <- table(baitmap$V1) ##number of baits on each chr
   
   chr <- as.character(names(nBaits))
@@ -1434,6 +1536,14 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   xAll
   
 }  
+
+.readRmap = function(s){
+  fread(s$rmapfile, colClasses = list(character=1))
+}
+
+.readBaitmap = function(s){
+  fread(s$baitmapfile, colClasses = list(character=1))
+}
 
 .readNPBfile = function(s){
   
@@ -1738,7 +1848,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
 plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=1e6, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
 {
   if(plotBaitNames){
-    baitmap = fread(cd@settings$baitmapfile)
+    baitmap = .readBaitmap(cd@settings)
   }
   if (is.null(baits)){
     baits = sample(unique(cd@x$baitID),n)
@@ -1761,6 +1871,19 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
   
   setkey(cd@x, baitID)
 
+  myArgs = list(...)
+  xlimInArgs = ("xlim" %in% names(myArgs))
+
+  minD = NULL
+  if(xlimInArgs){
+        minD = myArgs$xlim[1]
+	maxD = myArgs$xlim[2]
+  }else{
+        if(!is.null(maxD)){
+		minD = -maxD
+	}
+  }
+
   for(i in 1:n){
 
     this = cd@x[J(baits[i])]
@@ -1770,7 +1893,10 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     this = this[is.na(distSign)==FALSE]
 
     if (!is.null(maxD)){
-       this = this[abs(distSign)<=maxD]
+       this = this[distSign<=maxD]
+    }
+    if(!is.null(minD)){
+       this = this[distSign>=minD]
     }
      
     if (removeBait2bait){
@@ -1838,14 +1964,14 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
   }
   
   message("Reading the restriction map file...")
-  rmap = fread(cd@settings$rmapfile)
+  rmap = .readRmap(cd@settings)
   setnames(rmap, "V1", "rChr")
   setnames(rmap, "V2", "rStart")
   setnames(rmap, "V3", "rEnd")
   setnames(rmap, "V4", "otherEndID")
   
   message("Reading the bait map file...")
-  baitmap = fread(cd@settings$baitmapfile)
+  baitmap = .readBaitmap(cd@settings)
   
   setnames(baitmap, "V1", "baitChr")
   setnames(baitmap, "V2", "baitStart")
@@ -2004,14 +2130,14 @@ exportToGI <- function(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
   }
   
   message("Reading the restriction map file...")
-  rmap = fread(cd@settings$rmapfile)
+  rmap = .readRmap(cd@settings)
   setnames(rmap, "V1", "rChr")
   setnames(rmap, "V2", "rStart")
   setnames(rmap, "V3", "rEnd")
   setnames(rmap, "V4", "otherEndID")
   
   message("Reading the bait map file...")
-  baitmap = fread(cd@settings$baitmapfile)
+  baitmap = .readBaitmap(cd@settings)
   
   setnames(baitmap, "V1", "baitChr")
   setnames(baitmap, "V2", "baitStart")
@@ -2094,7 +2220,7 @@ copyCD <- function(cd)
 wb2b = function(oeID, s, baitmap=NULL){
   # s is the current chicagoData object's settings list
   if (is.null(baitmap)){
-    baitmap = fread(s$baitmapfile)
+    baitmap = .readBaitmap(s)
   }
   which(oeID %in% baitmap[[s$baitmapFragIDcol]])
 }

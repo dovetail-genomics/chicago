@@ -22,7 +22,7 @@ describeVecNames <- function(x, nm)
 describeNonDefaultSettings <- function(cd)
 {
   ##FIXME If we ever introduce an argument that's a list of things, this function will need to be changed.
-  validObject(cd)
+  #validObject(cd)
   
   x <- cd@settings
     
@@ -30,36 +30,68 @@ describeNonDefaultSettings <- function(cd)
   ref <- unlist(defaultSettings())
   query <- unlist(x)
 
-  output <- rbind(query, ref)
+  rnames <- names(ref)
+  qnames <- names(query)
+  
+  ##find missing/extraneous settings
+  sel.missing <- rnames[!rnames %in% qnames]
+  sel.extraneous <- qnames[!qnames %in% rnames]
+
+  if(length(sel.missing) > 0)
+  { 
+    msg <- paste("Missing setting(s): ", paste(sel.missing, collapse= ", "))
+    if ("brownianNoise.samples" %in% sel.missing){
+      msg <- paste0(msg, "\n(The missing brownianNoise.samples setting likely indicates that it was equal to 1 in the original analysis).")
+    }
+    warning(msg)
+  }
+
+  if(length(sel.extraneous) > 0)
+  {
+    warning("Extraneous setting(s): ", paste(sel.extraneous, collapse= ", "))
+  }
   
   ##specifically find the columns that are not uniform
-  sel <- !apply(output, 2, function(x) {
-    identical(unname(x[1]), unname(x[2]))
+  sel.shared <- rnames[rnames %in% qnames]
+
+  sel.changed <- sapply(sel.shared, function(x) {
+    !identical(ref[x], query[x])
     }
   )
   
-  output <- output["query", sel]
+  output <- query[sel.changed]
   
-  cat("Non-defaults are:\n")
-  show(output)
+  if(any(sel.changed))
+  {
+    cat("Non-defaults are:\n")
+    show(output)
+  }else{
+    cat("No non-default settings.")
+  }
+  
+  ##Find and list missing settings
+  ##FIXME
 }
 
 ##validity
 
 ##check setting names are correct
-setValidity("chicagoData",
-            function(object)
-            {
-              ref <- unlist(defaultSettings())
-              query <- unlist(object@settings)
-              
-              if(length(ref) != length(query) | any(!(names(query) %in% names(ref))))
-              {
-                return("Object's setting names do not match defaultSettings().")
-              }
-              TRUE
-            }
-          )
+##Have removed this, to avoid confusion when new settings are added in later versions of CHiCAGO.
+##Now WARN in the show() method.
+# setValidity("chicagoData",
+#             function(object)
+#             {
+#               ref <- unlist(defaultSettings())
+#               query <- unlist(object@settings)
+#               
+#               ##FIXME allow names to be *missing* from cd
+#               if(length(ref) != length(query) | any(!(names(query) %in% names(ref))))
+#               {
+#                 return("Object's setting names do not match defaultSettings().")
+#               }
+#               TRUE
+#             }
+#           )
 
 
 ##show

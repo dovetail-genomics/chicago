@@ -1,0 +1,25 @@
+citHeader("To cite the R package 'Chicago' in publications use:")
+
+
+citEntry(entry  = "article",
+         title  = "CHiCAGO: Robust Detection of DNA Looping Interactions in Capture Hi-C data",
+         author = personList(
+                 person(given="Jonathan", family="Cairns"),
+                 person(given="Paula", family="Freire-Pritchett"),
+                 as.person("Steven W Wingett"),
+                 person(given="Andrew", family="Dimond"),
+                 person(given="Vincent", family="Plagnol"),
+                 person(given="Daniel", family="Zerbino"),
+                 person(given="Stefan", family="Schoenfelder"),
+                 person(given="Biola-Maria", family="Javierre"),
+                 person(given="Cameron", family="Osborne"),
+                 person(given="Peter", family="Fraser"),
+                 person(given="Mikhail", family="Spivakov")
+			),
+	    journal = "BioRxiv",
+	    year = 2015,
+
+		note = paste("R package version ", R.Version()$major, ".", R.Version()$minor, sep = ""),
+		textVersion = paste("Cairns J*, Freire-Pritchett P*, Wingett SW, Dimond A, Plagnol V, Zerbino D, Schoenfelder S, Javierre BM, Osborne C, Fraser P, Spivakov M", "CHiCAGO: Robust Detection of DNA Looping Interactions in Capture Hi-C data, BioRxiv (2015) doi: http://dx.doi.org/10.1101/028068")
+	)
+
