@@ -1,7 +1,7 @@
 ---
 title: "CHiCAGO Vignette"
 author: "Jonathan Cairns, Paula Freire-Pritchett, Mikhail Spivakov"
-date: 22nd March, 2016
+date: 31st March, 2016
 VignetteIndexEntry: 
 output:
   BiocStyle::html_document:
@@ -41,6 +41,7 @@ The statistical foundations of CHiCAGO are presented in a separate paper that is
 In this vignette, we use the GM12878 data [@Mifsud2015]:
 
 ```{r, message=FALSE}
+library(Chicago)
 library(PCHiCdata)
 ```
 
@@ -260,7 +261,7 @@ enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder,
 
 Note the plot produced by this function. For each feature type, the yellow bar represents the number of features that overlap with interaction other ends. The blue bar represents what would be expected by chance, with a 95\% confidence interval for the mean number of overlaps plotted. If the yellow bar lies outside of this interval, we reject the null hypothesis, thus concluding that there is enrichment/depletion of that feature.
 
-The information displayed in the plot is also returned in tabular form (OL – Overlap; SI – Significant Interaction; SD – Standard Deviation; CI – Confidence Interval):
+The information displayed in the plot is also returned in tabular form (OL = Overlap, SI = Significant Interactions, SD = Standard Deviation, CI = Confidence Interval):
 
 ```{r}
 enrichmentResults

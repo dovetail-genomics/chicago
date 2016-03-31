@@ -749,28 +749,30 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
     
   }
   
+  cd@params$distFunParams <- distFunParams
   
   if(plot)
   {
     if (!is.null(outfile)){ 
       pdf(outfile)
     }
-    my.log.d <- seq(from=obs.min, to=obs.max, length.out = 101)
-    my.d <- exp(my.log.d)
-    plot(my.log.d, log(.distFun(my.d, distFunParams)),
-         type="l",
-         main = "Distance function estimate",
-         xlab = "log(distance)",
-         ylab = "log(f(d))",
-         col = "Red")
-    with(f.d, points(log(midpoint), log(refBinMean)))
-    legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
+    
+    plotDistFun(cd)
+#     my.log.d <- seq(from=obs.min, to=obs.max, length.out = 101)
+#     my.d <- exp(my.log.d)
+#     plot(my.log.d, log(.distFun(my.d, distFunParams)),
+#          type="l",
+#          main = "Distance function estimate",
+#          xlab = "log distance",
+#          ylab = "log f",
+#          col = "Red")
+     with(f.d, points(log(midpoint), log(refBinMean)))
+     legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
     if (!is.null(outfile)){
       dev.off()
     }
   }
   
-  cd@params$distFunParams <- distFunParams
   cd
 }
 
