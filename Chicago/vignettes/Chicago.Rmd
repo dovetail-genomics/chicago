@@ -25,11 +25,18 @@ CHiCAGO is a method for detecting statistically significant interaction events i
 
 A typical Chicago job for two biological replicates of CHi-C data takes 2-3 h wall-clock time (including sample pre-processing from bam files) and uses 50G RAM.
 
-NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the *chicagoTools* README for more information.
+------ ---------------------------------------------------------
+*NOTE* A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the *chicagoTools* README for more information.
+
+---------------------------------------------------------------
 
 The statistical foundations of CHiCAGO are presented in a separate paper that is currently available as a preprint [@ChicagoPreprint]. Briefly, CHiCAGO uses a convolution background model accounting for both 'Brownian collisions' between fragments (distance-dependent) and 'technical noise'. It borrows information across interactions (with appropriate normalisation) to estimate these background components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts (two chromosomes each) of published Promoter Capture HiC data sets in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] - note that both papers used a different interaction-calling algorithm and we are only reusing raw data from them. Do not use any of these sample input data for purposes other than training. 
+--------- ---------------------------------------------------------
+*WARNING* The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts (two chromosomes each) of published Promoter Capture HiC data sets in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] - note that both papers used a different interaction-calling algorithm and we are only reusing raw data from them. Do not use any of these sample input data for purposes other than training. 
+
+---------------------------------------------------------------
+
 
 In this vignette, we use the GM12878 data [@Mifsud2015]:
 
@@ -44,7 +51,7 @@ Before you start, you will need:
 1. Five restriction map information files ("design files"):
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
-- Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
+- Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, baitAnnotation. The regions specified in this file, including their fragmentIDs, must be an exact subset of those in the .rmap file. The baitAnnotation is a text field that is used only to annotate the output and plots.
 - *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to the ``chicagoTools`` README file for more details.
 
 We recommend that you put all five of these files into the same directory (that we refer to as designDir). An example of a valid design folder, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
@@ -54,6 +61,12 @@ dataPath <- system.file("extdata", package="PCHiCdata")
 testDesignDir <- file.path(dataPath, "hg19TestDesign")
 dir(testDesignDir)
 ```
+
+------ ---------------------------------------------------------
+*NOTE* Though we talk about "restriction fragments" throughout, any non-overlapping regions can be defined in .rmap (with a subset of these defined as baits). For example, if one wanted to increase power at the cost of resolution, it is possible to use bins of restriction fragments either throughout, or for some selected regions. However, in the binned fragment framework, we advise setting *removeAdjacent* to *FALSE* - see *?setExperiment* for details on how to do this.
+
+---------------------------------------------------------------
+
 
 2. You will also need input data files. These should be in CHiCAGO input format, *.chinput*. *.chinput* files can be obtained from aligned Capture HiC BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, run them through a HiC alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/).
 
@@ -247,7 +260,7 @@ enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder,
 
 Note the plot produced by this function. For each feature type, the yellow bar represents the number of features that overlap with interaction other ends. The blue bar represents what would be expected by chance, with a 95\% confidence interval for the mean number of overlaps plotted. If the yellow bar lies outside of this interval, we reject the null hypothesis, thus concluding that there is enrichment/depletion of that feature.
 
-The information displayed in the plot is also returned in tabular form:
+The information displayed in the plot is also returned in tabular form (OL – Overlap; SI – Significant Interaction; SD – Standard Deviation; CI – Confidence Interval):
 
 ```{r}
 enrichmentResults
