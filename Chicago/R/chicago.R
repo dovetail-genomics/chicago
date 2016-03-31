@@ -815,8 +815,8 @@ plotDistFun <- function(cd, ...){
   my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
   my.d <- exp(my.log.d)
   plot(my.log.d, log(.distFun(my.d, params)), type = "l", 
-       main = "Distance function estimate", xlab = "log(distance)", 
-       ylab = "log(f(d))", col = "Red", ...)
+       main = "Distance function estimate", xlab = "log distance", 
+       ylab = "log f", col = "Red", ...)
 }
 
 estimateBrownianNoise <- function(cd) {
