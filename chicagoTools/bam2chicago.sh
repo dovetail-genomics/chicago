@@ -99,8 +99,8 @@ if [ "$nodelete" != "nodelete" ]; then
 fi
 
 echo "Intersecting with bait fragments again to produce a list of bait-to-bait interactions that can be used separately; note they will also be retained in the main output..."
-echo "##	samplename=${samplename}	bamname=${bamname}	baitmapfile=${baitfendsid}	digestfile=${digestbed}" > ${samplename}/${bamname}_bait2bait.bedpe
-bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid >> ${samplename}/${bamname}_bait2bait.bedpe
+echo "##	samplename=${samplename}	bamname=${bamname}	baitmapfile=${baitfendsid}	digestfile=${digestbed}" > ${samplename}/${samplename}_bait2bait.bedpe
+bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid >> ${samplename}/${samplename}_bait2bait.bedpe
 
 echo "Intersecting with restriction fragments (using min overhang of 0.6)..."
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wao -f 0.6 -b $digestbed > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
