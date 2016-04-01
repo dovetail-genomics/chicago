@@ -1,12 +1,15 @@
-\name{estimateBrownianNoise}
+\name{estimateBrownianComponent}
 \alias{estimateBrownianNoise}
+\alias{estimateBrownianComponent}
 \title{
-Estimate Brownian Noise
+Estimate Brownian background component.
 }
 \description{
-Estimates the dispersion, and adds a a \code{Bmean} column giving the mean Brownian noise.
+Estimates the dispersion, and adds a a \code{Bmean} column giving the expected  number of Brownian reads.
 
 Usually, the dispersion is not calculated on the full dataset - rather, a subsample of baits is taken, and the dispersion is calculated on that. The number of baits used is taken from \code{brownianNoise.subset} (with an \code{NA} value meaning that the entire dataset is used, and no subsampling is performed).
+
+(Note that the alias \code{estimateBrownianNoise()} is provided for back-compatibility.)
 }
 \usage{
 estimateBrownianNoise(cd)
@@ -38,5 +41,5 @@ cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
 ##make cdUnitTest use the full subset of baits
 cdUnitTest <- modifySettings(cd=cdUnitTest, settings=list(brownianNoise.subset=NA))
 
-cdUnitTest <- estimateBrownianNoise(cdUnitTest)
+cdUnitTest <- estimateBrownianComponent(cdUnitTest)
 }

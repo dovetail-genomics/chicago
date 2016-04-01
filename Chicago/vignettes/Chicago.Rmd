@@ -132,7 +132,7 @@ In this section, we describe the expected properties of the diagnostic plots.
 
 Note that the diagnostic plots above are computed on the fly using only a small fraction of the full GM12878 dataset. In real-world, genome-wide datasets, more fragment pools will be visible and thus the trends described below should be more pronounced.
 
-1. *Brownian noise other end factors*: The adjustment made to the mean Brownian noise count, estimated in the pools of other ends. ("tlb" refers to the number of trans-chromosomal reads that the other end accumulates in total. "B2B" stands for a "bait-to-bait" interactions).
+1. *Brownian other end factors*: The adjustment made to the mean Brownian read count, estimated in the pools of other ends. ("tlb" refers to the number of trans-chromosomal reads that the other end accumulates in total. "B2B" stands for a "bait-to-bait" interactions).
 
 - The red bars should generally increase in height from left to right. 
 - The blue bars should be higher than the red bars on average, and should also increase in height from left to right.
@@ -142,7 +142,7 @@ Note that the diagnostic plots above are computed on the fly using only a small 
 - The distributions' median and variance should trend upwards as we move from left to right.
 - In the lower subplot, the bait-to-bait estimates (here, the four bars on the far right) should be higher, on average, than the others. Both groups should also have medians and variances that trend upwards, moving from left to right.
 
-3. *Distance function*: The mean number of Brownian noise reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
+3. *Distance function*: The mean number of Brownian reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
 
 - The function should monotonically decrease.
 - The curve should fit the points reasonably well.
@@ -321,20 +321,20 @@ Columns:
 
 * baitID: ID of baited fragment
 * otherEndID: ID of other end fragment
-* s_j: bait-specific scaling factor (Brownian noise)
+* s_j: bait-specific scaling factor (Brownian component)
 * otherEndLen: The length of the other end fragment
 * distSign: The distance from the baited fragment to the other end fragment. Positive and negative values indicate that the other end is, respectively, $5'$ and $3'$ of the baited fragment. NA indicates a trans interactions.
 * isBait2Bait: TRUE if the other end fragment is also a baited fragment
 * N.1, N.2, ...: Raw read counts per replicate (see ``?mergeSamples``).
 * N: Merged count (see ``?mergeSamples``) or raw count in the case of single-replicate interaction calling.
 * refBinMean: Can be ignored. (see ``?normaliseBaits``)
-* s_i: other end-specific scaling factor (Brownian noise)
+* s_i: other end-specific scaling factor (Brownian component)
 * NNb: "N normalised for baits", a count scaled up by accounting for s_j. May be useful for visualization.
 * NNboe: "N normalised for baits and other ends"; may be useful for visualization.
 * tlb: Class of other end, based on the number of fragments on other chromosomes that have read pairs.
 * tblb: As tlb, for the bait fragment.
 * Tmean: Expected count from technical noise.
-* Bmean: Expected count from Brownian noise. (Thus, the expected count under the null hypothesis is Tmean + Bmean.)
+* Bmean: Expected count from Brownian component. (Thus, the expected count under the null hypothesis is Tmean + Bmean.)
 * log.p: p-value associated with fragment pair, on log-scale.
 * log.w: p-value weight, on log-scale.
 * log.q: weighted p-value, on log-scale.
