@@ -1,7 +1,8 @@
 ## ----style, echo = FALSE, results = 'asis'-------------------------------
 BiocStyle::markdown()
 
-## ------------------------------------------------------------------------
+## ---- message=FALSE------------------------------------------------------
+library(Chicago)
 library(PCHiCdata)
 
 ## ------------------------------------------------------------------------
@@ -82,8 +83,8 @@ featuresList
 ## ---- message=FALSE, fig.width=12, fig.height=7--------------------------
 no_bins <- ceiling(max(abs(intData(cd)$distSign), na.rm = TRUE)/1e4)
 
-enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
-                                             no_bins=no_bins, sample_number=100)
+enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder,
+              list_frag=featuresList, no_bins=no_bins, sample_number=100)
 
 ## ------------------------------------------------------------------------
 enrichmentResults
@@ -114,6 +115,15 @@ head(intData(cd), 2)
 
 ## ------------------------------------------------------------------------
 newCd = copyCD(cd)
+
+## ------------------------------------------------------------------------
+weightsPath <- file.path(system.file("extdata", package="Chicago"),
+                         "weights")
+dir(weightsPath)
+
+## ---- message=FALSE------------------------------------------------------
+weightSettings <- file.path(weightsPath, "GM12878-2reps.settings")
+cd <- setExperiment(designDir = testDesignDir, settingsFile = weightSettings)
 
 ## ------------------------------------------------------------------------
 sessionInfo()

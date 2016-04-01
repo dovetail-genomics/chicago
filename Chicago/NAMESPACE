@@ -1,7 +1,7 @@
-export(chicagoPipeline, copyCD, defaultSettings, estimateBrownianNoise, estimateDistFun, estimateTechnicalNoise, 
-       exportResults, exportToGI, getPvals, getScores, mergeSamples, modifySettings, normaliseBaits, 
-       normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment, overlapFragWithFeatures,
-       peakEnrichment4Features, chicagoData, getSkOnly)
+export(chicagoPipeline, copyCD, defaultSettings, estimateBrownianComponent, estimateBrownianNoise, estimateDistFun, plotDistFun,
+       estimateTechnicalNoise, exportResults, exportToGI, getPvals, getScores, mergeSamples, modifySettings,
+       normaliseBaits, normaliseOtherEnds, plotBaits, readAndMerge, readSample, setExperiment,
+       overlapFragWithFeatures, peakEnrichment4Features, chicagoData, getSkOnly)
 exportMethods(intData, settings, params, "intData<-", "params<-")
 
 

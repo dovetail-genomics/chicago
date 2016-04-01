@@ -1,7 +1,7 @@
 ---
 title: "CHiCAGO Vignette"
 author: "Jonathan Cairns, Paula Freire-Pritchett, Mikhail Spivakov"
-date: 17th November, 2015
+date: 31st March, 2016
 VignetteIndexEntry: 
 output:
   BiocStyle::html_document:
@@ -25,15 +25,23 @@ CHiCAGO is a method for detecting statistically significant interaction events i
 
 A typical Chicago job for two biological replicates of CHi-C data takes 2-3 h wall-clock time (including sample pre-processing from bam files) and uses 50G RAM.
 
-NOTE: A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the *chicagoTools* README for more information.
+------ ---------------------------------------------------------
+*NOTE* A wrapper to perform this type of analysis, called *runChicago.R*, is provided as part of *chicagoTools*, which is available from our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the *chicagoTools* README for more information.
 
-The statistical foundations of CHiCAGO will be presented in a separate paper - a preprint is currently available [@ChicagoPreprint]. Briefly, CHiCAGO uses a convolution noise model accounting for both 'Brownian' (distance-dependent) and 'technical' noise. It borrows information across interactions (with appropriate normalisation) to estimate these noise components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
+---------------------------------------------------------------
 
-WARNING: The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts (two chromosomes each) of published Promoter Capture HiC data sets in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] - note that both papers used a different interaction-calling algorithm and we are only reusing raw data from them. Do not use any of these sample input data for purposes other than training. 
+The statistical foundations of CHiCAGO are presented in a separate paper that is currently available as a preprint [@ChicagoPreprint]. Briefly, CHiCAGO uses a convolution background model accounting for both 'Brownian collisions' between fragments (distance-dependent) and 'technical noise'. It borrows information across interactions (with appropriate normalisation) to estimate these background components separately on different subsets of data. CHiCAGO then uses a p-value weighting procedure based on the expected true positive rates at different distance ranges (estimated from data), with scores representing soft-thresholded -log weighted p-values. The score threshold of 5 is a suggested stringent score threshold for calling significant interactions. 
+
+--------- ---------------------------------------------------------
+*WARNING* The data set used in this tutorial comes from the package *PCHiCdata*. This package contains small parts (two chromosomes each) of published Promoter Capture HiC data sets in mouse ESCs [@Schoenfelder2015] and GM12878 cells, derived from human LCLs [@Mifsud2015] - note that both papers used a different interaction-calling algorithm and we are only reusing raw data from them. Do not use any of these sample input data for purposes other than training. 
+
+---------------------------------------------------------------
+
 
 In this vignette, we use the GM12878 data [@Mifsud2015]:
 
-```{r}
+```{r, message=FALSE}
+library(Chicago)
 library(PCHiCdata)
 ```
 
@@ -44,7 +52,7 @@ Before you start, you will need:
 1. Five restriction map information files ("design files"):
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
-- Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, geneName.
+- Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, baitAnnotation. The regions specified in this file, including their fragmentIDs, must be an exact subset of those in the .rmap file. The baitAnnotation is a text field that is used only to annotate the output and plots.
 - *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to the ``chicagoTools`` README file for more details.
 
 We recommend that you put all five of these files into the same directory (that we refer to as designDir). An example of a valid design folder, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
@@ -54,6 +62,12 @@ dataPath <- system.file("extdata", package="PCHiCdata")
 testDesignDir <- file.path(dataPath, "hg19TestDesign")
 dir(testDesignDir)
 ```
+
+------ ---------------------------------------------------------
+*NOTE* Though we talk about "restriction fragments" throughout, any non-overlapping regions can be defined in .rmap (with a subset of these defined as baits). For example, if one wanted to increase power at the cost of resolution, it is possible to use bins of restriction fragments either throughout, or for some selected regions. However, in the binned fragment framework, we advise setting *removeAdjacent* to *FALSE* - see *?setExperiment* for details on how to do this.
+
+---------------------------------------------------------------
+
 
 2. You will also need input data files. These should be in CHiCAGO input format, *.chinput*. *.chinput* files can be obtained from aligned Capture HiC BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, run them through a HiC alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/).
 
@@ -77,7 +91,7 @@ settingsFile <- file.path(system.file("extdata", package="PCHiCdata"),
                           "sGM12878Settings", "sGM12878.settingsFile")
 ```
 
-Omit this step unless you know which settings you wish to alter.
+Omit this step unless you know which settings you wish to alter. If you are using non-human samples, or a very unusual cell type, one set of options that you might want to change is the weighting parameters: see [Using different weights](#using-different-weights).
 
 ## Example workflow
 
@@ -107,15 +121,31 @@ cd <- chicagoPipeline(cd)
 
 ``chicagoPipeline()`` produces a number of plots. You can save these to disk by setting the ``outprefix`` argument in ``chicagoPipeline()``.
 
-The plots are as follows:
-
-1. Brownian noise other end factors: The adjustment made to the mean Brownian noise count, based on the class of the other end. ("tlb" refers to the number of trans reads the other end has, in total. "B2B" stands for a "bait-to-bait" interaction.)
-2. Technical noise estimates: The mean number of technical noise reads expected for other ends and baits, respectively, in certain classes. These classes, displayed on the x axis, again refer to the number of trans reads that the other end has.
-3. Distance function: The mean number of Brownian noise reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
+The plots are as follows (an explanation follows):
 
 ```{r, echo=FALSE, message=FALSE}
 cd <- chicagoPipeline(cd)
 ```
+
+### Interpreting the plots
+In this section, we describe the expected properties of the diagnostic plots. 
+
+Note that the diagnostic plots above are computed on the fly using only a small fraction of the full GM12878 dataset. In real-world, genome-wide datasets, more fragment pools will be visible and thus the trends described below should be more pronounced.
+
+1. *Brownian other end factors*: The adjustment made to the mean Brownian read count, estimated in the pools of other ends. ("tlb" refers to the number of trans-chromosomal reads that the other end accumulates in total. "B2B" stands for a "bait-to-bait" interactions).
+
+- The red bars should generally increase in height from left to right. 
+- The blue bars should be higher than the red bars on average, and should also increase in height from left to right.
+
+2. *Technical noise estimates*: The mean number of technical noise reads expected for other ends and baits, respectively, per pools of fragments. These pools, displayed on the x axis, again refer to the number of trans-chromosomal reads that the fragments accumulate.
+
+- The distributions' median and variance should trend upwards as we move from left to right.
+- In the lower subplot, the bait-to-bait estimates (here, the four bars on the far right) should be higher, on average, than the others. Both groups should also have medians and variances that trend upwards, moving from left to right.
+
+3. *Distance function*: The mean number of Brownian reads expected for an ``average`` bait, as a function of distance, plotted on a log-log scale.
+
+- The function should monotonically decrease.
+- The curve should fit the points reasonably well.
 
 ## Output files
 
@@ -177,6 +207,11 @@ head(a)
 
 For bait-to-bait interactions, the interaction can be tested either way round (i.e. either fragment can be considered the "bait"). In most output formats, both of these tests are preserved. The exception is washU output, where these scores are consolidated by taking the maximum.
 
+------ ---------------------------------------------------------
+*NOTE* When comparing interactions detected between multiple replicates, the degree of overlap may appear to be lower than expected. This is due to the undersampled nature of most CHi-C datasets. Sampling error can drive down the sensitivity, particularly for interactions that span large distances and have low read counts. As such, low overlap is not necessarily an indication of a high false discovery rate. <br><br> Undersampling needs to be taken into consideration when interpreting CHiCAGO results. In particular, we recommend performing comparisons at the score-level rather than at the level of thresholded interaction calls. Potentially, differential analysis algorithms for sequencing data such as *DESeq2* [@deseq2] may also be used to formally compare the enrichment at CHiCAGO-detected interactions between conditions at the count level, although power will generally be a limiting factor. <br><br> Formal methods such as *sdef* [@sdef] may provide a more balanced view of the consistency between replicates. Alternatively, additional filtering based on the mean number of reads per detected interaction (e.g. removing calls with N<10 reads) will reduce the impact of undersampling on the observed overlap, but at the cost of decreasing the power to detect longer-range interactions.
+
+----------------------------------------------------------------
+
 ## Visualising interactions
 
 The ``plotBaits()`` function can be used to plot the raw read counts versus linear distance from bait for either specific or random baits, labelling significant interactions in a different colour. By default, 16 random baits are plotted, with interactions within 1 Mb from bait passing the threshold of 5 shown in red and those passing the more lenient threshold of 3 shown in blue.
@@ -220,13 +255,13 @@ As part of the analysis, ``peakEnrichment4Features()`` takes a distance range (b
 ```{r, message=FALSE, fig.width=12, fig.height=7}
 no_bins <- ceiling(max(abs(intData(cd)$distSign), na.rm = TRUE)/1e4)
 
-enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder, list_frag=featuresList,
-                                             no_bins=no_bins, sample_number=100)
+enrichmentResults <- peakEnrichment4Features(cd, folder=featuresFolder,
+              list_frag=featuresList, no_bins=no_bins, sample_number=100)
 ```
 
 Note the plot produced by this function. For each feature type, the yellow bar represents the number of features that overlap with interaction other ends. The blue bar represents what would be expected by chance, with a 95\% confidence interval for the mean number of overlaps plotted. If the yellow bar lies outside of this interval, we reject the null hypothesis, thus concluding that there is enrichment/depletion of that feature.
 
-The information displayed in the plot is also returned in tabular form:
+The information displayed in the plot is also returned in tabular form (OL = Overlap, SI = Significant Interactions, SD = Standard Deviation, CI = Confidence Interval):
 
 ```{r}
 enrichmentResults
@@ -286,20 +321,20 @@ Columns:
 
 * baitID: ID of baited fragment
 * otherEndID: ID of other end fragment
-* s_j: bait-specific scaling factor (Brownian noise)
+* s_j: bait-specific scaling factor (Brownian component)
 * otherEndLen: The length of the other end fragment
 * distSign: The distance from the baited fragment to the other end fragment. Positive and negative values indicate that the other end is, respectively, $5'$ and $3'$ of the baited fragment. NA indicates a trans interactions.
 * isBait2Bait: TRUE if the other end fragment is also a baited fragment
 * N.1, N.2, ...: Raw read counts per replicate (see ``?mergeSamples``).
 * N: Merged count (see ``?mergeSamples``) or raw count in the case of single-replicate interaction calling.
 * refBinMean: Can be ignored. (see ``?normaliseBaits``)
-* s_i: other end-specific scaling factor (Brownian noise)
+* s_i: other end-specific scaling factor (Brownian component)
 * NNb: "N normalised for baits", a count scaled up by accounting for s_j. May be useful for visualization.
 * NNboe: "N normalised for baits and other ends"; may be useful for visualization.
 * tlb: Class of other end, based on the number of fragments on other chromosomes that have read pairs.
 * tblb: As tlb, for the bait fragment.
 * Tmean: Expected count from technical noise.
-* Bmean: Expected count from Brownian noise. (Thus, the expected count under the null hypothesis is Tmean + Bmean.)
+* Bmean: Expected count from Brownian component. (Thus, the expected count under the null hypothesis is Tmean + Bmean.)
 * log.p: p-value associated with fragment pair, on log-scale.
 * log.w: p-value weight, on log-scale.
 * log.q: weighted p-value, on log-scale.
@@ -310,6 +345,40 @@ To avoid this behaviour, copy the *chicagoData* object first:
 
 ```{r}
 newCd = copyCD(cd)
+```
+
+##Using different weights
+
+CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. This procedure has four tuning parameters.
+
+The default values of these tuning parameters were calibrated on calls from seven human Macrophage data sets. Provided that your cell type is not too dissimilar to these calibration data, it should be fine to leave the parameters at their default settings. However, if your data set is from a different species or an unusual cell type, you may wish to recalibrate these parameters using data from cell types similar to yours. You can do this with the fitDistCurve.R script in *chicagoTools*, which we demonstrate in this section.
+
+First, run all of the samples through ``chicagoPipeline()``, saving each ``chicagoData`` object in individual .rds files (see ``saveRDS()``). Alternatively, if you are using the runChicago.R wrapper, .rds files should be generated automatically.
+
+Second, run the fitDistCurve.R script. As an example, if we had three biological replicates of mESC cells, we might run the following script at the Unix command prompt:
+
+```{r, engine='bash', eval=FALSE}
+Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds 
+```
+
+This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
+[Input files required](#input-files-required) section.
+
+Additionally, the script produces a plot, mESC_mediancurveFit.pdf, that can be used to diagnose unreliable estimates. By default, five coloured lines are shown, each representing a parameter estimate from a subset of the data. An unreliable fit is typically diagnosed when the coloured lines are highly dissimilar to each other, and thus the black median line is not representative of them. (Some dissimilarity may be OK, since the median confers robustness.)
+
+For the user's convenience, a set of precomputed weights are also provided in the package:
+
+```{r}
+weightsPath <- file.path(system.file("extdata", package="Chicago"),
+                         "weights")
+dir(weightsPath)
+```
+
+For example, to use the GM12878 weights, supply the appropriate settings file to ``setExperiment()`` as per the following:
+
+```{r, message=FALSE}
+weightSettings <- file.path(weightsPath, "GM12878-2reps.settings")
+cd <- setExperiment(designDir = testDesignDir, settingsFile = weightSettings)
 ```
 
 ##Session info
