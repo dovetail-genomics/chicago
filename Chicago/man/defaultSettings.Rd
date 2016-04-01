@@ -52,7 +52,7 @@ If this parameter is set too small, then estimates will be imprecise due to spar
 Dispersion estimation from a subset of baits has an error attached. Averaging over multiple subsamples allows us to decrease this error. Increasing this number improves the precision of dispersion estimation at the expense of greater runtime.}
 \item{brownianNoise.subset}{Default: 1000. Number of baits sampled from when estimating the Brownian noise dispersion. If set to NA, then all baits are used.
 
-Estimating dispersion from the entire dataset usually requires a prohibitively large amount of memory. A subset is chosen that is large enough to get a reasonably precise estimate of the dispersion, but small enough to stay in memory. A user with excess memory may wish to increase this number to further improve the estimate's precision.}
+Estimating dispersion from the entire dataset usually requires a prohibitively large amount of memory. A subset is chosen that is large enough to get a reasonably precise estimate of the dispersion, but small enough to stay in memory. A user with excess memory may wish to increase this number to further improve the estimate’s precision.}
 \item{brownianNoise.seed}{Default: NA. If not NA, then \code{brownianNoise.seed} is used as the random number generator seed when subsampling baits. Set this to make your analysis reproducible.}
 \item{baitIDcol}{Default: "baitID". The name of the baitID column in intData(cd).}
 \item{otherEndIDcol}{Default: "otherEndID". The name of the otherEndID column in intData(cd).}
