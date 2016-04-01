@@ -63,8 +63,8 @@ chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
   
   ### Note that f is saved as cd@params$f and  
   ### subset is saved as cd@settings$brownianNoise.subset
-  message("\n*** Running estimateBrownianNoise...\n")
-  cd = estimateBrownianNoise(cd)
+  message("\n*** Running estimateBrownianComponent...\n")
+  cd = estimateBrownianComponent(cd)
 
   if(printMemory){
     print(gc(reset=TRUE))
@@ -654,7 +654,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
     if (!is.null(outfile)){ pdf(outfile)}
     with(x,
          barplot(s_i, names.arg=tlb, col=sapply(tlb, function(x)ifelse(length(grep("B2B",x)), "darkblue", "red")),
-                    xlab="tlb", ylab="s_i", main = "Brownian noise: other end factors, s_i, estimated per other end pool")
+                    xlab="tlb", ylab="s_i", main = "Brownian OE factors (s_i) estimated per OE pool")
          )
     legend("topleft", legend=c("non-B2B", "B2B"),fill=c("red", "darkblue"))
     if (!is.null(outfile)){ dev.off()}
@@ -821,9 +821,9 @@ plotDistFun <- function(cd, ...){
        ylab = "log f", col = "Red", ...)
 }
 
-estimateBrownianNoise <- function(cd) {
+estimateBrownianComponent <- function(cd) {
   ##1) Reinstate zeros
-  ##2) Add a "Bmean" column to x, giving expected Brownian noise.
+  ##2) Add a "Bmean" column to x, giving expected Brownian component.
   ##3) Calculate dispersion by regressing against "Bmean", added to x as "dispersion" attribute
   ##subset: Since we don't need the entire data set, can just calculate based on a random subset of baits.
   ##!!NB!! Use set.seed to force subset analysis to be reproducible
@@ -848,9 +848,9 @@ estimateBrownianNoise <- function(cd) {
   siPresent <- "s_i" %in% colnames(cd@x)
   if(siPresent)
   {
-    message("s_i factors found - estimating Brownian noise...")
+    message("s_i factors found - estimating Brownian component...")
   } else {
-    message("s_i factors NOT found - variance will increase, estimating Brownian noise anyway...")
+    message("s_i factors NOT found - variance will increase, estimating Brownian component anyway...")
   }
   
   ##check if we are going to use the whole data set
@@ -878,6 +878,7 @@ estimateBrownianNoise <- function(cd) {
   cd@x <- .estimateBMean(cd@x, distFunParams=cd@params$distFunParams) ##NB: Different results from invocation of .estimateBMean() in .estimateDispersion.
   cd
 }
+estimateBrownianNoise <- estimateBrownianComponent
 
 .estimateDispersion <- function(cd, proxOE)
 {
@@ -986,7 +987,7 @@ estimateBrownianNoise <- function(cd) {
   ##Sanity check - the distances should agree (modulo rounding)
   if(any(removeNAs(abs(x$dist - abs(x$distSign))) > 1))
   {
-    warning("estimateBrownianNoise: Distances in precomputed ProxOE file did not match distances supplied.")
+    warning("estimateBrownianComponent: Distances in precomputed ProxOE file did not match distances supplied.")
   }
   
   x[, distSign:=dist]
@@ -1011,7 +1012,7 @@ estimateBrownianNoise <- function(cd) {
 
 .estimateBMean = function(x, distFunParams) {
   
-  ##Adds a "Bmean" vector to a data.table x, giving expected value of Brownian noise.
+  ##Adds a "Bmean" vector to a data.table x, giving expected value of Brownian component.
   ##NB updates by reference
   
   if("s_i" %in% colnames(x))
@@ -1031,7 +1032,7 @@ estimateBrownianNoise <- function(cd) {
 estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){ 
 
 # Estimate technical noise based on mean counts per bin, with bins defined based on trans-counts for baits _and_ other ends 
-# Note we need raw read counts for this, as normalisation is done wrt Brownian noise. 
+# Note we need raw read counts for this, as normalisation is done wrt Brownian component. 
   
 # NB: filterTopPercent, minProxOEPerBin, minProxB2BPerBin
 # are input parameters for .addTLB (the function for binning other ends) that is only called  
