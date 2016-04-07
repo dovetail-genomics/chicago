@@ -35,8 +35,8 @@ def usage():
   % (minFragLen, maxFragLen, maxLBrownEst, binsize)
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:jr:f:o:d:', \
-['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfilePrefix=', 'designDir='])
+  opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:Bjr:f:o:d:', \
+['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', 'removeb2b=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfilePrefix=', 'designDir='])
 except getopt.GetoptError:
   usage()
   sys.exit(120)
@@ -54,7 +54,7 @@ for opt, arg in opts:
     removeB2B = str2bool(arg)
   elif opt == '--removeAdjacent':
     removeAdjacent = str2bool(arg)
-  elif opt == '-b':
+  elif opt == '-B':
     removeB2B = True  
   elif opt == '-j':
     removeAdjacent = True
