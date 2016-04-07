@@ -31,12 +31,12 @@ outfilePrefix = ""
 designDir=""
 
 def usage():
-  print "Usage: python makeAuxFiles.py [--minFragLen=%d] [--maxFragLen=%d]  [--maxLBrownEst=%d] [--binsize=%d] [removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=<designDir>/*.rmap]\n\t[--baitmapfile=<designDir>/*.baitmap]\n\t[--designDir=.]\n\t[--outfilePrefix]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output files will be saved in the designDir unless explicitly specified." \
+  print "Usage: python makeDesignFiles.py [--minFragLen=%d] [--maxFragLen=%d]  [--maxLBrownEst=%d] [--binsize=%d] [removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=<designDir>/*.rmap]\n\t[--baitmapfile=<designDir>/*.baitmap]\n\t[--designDir=.]\n\t[--outfilePrefix]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output files will be saved in the designDir unless explicitly specified." \
   % (minFragLen, maxFragLen, maxLBrownEst, binsize)
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'l:b:jr:b:o:d:', \
-['maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'designDir='])
+  opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:jr:f:o:d:', \
+['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'designDir='])
 except getopt.GetoptError:
   usage()
   sys.exit(120)
@@ -58,9 +58,9 @@ for opt, arg in opts:
     removeB2B = True  
   elif opt == '-j':
     removeAdjacent = True
-  elif opt in ('--rmapfile', '-f'):
+  elif opt in ('--rmapfile', '-r'):
     rmapfile = arg
-  elif opt in ('--baitmapfile', '-t'):
+  elif opt in ('--baitmapfile', '-f'):
     baitmapfile = arg
   elif opt in ('--outfilePrefix', '-o'):
     outfilePrefix = arg
@@ -102,7 +102,7 @@ if rmapfile == "":
     rmapfile=os.path.join(designDir, whichFiles[0])
     print "Located rmapfile %s in %s" % (whichFiles[0], designDir)
   else:
-    print "\nError: could not unambiguously locate baitmapfile in designDir.\n"
+    print "\nError: could not unambiguously locate rmapfile in designDir.\n"
     usage()
     sys.exit(1)
 
