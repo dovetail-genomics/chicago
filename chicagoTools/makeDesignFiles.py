@@ -36,7 +36,7 @@ def usage():
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:jr:f:o:d:', \
-['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfile=', 'designDir='])
+['minFragLen=', 'maxFragLen=', 'maxLBrownEst=', 'binsize=', 'removeAdjacent=', 'rmapfile=', 'baitmapfile=', 'outfilePrefix=', 'designDir='])
 except getopt.GetoptError:
   usage()
   sys.exit(120)
