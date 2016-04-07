@@ -261,7 +261,7 @@ poe.close()
 
 ### make NBaitsPerBinFile
 
-print "Creating .nbpb file - this will take a while..."
+print "\nCreating .nbpb file - this will take a while..."
 
 print "Looping through other ends..."
 
