@@ -19,7 +19,7 @@ bibliography: Chicago.bib
 BiocStyle::markdown()
 ```
 
-## Introduction
+# Introduction
 
 CHiCAGO is a method for detecting statistically significant interaction events in Capture HiC data. This vignette will walk you through a typical CHiCAGO analysis. 
 
@@ -44,6 +44,8 @@ In this vignette, we use the GM12878 data [@Mifsud2015]:
 library(Chicago)
 library(PCHiCdata)
 ```
+
+# Workflow
 
 ## Input files required
 
@@ -128,7 +130,7 @@ cd <- chicagoPipeline(cd)
 ```
 
 ### Interpreting the plots
-In this section, we describe the expected properties of the diagnostic plots. 
+Here, we describe the expected properties of the diagnostic plots.
 
 Note that the diagnostic plots above are computed on the fly using only a small fraction of the full GM12878 dataset. In real-world, genome-wide datasets, more fragment pools will be visible and thus the trends described below should be more pronounced.
 
