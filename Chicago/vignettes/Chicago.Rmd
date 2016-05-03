@@ -19,7 +19,7 @@ bibliography: Chicago.bib
 BiocStyle::markdown()
 ```
 
-## Introduction
+# Introduction
 
 CHiCAGO is a method for detecting statistically significant interaction events in Capture HiC data. This vignette will walk you through a typical CHiCAGO analysis. 
 
@@ -45,6 +45,8 @@ library(Chicago)
 library(PCHiCdata)
 ```
 
+# Workflow
+
 ## Input files required
 
 Before you start, you will need: 
@@ -69,7 +71,7 @@ dir(testDesignDir)
 ---------------------------------------------------------------
 
 
-2. You will also need input data files. These should be in CHiCAGO input format, *.chinput*. *.chinput* files can be obtained from aligned Capture HiC BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, run them through a HiC alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/).
+2. You will also need input data files, which should be in CHiCAGO input format, *.chinput*. You can obtain *.chinput* files from aligned Capture Hi-C BAM files by running ``bam2chicago.sh``, available as part of ``chicagoTools``. (To obtain BAM files from raw fastq files, use a Hi-C alignment & QC pipeline such as [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/).
 
 Example *.chinput* files are provided in the PCHiCdata package, as follows:
 
@@ -84,14 +86,14 @@ files <- c(
   )
 ```
 
-OPTIONAL: The data set in this vignette requires some additional custom settings, to ensure that the vignette compiles in a reasonable time:
+OPTIONAL: The data set in this vignette requires some additional custom settings, both to ensure that the vignette compiles in a reasonable time and to deal with the artificially reduced size of the data set:
 
 ```{r}
 settingsFile <- file.path(system.file("extdata", package="PCHiCdata"),
                           "sGM12878Settings", "sGM12878.settingsFile")
 ```
 
-Omit this step unless you know which settings you wish to alter. If you are using non-human samples, or a very unusual cell type, one set of options that you might want to change is the weighting parameters: see [Using different weights](#using-different-weights).
+*Omit this step unless you know which settings you wish to alter*. If you are using non-human samples, or a very unusual cell type, one set of options that you might want to change is the weighting parameters: see [Using different weights](#using-different-weights).
 
 ## Example workflow
 
@@ -128,7 +130,7 @@ cd <- chicagoPipeline(cd)
 ```
 
 ### Interpreting the plots
-In this section, we describe the expected properties of the diagnostic plots. 
+Here, we describe the expected properties of the diagnostic plots.
 
 Note that the diagnostic plots above are computed on the fly using only a small fraction of the full GM12878 dataset. In real-world, genome-wide datasets, more fragment pools will be visible and thus the trends described below should be more pronounced.
 
@@ -364,7 +366,7 @@ Rscript fitDistCurve.R mESC --inputs mESC1.rds,mESC2.rds,mESC3.rds
 This script produces the file mESC.settingsFile, which you can read in to ``modifySettings()`` as usual - see the
 [Input files required](#input-files-required) section.
 
-Additionally, the script produces a plot, mESC_mediancurveFit.pdf, that can be used to diagnose unreliable estimates. By default, five coloured lines are shown, each representing a parameter estimate from a subset of the data. An unreliable fit is typically diagnosed when the coloured lines are highly dissimilar to each other, and thus the black median line is not representative of them. (Some dissimilarity may be OK, since the median confers robustness.)
+Additionally, the script produces a plot (in this case, called mESC_mediancurveFit.pdf) that can be used to diagnose unreliable estimates. By default, five coloured lines are shown, each representing a parameter estimate from a subset of the data. An unreliable fit is typically diagnosed when the coloured lines are highly dissimilar to each other, and thus the black median line is not representative of them. (Some dissimilarity may be OK, since the median confers robustness.)
 
 For the user's convenience, a set of precomputed weights are also provided in the package:
 
