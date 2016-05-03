@@ -3,6 +3,12 @@ message("\n***runChicago.R\n\n")
 ### Parsing the command line ###
 
 library(argparser)
+
+if (packageVersion("argparser") < 0.3) {
+  stop("argparser version (", packageVersion("argparser"), ") is out of date - 0.3 or later is required. Please open R and run install.packages('argparser') to update.")
+}
+
+
 message("\n")
 
 args = commandArgs(trailingOnly=T)
@@ -88,61 +94,117 @@ moveToFolder = function(pattern, where){
   min(res)
 }
 
-### Main code ###
-
 message("Loading the Chicago package and dependencies...\n")
 library(Chicago)
 
-featuresOnly = opts[["features-only"]]
+### argparser read-in ###
 
-inputFiles = strsplit(opts[["<input-files>"]], "\\,")[[1]]
-outPrefix_rel = opts[["<output-prefix>"]]
+if(packageVersion("argparser") >= 0.4)
+{
+  ##FIXME TODO: add unit test here to check for future argparser incompatibilities
+  featuresOnly = opts[["features_only"]]
+  
+  inputFiles = strsplit(opts[["<input_files>"]], "\\,")[[1]]
+  outPrefix_rel = opts[["<output_prefix>"]]
+  
+  settingsFile = opts[["settings_file"]]
+  designDir = opts[["design_dir"]]
+  
+  printMemory = opts[["print_memory"]]
+  
+  cutoff = opts[["cutoff"]]
+  
+  exportFormat = NA
+  if(!is.na(opts[["export_format"]])[1]){
+    exportFormat = strsplit(opts[["export_format"]], "\\,")[[1]]
+  }
+  
+  exportOrder = opts[["export_order"]]
+  
+  isRda = opts[["rda"]]
+  isDF = opts[["save_df_only"]]
+  
+  proxLim = opts[["examples_prox_dist"]]
+  plotFull = opts[["examples_full_range"]]
+  
+  outDir = ifelse(opts[["output_dir"]]=="<output-prefix>", outPrefix_rel, opts[["output_dir"]])
+  
+  outPrefix = file.path(outDir, outPrefix_rel)
+  
+  enSampleNumber = opts[["en_sample_no"]]
+  enMaxDist = opts[["en_max_dist"]]
+  if (opts[["en_full_cis_range"]]){
+    enMaxDist = NULL
+    message("Warning: --en-full-cis-range selected. Feature enrichment computation will be very slow\n")
+  }
+  enMinDist = opts[["en_min_dist"]]
+  enTrans = opts[["en_trans"]]
+  
+  if (enMinDist == "NULL" & enTrans){
+    message("Running enrichment analysis for trans interactions only.")
+    enMinDist = NULL
+    enMaxDist = NULL
+  }else{
+    enMinDist = as.numeric(enMinDist)
+  }
+  
+  enFeatFolder = opts[["en_feat_folder"]]
+  enFeatFiles = opts[["en_feat_files"]]
+  enFeatList = opts[["en_feat_list"]]
 
-settingsFile = opts[["settings-file"]]
-designDir = opts[["design-dir"]]
+} else if(packageVersion("argparser") < 0.4) {
 
-printMemory = opts[["print-memory"]]
-
-cutoff = opts[["cutoff"]]
-
-exportFormat = NA
-if(!is.na(opts[["export-format"]])[1]){
-   exportFormat = strsplit(opts[["export-format"]], "\\,")[[1]]
+  featuresOnly = opts[["features-only"]]
+  
+  inputFiles = strsplit(opts[["<input-files>"]], "\\,")[[1]]
+  outPrefix_rel = opts[["<output-prefix>"]]
+  
+  settingsFile = opts[["settings-file"]]
+  designDir = opts[["design-dir"]]
+  
+  printMemory = opts[["print-memory"]]
+  
+  cutoff = opts[["cutoff"]]
+  
+  exportFormat = NA
+  if(!is.na(opts[["export-format"]])[1]){
+    exportFormat = strsplit(opts[["export-format"]], "\\,")[[1]]
+  }
+  
+  exportOrder = opts[["export-order"]]
+  
+  isRda = opts[["rda"]]
+  isDF = opts[["save-df-only"]]
+  
+  proxLim = opts[["examples-prox-dist"]]
+  plotFull = opts[["examples-full-range"]]
+  
+  outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix_rel, opts[["output-dir"]])
+  
+  outPrefix = file.path(outDir, outPrefix_rel)
+  
+  enSampleNumber = opts[["en-sample-no"]]
+  enMaxDist = opts[["en-max-dist"]]
+  if (opts[["en-full-cis-range"]]){
+    enMaxDist = NULL
+    message("Warning: --en-full-cis-range selected. Feature enrichment computation will be very slow\n")
+  }
+  enMinDist = opts[["en-min-dist"]]
+  enTrans = opts[["en-trans"]]
+  
+  if (enMinDist == "NULL" & enTrans){
+    message("Running enrichment analysis for trans interactions only.")
+    enMinDist = NULL
+    enMaxDist = NULL
+  }else{
+    enMinDist = as.numeric(enMinDist)
+  }
+  
+  enFeatFolder = opts[["en-feat-folder"]]
+  enFeatFiles = opts[["en-feat-files"]]
+  enFeatList = opts[["en-feat-list"]]
 }
-
-exportOrder = opts[["export-order"]]
-
-isRda = opts[["rda"]]
-isDF = opts[["save-df-only"]]
-
-proxLim = opts[["examples-prox-dist"]]
-plotFull = opts[["examples-full-range"]]
-
-outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix_rel, opts[["output-dir"]])
-
-outPrefix = file.path(outDir, outPrefix_rel)
-
-enSampleNumber = opts[["en-sample-no"]]
-enMaxDist = opts[["en-max-dist"]]
-if (opts[["en-full-cis-range"]]){
-  enMaxDist = NULL
-  message("Warning: --en-full-cis-range selected. Feature enrichment computation will be very slow\n")
-}
-enMinDist = opts[["en-min-dist"]]
-enTrans = opts[["en-trans"]]
-
-if (enMinDist == "NULL" & enTrans){
-  message("Running enrichment analysis for trans interactions only.")
-  enMinDist = NULL
-  enMaxDist = NULL
-}else{
-  enMinDist = as.numeric(enMinDist)
-}
-
-enFeatFolder = opts[["en-feat-folder"]]
-enFeatFiles = opts[["en-feat-files"]]
-enFeatList = opts[["en-feat-list"]]
-
+### main code ###
 
 if(enTrans & !is.null(enMaxDist) & !is.null(enMinDist)){
   message("\nWarning: --en-trans specificed together with --en-max-dist and --en-min-dist (possibly keeping the default values), which was likely not intended. Running the enrichment analysis for the full range. To test trans only, rerun with --en-min-dist NULL.\n")
