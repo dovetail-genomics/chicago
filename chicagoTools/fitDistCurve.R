@@ -10,6 +10,10 @@
 
 library(argparser)
 
+if (packageVersion("argparser") < 0.3) {
+  stop("argparser version (", packageVersion("argparser"), ") is out of date - 0.3 or later is required. Please open R and run install.packages('argparser') to update.")
+}
+
 args = commandArgs(trailingOnly=TRUE)
 
 p = arg_parser("Get the parameters for the p-value weighting curve (alpha through delta). Specify '--inputs' OR '--summaryInput'.", name="Rscript fitDistCurve.R")
@@ -29,6 +33,10 @@ opts = parse_args(p, args)
 
 print(opts)
 
+if(packageVersion("argparser") < 0.4)
+{
+  names(opts) <- gsub("-", "_", names(opts))
+}
 
 outputPrefix = opts[["<output-prefix>"]]
 inputs <- opts[["inputs"]]
