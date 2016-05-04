@@ -4,7 +4,8 @@ data("cdUnitTest")
 
 ##modifications to cdUnitTest, ensuring it uses correct design directory
 designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
-cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir)
+cdUnitTest <- modifySettings(cd=cdUnitTest, designDir=designDir,
+                             settings = list(brownianNoise.samples=1, brownianNoise.subset=NA))
 setkey(cdUnitTest@x, baitID, otherEndID)
 
 context("Recalculate cdUnitTest columns")

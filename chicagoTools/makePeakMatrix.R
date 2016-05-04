@@ -2,6 +2,10 @@ message("***makePeakMatrix.R***\n")
 
 library(argparser)
 
+if (packageVersion("argparser") < 0.3) {
+  stop("argparser version (", packageVersion("argparser"), ") is out of date - 0.3 or later is required. Please open R and run install.packages('argparser') to update.")
+}
+
 ### A great function from http://www.r-bloggers.com/testing-for-valid-variable-names/
 is_valid_variable_name = function(x, allow_reserved = TRUE, unique = FALSE)
 {
@@ -82,9 +86,15 @@ library(matrixStats)
 library(cluster)
 library(Hmisc)
 
+### argparser read-in ###
 
-namesfile = opts[["<names-file>"]]
-prefix = opts[["<output-prefix>"]]
+if(packageVersion("argparser") < 0.4)
+{
+  names(opts) <- gsub("-", "_", names(opts))
+}
+
+namesfile = opts[["<names_file>"]]
+prefix = opts[["<output_prefix>"]]
 
 cutoff = as.numeric(opts[["cutoff"]])
 lessThanCutoff = opts[["lessthan"]]
@@ -123,7 +133,7 @@ sampsize = as.numeric(opts[["clustsubset"]])
 rds = !opts[["rda"]]
 var = opts[["var"]]
 
-shouldPrintMem = opts[["print-memory"]]
+shouldPrintMem = opts[["print_memory"]]
 
 if(rds & var!="x"){ # if var has been changed from default
   cat("Warning: var name redefined while the --rds option is used, for which it's irrelevant.\n") 
