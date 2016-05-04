@@ -47,49 +47,20 @@ Mikhail Spivakov, Jonathan Cairns, Paula Freire Pritchett
 \code{\link{exportResults}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+  ##Read in some raw data
+  filesDir <- file.path(system.file("extdata", package="Chicago"), "unitTestData")
+  file <- file.path(filesDir, dir(filesDir))[1]
+  print(file) ##we will read in this file
 
-## The function is currently defined as
-function (cd, outprefix, printMemory = FALSE) 
-{
-    message("\n*** Running normaliseBaits...\n")
-    cd = normaliseBaits(cd)
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    message("\n*** Running normaliseOtherEnds...\n")
-    cd = normaliseOtherEnds(cd, outfile = paste0(outprefix, "_oeNorm.pdf"))
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    message("\n*** Running estimateTechnicalNoise...\n")
-    cd = estimateTechnicalNoise(cd, outfile = paste0(outprefix, 
-        "_techNoise.pdf"))
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    message("\n*** Running estimateDistFun...\n")
-    cd = estimateDistFun(cd, outfile = paste0(outprefix, "_distFun.pdf"))
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    message("\n*** Running estimateBrownianNoise...\n")
-    cd = estimateBrownianNoise(cd)
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    message("\n*** Running getPvals...\n")
-    cd = getPvals(cd)
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    message("\n*** Running getScores...\n")
-    cd = getScores(cd)
-    if (printMemory) {
-        print(gc(reset = TRUE))
-    }
-    cd
+  designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesign")
+  
+  ##Add a setting specific to the unit test data! Do not use in practice!
+  if(!interactive()) {
+    settings <- list(brownianNoise.samples=1)
+  } else {
+    settings <- NULL
   }
+
+  cd <- setExperiment(designDir=designDir, settings=settings)
+  cd <- readAndMerge(file, cd)
 }

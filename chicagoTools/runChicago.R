@@ -3,6 +3,12 @@ message("\n***runChicago.R\n\n")
 ### Parsing the command line ###
 
 library(argparser)
+
+if (packageVersion("argparser") < 0.3) {
+  stop("argparser version (", packageVersion("argparser"), ") is out of date - 0.3 or later is required. Please open R and run install.packages('argparser') to update.")
+}
+
+
 message("\n")
 
 args = commandArgs(trailingOnly=T)
@@ -88,48 +94,52 @@ moveToFolder = function(pattern, where){
   min(res)
 }
 
-### Main code ###
-
 message("Loading the Chicago package and dependencies...\n")
 library(Chicago)
 
-featuresOnly = opts[["features-only"]]
+### argparser read-in ###
+if(packageVersion("argparser") < 0.4)
+{
+  names(opts) <- gsub("-", "_", names(opts))
+}
 
-inputFiles = strsplit(opts[["<input-files>"]], "\\,")[[1]]
-outPrefix_rel = opts[["<output-prefix>"]]
+featuresOnly = opts[["features_only"]]
 
-settingsFile = opts[["settings-file"]]
-designDir = opts[["design-dir"]]
+inputFiles = strsplit(opts[["<input_files>"]], "\\,")[[1]]
+outPrefix_rel = opts[["<output_prefix>"]]
 
-printMemory = opts[["print-memory"]]
+settingsFile = opts[["settings_file"]]
+designDir = opts[["design_dir"]]
+
+printMemory = opts[["print_memory"]]
 
 cutoff = opts[["cutoff"]]
 
 exportFormat = NA
-if(!is.na(opts[["export-format"]])[1]){
-   exportFormat = strsplit(opts[["export-format"]], "\\,")[[1]]
+if(!is.na(opts[["export_format"]])[1]){
+  exportFormat = strsplit(opts[["export_format"]], "\\,")[[1]]
 }
 
-exportOrder = opts[["export-order"]]
+exportOrder = opts[["export_order"]]
 
 isRda = opts[["rda"]]
-isDF = opts[["save-df-only"]]
+isDF = opts[["save_df_only"]]
 
-proxLim = opts[["examples-prox-dist"]]
-plotFull = opts[["examples-full-range"]]
+proxLim = opts[["examples_prox_dist"]]
+plotFull = opts[["examples_full_range"]]
 
-outDir = ifelse(opts[["output-dir"]]=="<output-prefix>", outPrefix_rel, opts[["output-dir"]])
+outDir = ifelse(opts[["output_dir"]]=="<output-prefix>", outPrefix_rel, opts[["output_dir"]])
 
 outPrefix = file.path(outDir, outPrefix_rel)
 
-enSampleNumber = opts[["en-sample-no"]]
-enMaxDist = opts[["en-max-dist"]]
-if (opts[["en-full-cis-range"]]){
+enSampleNumber = opts[["en_sample_no"]]
+enMaxDist = opts[["en_max_dist"]]
+if (opts[["en_full_cis_range"]]){
   enMaxDist = NULL
   message("Warning: --en-full-cis-range selected. Feature enrichment computation will be very slow\n")
 }
-enMinDist = opts[["en-min-dist"]]
-enTrans = opts[["en-trans"]]
+enMinDist = opts[["en_min_dist"]]
+enTrans = opts[["en_trans"]]
 
 if (enMinDist == "NULL" & enTrans){
   message("Running enrichment analysis for trans interactions only.")
@@ -139,10 +149,14 @@ if (enMinDist == "NULL" & enTrans){
   enMinDist = as.numeric(enMinDist)
 }
 
-enFeatFolder = opts[["en-feat-folder"]]
-enFeatFiles = opts[["en-feat-files"]]
-enFeatList = opts[["en-feat-list"]]
+enFeatFolder = opts[["en_feat_folder"]]
+if (is.na(enFeatFolder)){
+	enFeatFolder = NULL
+}
+enFeatFiles = opts[["en_feat_files"]]
+enFeatList = opts[["en_feat_list"]]
 
+### main code ###
 
 if(enTrans & !is.null(enMaxDist) & !is.null(enMinDist)){
   message("\nWarning: --en-trans specificed together with --en-max-dist and --en-min-dist (possibly keeping the default values), which was likely not intended. Running the enrichment analysis for the full range. To test trans only, rerun with --en-min-dist NULL.\n")
