@@ -150,6 +150,9 @@ if (enMinDist == "NULL" & enTrans){
 }
 
 enFeatFolder = opts[["en_feat_folder"]]
+if (is.na(enFeatFolder)){
+	enFeatFolder = NULL
+}
 enFeatFiles = opts[["en_feat_files"]]
 enFeatList = opts[["en_feat_list"]]
 
