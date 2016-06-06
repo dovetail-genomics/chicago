@@ -1176,7 +1176,7 @@ getPvals <- function(cd){
   
   ##p-values:
   ##(gives P(X > x-1) = P(X >= x))
-  ##The "ifelse" is because pdelap cannot deal with beta=0.
+  ##The "ifelse" is because pdelap requires beta > 0.
   ##TODO can probably optimize this:
   #   x[,"log.p"] <- ifelse(
   #     x$Bmean < .Machine$double.eps,
