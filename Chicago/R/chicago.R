@@ -1176,19 +1176,10 @@ getPvals <- function(cd){
   
   ##p-values:
   ##(gives P(X > x-1) = P(X >= x))
-  ##The "ifelse" is because pdelap requires beta > 0.
-  ##TODO can probably optimize this:
-  #   x[,"log.p"] <- ifelse(
-  #     x$Bmean < .Machine$double.eps,
-  #     ppois(x[,Ncol] - 1L, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE),
-  #     pdelap(x[,Ncol] - 1L, alpha, beta=x$Bmean/alpha, lambda=x$Tmean, lower.tail=FALSE, log.p=TRUE)
-  #   )
-  x[,log.p:= 
-      ifelse(Bmean < .Machine$double.eps,
-             ppois(N - 1L, lambda=Tmean, lower.tail=FALSE, log.p=TRUE),
-             pdelap(N - 1L, alpha, beta=Bmean/alpha, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)
-      )
-    ]
+  ##Note that the cases Bmean = 0 and Bmean > 0 are considered separately.
+  x[, log.p:=NA_real_]
+  x[Bmean < .Machine$double.eps, log.p:=ppois(N - 1L, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)]
+  x[Bmean >= .Machine$double.eps, log.p:=pdelap(N - 1L, alpha, beta=Bmean/alpha, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)]
   
   # Large N approximation ---------------------------------------------------
   
