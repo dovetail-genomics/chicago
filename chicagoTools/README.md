@@ -1,6 +1,6 @@
 chicagoTools are an assorted set of scripts associated with the Chicago R package.  
 
-Currently it includes the following software:
+Currently, the following software is included:
 
 - The script for preparing "design files" needed for the Chicago package:
        + makeDesignFiles.py
