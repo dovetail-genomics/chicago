@@ -173,6 +173,13 @@ if(!is.na(enFeatFiles) & !is.na(enFeatList)){
   stop("Only one of --en-feat-files or --en-feat-list should be provided, not both\n")
 }
 
+if (!is.na(enFeatFiles)){
+  enFeatFiles = strsplit(enFeatFiles, ",")[[1]]
+  message("\nUsing the following enFeatFiles for feature enrichment:")
+  cat(enFeatFiles, sep="\n", file=stderr())
+  
+}
+
 if(!is.na(enFeatList)){
   featList = read.table(enFeatList, header=F, stringsAsFactors = F)
   if (ncol(featList)!=2){
