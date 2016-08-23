@@ -1,6 +1,8 @@
 **CHiCAGO: Capture HiC Analysis of Genomic Organisation** 
 
-CHiCAGO is a set of tools for Capture HiC data analysis. A preprint describing CHiCAGO statistical methodology is available on bioRxiv: [http://dx.doi.org/10.1101/028068](http://dx.doi.org/10.1101/028068).
+CHiCAGO is a set of tools for Capture HiC data analysis. 
+
+CHiCAGO is presented in [this paper](http://www.genomebiology.com/2016/17/1/127): Cairns J / Freire-Pritchett P, Wingett SW, Várnai C, Dimond A, Plagnol V, Zerbino D, Schoenfelder S, Javierre B-M, Osborne C, Fraser P, Spivakov M. CHiCAGO: Robust Detection of DNA Looping Interactions in Capture Hi-C data. Genome Biology. 2016. 17:127. 
 
 This repository contains the following files:
 
@@ -32,7 +34,7 @@ install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
 (This strategy downloads the repository multiple times. To avoid this, you can manually install Chicago's dependencies, then install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
-The R packages have also been submitted to Bioconductor, and installation using ```biocLite()``` will be available upon acceptance.
+The R packages are also part of Bioconductor 3.3, and installation using ```biocLite()``` is available. However, as Bioconductor releases only happen twice a year, more recent versions of the R packages may be available from here.
 
 If you encounter any problems, please [post an issue](https://bitbucket.org/chicagoTeam/chicago/issues) or email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 

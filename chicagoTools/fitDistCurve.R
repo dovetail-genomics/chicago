@@ -417,6 +417,6 @@ dev.off()
 
 
 ## FINAL OUTPUT
-outputTable <- cbind(c("alpha", "beta", "gamma", "delta"), medianJackPar[1:4])
+outputTable <- cbind(c("weightAlpha", "weightBeta", "weightGamma", "weightDelta"), medianJackPar[1:4])
 write.table(outputTable, paste0(outputPrefix,".settings"), quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE)
 message("Output saved.")

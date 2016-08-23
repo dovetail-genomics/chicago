@@ -55,7 +55,7 @@ Before you start, you will need:
 
 - Restriction map file (.rmap) - a bed file containing coordinates of the restriction fragments. By default, 4 columns: chr, start, end, fragmentID.
 - Bait map file (.baitmap) - a bed file containing coordinates of the baited restriction fragments, and their associated annotations. By default, 5 columns: chr, start, end, fragmentID, baitAnnotation. The regions specified in this file, including their fragmentIDs, must be an exact subset of those in the .rmap file. The baitAnnotation is a text field that is used only to annotate the output and plots.
-- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python scripts from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src): ``countNperBin.py``, ``countNbaitsPerBin.py`` and ``getProxOE.py``. Refer to the ``chicagoTools`` README file for more details.
+- *nperbin* file (.npb), *nbaitsperbin* file (.nbpb), *proxOE* file (.poe) - Precompute these tables from the .rmap and .baitmap files, using the Python script ``makeDesignFiles.py`` from *chicagoTools* at our [Bitbucket repository](https://bitbucket.org/chicagoTeam/chicago/src). Refer to the ``chicagoTools`` README file for more details.
 
 We recommend that you put all five of these files into the same directory (that we refer to as designDir). An example of a valid design folder, for a two-chromosome sample of the GM12878 data used in this vignette, is provided in the PCHiCdata package, as follows.
 
