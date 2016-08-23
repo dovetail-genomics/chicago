@@ -1696,6 +1696,10 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   }
 
 .addTLB = function(cd, adjBait2bait=TRUE){
+  ##Assigns each fragment a "tlb" - a range containing the number of trans
+  ##1) The bins are constructed based on reduced data - (outliers trimmed, )
+  ##2) The bin endpoints are readjusted such that no fragments fall outside.
+  ##3) These bins are then applied to the entire dataset.
   
   # cd is the current chicagoData object
   x = cd@x
