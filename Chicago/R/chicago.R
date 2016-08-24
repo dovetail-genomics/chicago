@@ -106,8 +106,8 @@ defaultSettings <- function()
     removeAdjacent = TRUE,
     adjBait2bait=TRUE,
     tlb.filterTopPercent=0.01, 
-    tlb.minProxOEPerBin=1000, 
-    tlb.minProxB2BPerBin=100,
+    tlb.minProxOEPerBin=50000, 
+    tlb.minProxB2BPerBin=2500,
     techNoise.minBaitsPerBin=1000, 
     brownianNoise.samples=5,
     brownianNoise.subset=1000,
@@ -1736,18 +1736,18 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
     # to then be able to check how many other ends we are pooling together for each tlb bin 
     # note that distSign[1] here means min(distSign) as it's keyed by this column
     # sum(distSign==transD) is a bit faster than length(.I[distSign==transD])
-
+    
     # MEMORY-HUNGRY CODE
     # Watch this thread for possible solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1#comment46288765_29022185
     # Note that B2B interactions appear twice, once each way - this means that by=otherEndID is fine (no need for a by=baitID fudge).
-    transLen = x[, list(sum(distSign==transD), isBait2bait[1], distSign[1]), by=otherEndID]
+    transLen = x[, list(sum(distSign==transD), isBait2bait[1], min(abs(distSign))), by=otherEndID]
     
     setnames(transLen, "V2", "isBait2bait")
     setnames(transLen, "V3", "distSign")
   }
   else{
     setkey(x, otherEndID, distSign)
-    transLen = x[, list(length(.I[distSign==transD]), distSign[1]), by=otherEndID]    
+    transLen = x[, list(length(.I[distSign==transD]), min(abs(distSign))), by=otherEndID]    
     setnames(transLen, "V2", "distSign")
   }
   
@@ -1839,7 +1839,6 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   x
 }
-
 
 plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=1e6, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
 {
