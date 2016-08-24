@@ -8,84 +8,7 @@ utils::globalVariables(c("distSign", "isBait2bait", "otherEndID", "transLength",
                          "otherEndChr","log.p","Tmean","log.w","log.q","score","otherEndLen","nperbait",
                          "isAdjacent","isAllB2BProx", "samplefilename"))
 
-
-ifnotnull = function(var, res){ if(!is.null(var)){res}}
-
-locateFile = function(what, where, pattern){
-  message("Locating ", what, " in ", where, "...")
-  filename = list.files(where, pattern)
-  
-  if (length(filename)!=1){
-    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
-  }
-  
-  message("Found ", filename)
-  file.path(where, filename)
-}
-  
-chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
-{
-  message("\n*** Running normaliseBaits...\n")
-  cd = normaliseBaits(cd)
-
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  message("\n*** Running normaliseOtherEnds...\n")
-  cd = normaliseOtherEnds(cd,
-                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
-                          )
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  message("\n*** Running estimateTechnicalNoise...\n")
-  cd = estimateTechnicalNoise(cd,
-                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
-                              )
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  message("\n*** Running estimateDistFun...\n")
-  
-  ### Note that f is saved in cd@params
-  cd = estimateDistFun(cd,
-                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
-  )
-
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  ### Note that f is saved as cd@params$f and  
-  ### subset is saved as cd@settings$brownianNoise.subset
-  message("\n*** Running estimateBrownianComponent...\n")
-  cd = estimateBrownianComponent(cd)
-
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }  
-  
-  message("\n*** Running getPvals...\n")
-  cd = getPvals(cd)
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }  
-  
-  message("\n*** Running getScores...\n")
-  cd = getScores(cd)
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }  
-  
-  cd
-}
+## Settings functions -----------------
 
 defaultSettings <- function()
 {
@@ -268,6 +191,8 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
 
   def.settings
 }
+
+## Read-in functions ----------------
 
 readSample = function(file, cd){
   
@@ -571,6 +496,74 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   
 }
 
+##Pipeline ------------
+
+chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
+{
+  message("\n*** Running normaliseBaits...\n")
+  cd = normaliseBaits(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  message("\n*** Running normaliseOtherEnds...\n")
+  cd = normaliseOtherEnds(cd,
+                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
+  )
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  message("\n*** Running estimateTechnicalNoise...\n")
+  cd = estimateTechnicalNoise(cd,
+                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
+  )
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  message("\n*** Running estimateDistFun...\n")
+  
+  ### Note that f is saved in cd@params
+  cd = estimateDistFun(cd,
+                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
+  )
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  ### Note that f is saved as cd@params$f and  
+  ### subset is saved as cd@settings$brownianNoise.subset
+  message("\n*** Running estimateBrownianComponent...\n")
+  cd = estimateBrownianComponent(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }  
+  
+  message("\n*** Running getPvals...\n")
+  cd = getPvals(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }  
+  
+  message("\n*** Running getScores...\n")
+  cd = getScores(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }  
+  
+  cd
+}
+
+##Pipeline functions ------------
+
 normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   
@@ -808,17 +801,6 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   )
   
   exp(out)
-}
-
-plotDistFun <- function(cd, ...){
-  ##TODO: alternative method where we get the observed values too
-  params <- cd@params$distFunParams
-
-  my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
-  my.d <- exp(my.log.d)
-  plot(my.log.d, log(.distFun(my.d, params)), type = "l", 
-       main = "Distance function estimate", xlab = "log distance", 
-       ylab = "log f", col = "Red", ...)
 }
 
 estimateBrownianComponent <- function(cd) {
@@ -1181,7 +1163,8 @@ getPvals <- function(cd){
   x[Bmean < .Machine$double.eps, log.p:=ppois(N - 1L, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)]
   x[Bmean >= .Machine$double.eps, log.p:=pdelap(N - 1L, alpha, beta=Bmean/alpha, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)]
   
-  # Large N approximation ---------------------------------------------------
+  # Large N approximation
+  # ---------------------
   
   ##In rare cases where pdelap returns Infs, estimate the p-value magnitude
   ##using an NB approximation, through method of moments argument
@@ -1529,6 +1512,8 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
 }  
 
+## Hidden "read" functions ----------------------
+
 .readRmap = function(s){
   fread(s$rmapfile, colClasses = list(character=1))
 }
@@ -1840,6 +1825,8 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   x
 }
 
+## Export/plotting functions ----------------------
+
 plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=1e6, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
 {
   if(plotBaitNames){
@@ -1933,6 +1920,17 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     dev.off()
   }
   baits
+}
+
+plotDistFun <- function(cd, ...){
+  ##TODO: alternative method where we get the observed values too
+  params <- cd@params$distFunParams
+  
+  my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
+  my.d <- exp(my.log.d)
+  plot(my.log.d, log(.distFun(my.d, params)), type = "l", 
+       main = "Distance function estimate", xlab = "log distance", 
+       ylab = "log f", col = "Red", ...)
 }
 
 exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL,
@@ -2096,7 +2094,7 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       sel <- order(out$bait_chr, out$bait_start)
       out <- out[sel,]
       
-      res = apply(out,1,function(x){
+      res = apply(out, 1, function(x){
         lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
         lines
       })
@@ -2212,6 +2210,8 @@ copyCD <- function(cd)
   newCD
 }
 
+## Misc functions ---------------------------
+
 wb2b = function(oeID, s, baitmap=NULL){
   # s is the current chicagoData object's settings list
   if (is.null(baitmap)){
@@ -2245,4 +2245,18 @@ removeNAs <- function(x) {x[!is.na(x)]}
 naToInf <- function(x)
 {
   ifelse(is.na(x), Inf, x) ##Convert NAs to infs.
+}
+
+ifnotnull = function(var, res){ if(!is.null(var)){res}}
+
+locateFile = function(what, where, pattern){
+  message("Locating ", what, " in ", where, "...")
+  filename = list.files(where, pattern)
+  
+  if (length(filename)!=1){
+    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
+  }
+  
+  message("Found ", filename)
+  file.path(where, filename)
 }
