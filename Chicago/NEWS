@@ -1,10 +1,11 @@
 Chicago 1.1.5
 -------------
 
-The values of two default settings have changed:
+We fixed a bug in .addTLB() (called by estimateTechnicalNoise()) that reduced the number of trans-count bins used, though the read counts in those bins were still calculated correctly. Since fixing this bug increased the number of trans-count bins, we adjusted the default values of two settings accordingly:
+
 tlb.minProxOEPerBin: 1,000 changed to 50,000
 tlb.minProxB2BPerBin: 100 changed to 2,500
 
-We made this change in response to a bugfix in .addTLB(). This bug inflated the number of trans-count bins (though the read counts in those bins were still calculated correctly). The new setting values have been chosen to ensure that results should change as little as possible from Chicago 1.1.4. If you were not intentionally altering these two settings, then you shouldn't notice any qualitative differences.
+These values have been chosen to ensure that results should change as little as possible from Chicago 1.1.4. Unless you were using custom values, you should not notice any qualitative differences.
 
 Many thanks to Thomas Sexton for bringing the bug to our attention and helping us fix it.
