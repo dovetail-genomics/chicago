@@ -1011,6 +1011,151 @@ estimateBrownianNoise <- estimateBrownianComponent
   x
 }
 
+.addTLB = function(cd, adjBait2bait=TRUE){
+  ##Assigns each fragment a "tlb" - a range containing the number of trans
+  ##1) The bins are constructed based on reduced data - (outliers trimmed, )
+  ##2) The bin endpoints are readjusted such that no fragments fall outside.
+  ##3) These bins are then applied to the entire dataset.
+  
+  # cd is the current chicagoData object
+  x = cd@x
+  s = cd@settings
+  
+  filterTopPercent = s$tlb.filterTopPercent
+  minProxOEPerBin = s$tlb.minProxOEPerBin
+  minProxB2BPerBin = s$tlb.minProxB2BPerBin
+  
+  message("Preprocessing input...")
+  
+  # Checking whether in the input, we had distances at trans-interactions labeled as NA 
+  # (as opposed to a dummy maximum distance)
+  transNA = FALSE
+  if(any(is.na(x$distSign))){
+    transNA = TRUE
+    transD = max(x[is.na(distSign)==FALSE]$distSign)+s$binsize
+    x[is.na(distSign), distSign := transD]
+  }
+  else{
+    transD = max(x$distSign)
+    message("Warning: No NAs found in input. Assuming the max distance of ", transD, " is a dummy for trans-counts.")
+  }
+  
+  message("Computing trans-counts...")
+  
+  if (adjBait2bait){
+    if (!"isBait2bait" %in% names(x)){
+      x[, isBait2bait := FALSE]
+      x[wb2b(otherEndID), isBait2bait:= TRUE] 
+    }
+    setkey(x, otherEndID, distSign)
+    # we are interested in the minimum distance for interactions that involve each other end
+    # to then be able to check how many other ends we are pooling together for each tlb bin 
+    # note that distSign[1] here means min(distSign) as it's keyed by this column
+    # sum(distSign==transD) is a bit faster than length(.I[distSign==transD])
+    
+    # MEMORY-HUNGRY CODE
+    # Watch this thread for possible solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1#comment46288765_29022185
+    # Note that B2B interactions appear twice, once each way - this means that by=otherEndID is fine (no need for a by=baitID fudge).
+    transLen = x[, list(sum(distSign==transD), isBait2bait[1], min(abs(distSign))), by=otherEndID]
+    
+    setnames(transLen, "V2", "isBait2bait")
+    setnames(transLen, "V3", "distSign")
+  }
+  else{
+    setkey(x, otherEndID, distSign)
+    transLen = x[, list(length(.I[distSign==transD]), min(abs(distSign))), by=otherEndID]    
+    setnames(transLen, "V2", "distSign")
+  }
+  
+  setnames(transLen, "V1", "transLength")
+  
+  transLen0 = transLen
+  transLen = transLen[transLength<=quantile(transLen$transLength,1-filterTopPercent/100)] 
+  filteredLen = nrow(transLen0[!otherEndID %in% transLen$otherEndID])
+  message("Filtering out ", filteredLen, " other ends with top ", filterTopPercent, "% number of trans-interactions")
+  
+  # first use cut2 to compute bin boundaries on the proximal range based on the desired minProxOEPerBin
+  # (note cut2 doesn't guarantee that all bins will contain this min number of observations)
+  # then use cut to split the whole dataset based on these bins
+  # note we'll need the full dataset (and not only proximal interactions) assigned to tlb bins
+  # when estimating technical noise
+  # If adjBait2bait == TRUE, do this separately for bait2bait and non-bait2bait other ends.  
+  
+  if (adjBait2bait){
+    transLen0 = transLen
+    transLen = transLen0[isBait2bait==FALSE]
+    transLenB2B = transLen0[isBait2bait==TRUE]
+  }
+  
+  message("Binning...")
+  
+  cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
+              m=minProxOEPerBin, onlycuts=TRUE)
+  # for really depleted data sets, cuts is a single number, usually 0.
+  if(length(cuts) == 1)
+  {
+    tlbClasses <- factor(rep(cuts, nrow(transLen)))
+  } else {
+    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+    if (min(cuts)>min(transLen$transLength)){
+      cuts[1] = min(transLen$transLength)
+    }
+    if (max(cuts)<max(transLen$transLength)){
+      cuts[length(cuts)] = max(transLen$transLength)
+    }
+    tlbClasses <- cut(transLen$transLength, breaks=cuts, include.lowest=TRUE)
+  }
+  set(transLen, NULL, "tlb" , tlbClasses)
+  
+  if (adjBait2bait){
+    
+    cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
+                   m=minProxB2BPerBin, onlycuts=TRUE)
+    # for really depleted data sets, cutsB2B is a single number, usually 0.
+    if(length(cutsB2B) == 1)
+    {
+      tlbClassesB2B <- factor(rep(cutsB2B, nrow(transLenB2B)))
+    } else {
+      # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+      # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+      if (min(cutsB2B)>min(transLenB2B$transLength)){
+        cutsB2B[1] = min(transLenB2B$transLength)
+      }
+      if (max(cutsB2B)<max(transLenB2B$transLength)){
+        cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
+      }
+      tlbClassesB2B <- cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE)
+    }
+    set(transLenB2B, NULL, "tlb", tlbClassesB2B)
+    levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
+    
+    transLen = rbind(transLen, transLenB2B)
+  }      
+  
+  set(transLen, NULL, "transLength", NULL)
+  set(transLen, NULL, "isBait2bait", NULL)
+  set(transLen, NULL, "distSign", NULL)
+  
+  setkey(x, otherEndID)
+  setkey(transLen, otherEndID)
+  
+  ##discard TLB if already present
+  if("tlb" %in% colnames(x))
+  {
+    set(x, NULL, "tlb", NULL)
+  }
+  
+  x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
+  # removing the interactions with too "sticky" other ends and those mapping to very sparse bins
+  
+  if(transNA){
+    x[distSign==max(x$distSign), distSign := NA]
+  }
+  
+  x
+}
+
 estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){ 
 
 # Estimate technical noise based on mean counts per bin, with bins defined based on trans-counts for baits _and_ other ends 
@@ -1679,151 +1824,6 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   setnames(proxOE, 1:3, c("baitID", "otherEndID", "dist"))
   proxOE
   }
-
-.addTLB = function(cd, adjBait2bait=TRUE){
-  ##Assigns each fragment a "tlb" - a range containing the number of trans
-  ##1) The bins are constructed based on reduced data - (outliers trimmed, )
-  ##2) The bin endpoints are readjusted such that no fragments fall outside.
-  ##3) These bins are then applied to the entire dataset.
-  
-  # cd is the current chicagoData object
-  x = cd@x
-  s = cd@settings
-  
-  filterTopPercent = s$tlb.filterTopPercent
-  minProxOEPerBin = s$tlb.minProxOEPerBin
-  minProxB2BPerBin = s$tlb.minProxB2BPerBin
-  
-  message("Preprocessing input...")
-  
-  # Checking whether in the input, we had distances at trans-interactions labeled as NA 
-  # (as opposed to a dummy maximum distance)
-  transNA = FALSE
-  if(any(is.na(x$distSign))){
-    transNA = TRUE
-    transD = max(x[is.na(distSign)==FALSE]$distSign)+s$binsize
-    x[is.na(distSign), distSign := transD]
-  }
-  else{
-    transD = max(x$distSign)
-    message("Warning: No NAs found in input. Assuming the max distance of ", transD, " is a dummy for trans-counts.")
-  }
-  
-  message("Computing trans-counts...")
-  
-  if (adjBait2bait){
-    if (!"isBait2bait" %in% names(x)){
-      x[, isBait2bait := FALSE]
-      x[wb2b(otherEndID), isBait2bait:= TRUE] 
-    }
-    setkey(x, otherEndID, distSign)
-    # we are interested in the minimum distance for interactions that involve each other end
-    # to then be able to check how many other ends we are pooling together for each tlb bin 
-    # note that distSign[1] here means min(distSign) as it's keyed by this column
-    # sum(distSign==transD) is a bit faster than length(.I[distSign==transD])
-    
-    # MEMORY-HUNGRY CODE
-    # Watch this thread for possible solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1#comment46288765_29022185
-    # Note that B2B interactions appear twice, once each way - this means that by=otherEndID is fine (no need for a by=baitID fudge).
-    transLen = x[, list(sum(distSign==transD), isBait2bait[1], min(abs(distSign))), by=otherEndID]
-    
-    setnames(transLen, "V2", "isBait2bait")
-    setnames(transLen, "V3", "distSign")
-  }
-  else{
-    setkey(x, otherEndID, distSign)
-    transLen = x[, list(length(.I[distSign==transD]), min(abs(distSign))), by=otherEndID]    
-    setnames(transLen, "V2", "distSign")
-  }
-  
-  setnames(transLen, "V1", "transLength")
-  
-  transLen0 = transLen
-  transLen = transLen[transLength<=quantile(transLen$transLength,1-filterTopPercent/100)] 
-  filteredLen = nrow(transLen0[!otherEndID %in% transLen$otherEndID])
-  message("Filtering out ", filteredLen, " other ends with top ", filterTopPercent, "% number of trans-interactions")
-  
-  # first use cut2 to compute bin boundaries on the proximal range based on the desired minProxOEPerBin
-  # (note cut2 doesn't guarantee that all bins will contain this min number of observations)
-  # then use cut to split the whole dataset based on these bins
-  # note we'll need the full dataset (and not only proximal interactions) assigned to tlb bins
-  # when estimating technical noise
-  # If adjBait2bait == TRUE, do this separately for bait2bait and non-bait2bait other ends.  
-  
-  if (adjBait2bait){
-    transLen0 = transLen
-    transLen = transLen0[isBait2bait==FALSE]
-    transLenB2B = transLen0[isBait2bait==TRUE]
-  }
-  
-  message("Binning...")
-  
-  cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
-              m=minProxOEPerBin, onlycuts=TRUE)
-  # for really depleted data sets, cuts is a single number, usually 0.
-  if(length(cuts) == 1)
-  {
-    tlbClasses <- factor(rep(cuts, nrow(transLen)))
-  } else {
-    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-    if (min(cuts)>min(transLen$transLength)){
-      cuts[1] = min(transLen$transLength)
-    }
-    if (max(cuts)<max(transLen$transLength)){
-      cuts[length(cuts)] = max(transLen$transLength)
-    }
-    tlbClasses <- cut(transLen$transLength, breaks=cuts, include.lowest=TRUE)
-  }
-  set(transLen, NULL, "tlb" , tlbClasses)
-  
-  if (adjBait2bait){
-    
-    cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
-                   m=minProxB2BPerBin, onlycuts=TRUE)
-    # for really depleted data sets, cutsB2B is a single number, usually 0.
-    if(length(cutsB2B) == 1)
-    {
-      tlbClassesB2B <- factor(rep(cutsB2B, nrow(transLenB2B)))
-    } else {
-      # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-      # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-      if (min(cutsB2B)>min(transLenB2B$transLength)){
-        cutsB2B[1] = min(transLenB2B$transLength)
-      }
-      if (max(cutsB2B)<max(transLenB2B$transLength)){
-        cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
-      }
-      tlbClassesB2B <- cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE)
-    }
-    set(transLenB2B, NULL, "tlb", tlbClassesB2B)
-    levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
-    
-    transLen = rbind(transLen, transLenB2B)
-  }      
-  
-  set(transLen, NULL, "transLength", NULL)
-  set(transLen, NULL, "isBait2bait", NULL)
-  set(transLen, NULL, "distSign", NULL)
-  
-  setkey(x, otherEndID)
-  setkey(transLen, otherEndID)
-  
-  ##discard TLB if already present
-  if("tlb" %in% colnames(x))
-  {
-    set(x, NULL, "tlb", NULL)
-  }
-  
-  x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
-  # removing the interactions with too "sticky" other ends and those mapping to very sparse bins
-  
-  if(transNA){
-    x[distSign==max(x$distSign), distSign := NA]
-  }
-  
-  x
-}
 
 ## Export/plotting functions ----------------------
 
