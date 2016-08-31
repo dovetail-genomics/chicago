@@ -8,4 +8,6 @@ tlb.minProxB2BPerBin: 100 changed to 2,500
 
 These values have been chosen to ensure that results should change as little as possible from Chicago 1.1.4. Unless you were using custom values, you should not notice any qualitative differences.
 
+If you need to re-run chicagoPipeline() (or just estimateTechnicalNoise()) on a chicagoData object created using version 1.1.4 or earlier, please manually update the parameters to their new setting.
+
 Many thanks to Thomas Sexton for bringing the bug to our attention and helping us fix it.
