@@ -192,6 +192,17 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
   def.settings
 }
 
+.checkForIncompatibilities <- function(cd)
+{
+  ##Check for 1.1.4 or before
+  if(cd@settings$tlb.minProxOEPerBin == 1000 | cd@settings$tlb.minProxB2BPerBin == 100)
+  {
+    message("WARNING: It looks like cd is an old chicagoData (version 1.1.4 or earlier).")
+    message("If so, please update some of the settings - see the Chicago 1.1.5 entry in news(package='Chicago').")
+    warning("tlb settings match Chicago 1.1.4 and before.")
+  }
+}
+
 ## Read-in functions ----------------
 
 readSample = function(file, cd){
@@ -500,6 +511,8 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
 
 chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
 {
+  .checkForIncompatibilities(cd)
+  
   message("\n*** Running normaliseBaits...\n")
   cd = normaliseBaits(cd)
   
@@ -1165,9 +1178,11 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
 # are input parameters for .addTLB (the function for binning other ends) that is only called  
 # if tlb's aren't already present in the input - and they will be present if other end normalisation
 # has been applied 
-    
-  message("Estimating technical noise based on trans-counts...")
 
+  message("Estimating technical noise based on trans-counts...")
+  .checkForIncompatibilities(cd)
+  
+  
   ##test to see if tblb, Tmean columns exist, warn & delete if so
   replacedCols <- c("tblb", "Tmean")
   sel <- replacedCols %in% colnames(cd@x)
