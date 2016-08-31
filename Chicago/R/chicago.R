@@ -1354,14 +1354,16 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(method == "weightedRelative")
   {
+    eta.bar <- .getEtaBar(cd)
+    
     ##Get weights, weight p-values
     message("Calculating p-value weights...")
-    x[, log.w:= .getWeights(abs(x$distSign), cd, includeTrans=includeTrans)]
+    x[, log.w:= .getWeights(abs(x$distSign), cd, eta.bar=eta.bar, includeTrans=includeTrans)]
     x[, log.q:= log.p - log.w] ##weighted p-val
     message("Calculating scores...")
     
     ##get score (more interpretable than log.q)
-    minval <- .getWeights(0, cd, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
+    minval <- .getWeights(0, cd, eta.bar=eta.bar, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
     x[,score := pmax(- minval - log.q, 0)]
     
   } else {
@@ -1423,7 +1425,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   Nhyp
 }
 
-.getWeights <- function(dist, cd, includeTrans=TRUE)
+.getEtaBar <- function(cd, includeTrans=TRUE)
 {
   set <- cd@settings
   
@@ -1476,6 +1478,16 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   }
   
   eta.bar <- eta.sigma/Nhyp
+  eta.bar
+}
+
+.getWeights <- function(dist, cd, eta.bar, includeTrans=TRUE)
+{
+  set <- cd@settings
+  alpha = set$weightAlpha
+  beta = set$weightBeta
+  gamma = set$weightGamma
+  delta = set$weightDelta
   
   ##4. Calculate weights
   eta <- expit(alpha + beta*log(naToInf(dist)))
