@@ -42,10 +42,10 @@ Baited fragments are treated separately from the rest in estimating other end-le
 \item{tlb.filterTopPercent}{Default: 0.01. Top percent of fragments with respect to accumulated trans-counts to be filtered out in the binning procedure.
 
 Other ends are pooled together when calculating their scaling factors and as part of technical noise estimation. Binning is performed by quantile, and for the most extreme outliers this approach is not going to be adequate. Increasing this value may potentially make the estimation for the highest-count bin more robust, but will exclude additional other ends from the analysis.}
-\item{tlb.minProxOEPerBin}{Default: 1000. Minimum pool size (i.e. minimum number of other ends per pool), used when pooling other ends together based on trans-counts.
+\item{tlb.minProxOEPerBin}{Default: 50000. Minimum pool size (i.e. minimum number of other ends per pool), used when pooling other ends together based on trans-counts.
 
 If this parameter is set too small, then estimates will be imprecise due to sparsity issues. If this parameter is set too large, then the model becomes inflexible and so the model fit is hindered. This parameter could be decreased in a dataset that has been sequenced to an extremely high depth. Alternatively, it may need to be decreased out of necessity, in a dataset with very few other ends - for example, the vignette decreases this setting to process the PCHiCdata package data (since these data sets span only a small subset of the genome, in each case).}
-\item{tlb.minProxB2BPerBin}{Default: 100. Minimum pool size, used when pooling other ends together (bait-to-bait interactions only). (See previous entry, tlb.minProxOEPerBin, for advice on setting parameter.)}
+\item{tlb.minProxB2BPerBin}{Default: 2500. Minimum pool size, used when pooling other ends together (bait-to-bait interactions only). (See previous entry, tlb.minProxOEPerBin, for advice on setting parameter.)}
 \item{techNoise.minBaitsPerBin}{Default: 1000. Minimum pool size, used when pooling baits together based on accumulated trans-counts. (See tlb.minProxOEPerBin for advice on setting parameter.)}
 \item{brownianNoise.samples}{Default: 5. Number of times subsampling occurs when estimating the Brownian collision dispersion.
 

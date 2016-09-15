@@ -8,84 +8,7 @@ utils::globalVariables(c("distSign", "isBait2bait", "otherEndID", "transLength",
                          "otherEndChr","log.p","Tmean","log.w","log.q","score","otherEndLen","nperbait",
                          "isAdjacent","isAllB2BProx", "samplefilename"))
 
-
-ifnotnull = function(var, res){ if(!is.null(var)){res}}
-
-locateFile = function(what, where, pattern){
-  message("Locating ", what, " in ", where, "...")
-  filename = list.files(where, pattern)
-  
-  if (length(filename)!=1){
-    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
-  }
-  
-  message("Found ", filename)
-  file.path(where, filename)
-}
-  
-chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
-{
-  message("\n*** Running normaliseBaits...\n")
-  cd = normaliseBaits(cd)
-
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  message("\n*** Running normaliseOtherEnds...\n")
-  cd = normaliseOtherEnds(cd,
-                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
-                          )
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  message("\n*** Running estimateTechnicalNoise...\n")
-  cd = estimateTechnicalNoise(cd,
-                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
-                              )
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  message("\n*** Running estimateDistFun...\n")
-  
-  ### Note that f is saved in cd@params
-  cd = estimateDistFun(cd,
-                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
-  )
-
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }
-  
-  ### Note that f is saved as cd@params$f and  
-  ### subset is saved as cd@settings$brownianNoise.subset
-  message("\n*** Running estimateBrownianComponent...\n")
-  cd = estimateBrownianComponent(cd)
-
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }  
-  
-  message("\n*** Running getPvals...\n")
-  cd = getPvals(cd)
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }  
-  
-  message("\n*** Running getScores...\n")
-  cd = getScores(cd)
-  
-  if(printMemory){
-    print(gc(reset=TRUE))
-  }  
-  
-  cd
-}
+## Settings functions -----------------
 
 defaultSettings <- function()
 {
@@ -106,8 +29,8 @@ defaultSettings <- function()
     removeAdjacent = TRUE,
     adjBait2bait=TRUE,
     tlb.filterTopPercent=0.01, 
-    tlb.minProxOEPerBin=1000, 
-    tlb.minProxB2BPerBin=100,
+    tlb.minProxOEPerBin=50000, 
+    tlb.minProxB2BPerBin=2500,
     techNoise.minBaitsPerBin=1000, 
     brownianNoise.samples=5,
     brownianNoise.subset=1000,
@@ -268,6 +191,19 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
 
   def.settings
 }
+
+.checkForIncompatibilities <- function(cd)
+{
+  ##Check for 1.1.4 or before
+  if(cd@settings$tlb.minProxOEPerBin == 1000 | cd@settings$tlb.minProxB2BPerBin == 100)
+  {
+    message("WARNING: It looks like cd is an old chicagoData (version 1.1.4 or earlier).")
+    message("If so, please update some of the settings - see the Chicago 1.1.5 entry in news(package='Chicago').")
+    warning("tlb settings match Chicago 1.1.4 and before.")
+  }
+}
+
+## Read-in functions ----------------
 
 readSample = function(file, cd){
   
@@ -571,6 +507,76 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   
 }
 
+##Pipeline ------------
+
+chicagoPipeline <- function(cd, outprefix=NULL, printMemory=FALSE)
+{
+  .checkForIncompatibilities(cd)
+  
+  message("\n*** Running normaliseBaits...\n")
+  cd = normaliseBaits(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  message("\n*** Running normaliseOtherEnds...\n")
+  cd = normaliseOtherEnds(cd,
+                          outfile=ifnotnull(outprefix, paste0(outprefix, "_oeNorm.pdf"))
+  )
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  message("\n*** Running estimateTechnicalNoise...\n")
+  cd = estimateTechnicalNoise(cd,
+                              outfile=ifnotnull(outprefix, paste0(outprefix, "_techNoise.pdf"))
+  )
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  message("\n*** Running estimateDistFun...\n")
+  
+  ### Note that f is saved in cd@params
+  cd = estimateDistFun(cd,
+                       outfile=ifnotnull(outprefix, paste0(outprefix, "_distFun.pdf"))
+  )
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }
+  
+  ### Note that f is saved as cd@params$f and  
+  ### subset is saved as cd@settings$brownianNoise.subset
+  message("\n*** Running estimateBrownianComponent...\n")
+  cd = estimateBrownianComponent(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }  
+  
+  message("\n*** Running getPvals...\n")
+  cd = getPvals(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }  
+  
+  message("\n*** Running getScores...\n")
+  cd = getScores(cd)
+  
+  if(printMemory){
+    print(gc(reset=TRUE))
+  }  
+  
+  cd
+}
+
+##Pipeline functions ------------
+
 normaliseBaits = function(cd, normNcol="NNb", shrink=FALSE, plot=TRUE, outfile=NULL, debug=FALSE){
   message("Normalising baits...")
   
@@ -810,17 +816,6 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   exp(out)
 }
 
-plotDistFun <- function(cd, ...){
-  ##TODO: alternative method where we get the observed values too
-  params <- cd@params$distFunParams
-
-  my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
-  my.d <- exp(my.log.d)
-  plot(my.log.d, log(.distFun(my.d, params)), type = "l", 
-       main = "Distance function estimate", xlab = "log distance", 
-       ylab = "log f", col = "Red", ...)
-}
-
 estimateBrownianComponent <- function(cd) {
   ##1) Reinstate zeros
   ##2) Add a "Bmean" column to x, giving expected Brownian component.
@@ -1029,6 +1024,151 @@ estimateBrownianNoise <- estimateBrownianComponent
   x
 }
 
+.addTLB = function(cd, adjBait2bait=TRUE){
+  ##Assigns each fragment a "tlb" - a range containing the number of trans
+  ##1) The bins are constructed based on reduced data - (outliers trimmed, )
+  ##2) The bin endpoints are readjusted such that no fragments fall outside.
+  ##3) These bins are then applied to the entire dataset.
+  
+  # cd is the current chicagoData object
+  x = cd@x
+  s = cd@settings
+  
+  filterTopPercent = s$tlb.filterTopPercent
+  minProxOEPerBin = s$tlb.minProxOEPerBin
+  minProxB2BPerBin = s$tlb.minProxB2BPerBin
+  
+  message("Preprocessing input...")
+  
+  # Checking whether in the input, we had distances at trans-interactions labeled as NA 
+  # (as opposed to a dummy maximum distance)
+  transNA = FALSE
+  if(any(is.na(x$distSign))){
+    transNA = TRUE
+    transD = max(x[is.na(distSign)==FALSE]$distSign)+s$binsize
+    x[is.na(distSign), distSign := transD]
+  }
+  else{
+    transD = max(x$distSign)
+    message("Warning: No NAs found in input. Assuming the max distance of ", transD, " is a dummy for trans-counts.")
+  }
+  
+  message("Computing trans-counts...")
+  
+  if (adjBait2bait){
+    if (!"isBait2bait" %in% names(x)){
+      x[, isBait2bait := FALSE]
+      x[wb2b(otherEndID), isBait2bait:= TRUE] 
+    }
+    setkey(x, otherEndID, distSign)
+    # we are interested in the minimum distance for interactions that involve each other end
+    # to then be able to check how many other ends we are pooling together for each tlb bin 
+    # note that distSign[1] here means min(distSign) as it's keyed by this column
+    # sum(distSign==transD) is a bit faster than length(.I[distSign==transD])
+    
+    # MEMORY-HUNGRY CODE
+    # Watch this thread for possible solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1#comment46288765_29022185
+    # Note that B2B interactions appear twice, once each way - this means that by=otherEndID is fine (no need for a by=baitID fudge).
+    transLen = x[, list(sum(distSign==transD), isBait2bait[1], min(abs(distSign))), by=otherEndID]
+    
+    setnames(transLen, "V2", "isBait2bait")
+    setnames(transLen, "V3", "distSign")
+  }
+  else{
+    setkey(x, otherEndID, distSign)
+    transLen = x[, list(length(.I[distSign==transD]), min(abs(distSign))), by=otherEndID]    
+    setnames(transLen, "V2", "distSign")
+  }
+  
+  setnames(transLen, "V1", "transLength")
+  
+  transLen0 = transLen
+  transLen = transLen[transLength<=quantile(transLen$transLength,1-filterTopPercent/100)] 
+  filteredLen = nrow(transLen0[!otherEndID %in% transLen$otherEndID])
+  message("Filtering out ", filteredLen, " other ends with top ", filterTopPercent, "% number of trans-interactions")
+  
+  # first use cut2 to compute bin boundaries on the proximal range based on the desired minProxOEPerBin
+  # (note cut2 doesn't guarantee that all bins will contain this min number of observations)
+  # then use cut to split the whole dataset based on these bins
+  # note we'll need the full dataset (and not only proximal interactions) assigned to tlb bins
+  # when estimating technical noise
+  # If adjBait2bait == TRUE, do this separately for bait2bait and non-bait2bait other ends.  
+  
+  if (adjBait2bait){
+    transLen0 = transLen
+    transLen = transLen0[isBait2bait==FALSE]
+    transLenB2B = transLen0[isBait2bait==TRUE]
+  }
+  
+  message("Binning...")
+  
+  cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
+              m=minProxOEPerBin, onlycuts=TRUE)
+  # for really depleted data sets, cuts is a single number, usually 0.
+  if(length(cuts) == 1)
+  {
+    tlbClasses <- factor(rep(cuts, nrow(transLen)))
+  } else {
+    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+    if (min(cuts)>min(transLen$transLength)){
+      cuts[1] = min(transLen$transLength)
+    }
+    if (max(cuts)<max(transLen$transLength)){
+      cuts[length(cuts)] = max(transLen$transLength)
+    }
+    tlbClasses <- cut(transLen$transLength, breaks=cuts, include.lowest=TRUE)
+  }
+  set(transLen, NULL, "tlb" , tlbClasses)
+  
+  if (adjBait2bait){
+    
+    cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
+                   m=minProxB2BPerBin, onlycuts=TRUE)
+    # for really depleted data sets, cutsB2B is a single number, usually 0.
+    if(length(cutsB2B) == 1)
+    {
+      tlbClassesB2B <- factor(rep(cutsB2B, nrow(transLenB2B)))
+    } else {
+      # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
+      # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
+      if (min(cutsB2B)>min(transLenB2B$transLength)){
+        cutsB2B[1] = min(transLenB2B$transLength)
+      }
+      if (max(cutsB2B)<max(transLenB2B$transLength)){
+        cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
+      }
+      tlbClassesB2B <- cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE)
+    }
+    set(transLenB2B, NULL, "tlb", tlbClassesB2B)
+    levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
+    
+    transLen = rbind(transLen, transLenB2B)
+  }      
+  
+  set(transLen, NULL, "transLength", NULL)
+  set(transLen, NULL, "isBait2bait", NULL)
+  set(transLen, NULL, "distSign", NULL)
+  
+  setkey(x, otherEndID)
+  setkey(transLen, otherEndID)
+  
+  ##discard TLB if already present
+  if("tlb" %in% colnames(x))
+  {
+    set(x, NULL, "tlb", NULL)
+  }
+  
+  x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
+  # removing the interactions with too "sticky" other ends and those mapping to very sparse bins
+  
+  if(transNA){
+    x[distSign==max(x$distSign), distSign := NA]
+  }
+  
+  x
+}
+
 estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){ 
 
 # Estimate technical noise based on mean counts per bin, with bins defined based on trans-counts for baits _and_ other ends 
@@ -1038,9 +1178,11 @@ estimateTechnicalNoise = function(cd, plot=TRUE, outfile=NULL){
 # are input parameters for .addTLB (the function for binning other ends) that is only called  
 # if tlb's aren't already present in the input - and they will be present if other end normalisation
 # has been applied 
-    
-  message("Estimating technical noise based on trans-counts...")
 
+  message("Estimating technical noise based on trans-counts...")
+  .checkForIncompatibilities(cd)
+  
+  
   ##test to see if tblb, Tmean columns exist, warn & delete if so
   replacedCols <- c("tblb", "Tmean")
   sel <- replacedCols %in% colnames(cd@x)
@@ -1181,7 +1323,8 @@ getPvals <- function(cd){
   x[Bmean < .Machine$double.eps, log.p:=ppois(N - 1L, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)]
   x[Bmean >= .Machine$double.eps, log.p:=pdelap(N - 1L, alpha, beta=Bmean/alpha, lambda=Tmean, lower.tail=FALSE, log.p=TRUE)]
   
-  # Large N approximation ---------------------------------------------------
+  # Large N approximation
+  # ---------------------
   
   ##In rare cases where pdelap returns Infs, estimate the p-value magnitude
   ##using an NB approximation, through method of moments argument
@@ -1226,14 +1369,16 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
   if(method == "weightedRelative")
   {
+    eta.bar <- .getEtaBar(cd)
+    
     ##Get weights, weight p-values
     message("Calculating p-value weights...")
-    x[, log.w:= .getWeights(abs(x$distSign), cd, includeTrans=includeTrans)]
+    x[, log.w:= .getWeights(abs(x$distSign), cd, eta.bar=eta.bar, includeTrans=includeTrans)]
     x[, log.q:= log.p - log.w] ##weighted p-val
     message("Calculating scores...")
     
     ##get score (more interpretable than log.q)
-    minval <- .getWeights(0, cd, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
+    minval <- .getWeights(0, cd, eta.bar=eta.bar, includeTrans=includeTrans) ##FIXME could be optimized a *lot*.
     x[,score := pmax(- minval - log.q, 0)]
     
   } else {
@@ -1295,7 +1440,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   Nhyp
 }
 
-.getWeights <- function(dist, cd, includeTrans=TRUE)
+.getEtaBar <- function(cd, includeTrans=TRUE)
 {
   set <- cd@settings
   
@@ -1348,6 +1493,16 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   }
   
   eta.bar <- eta.sigma/Nhyp
+  eta.bar
+}
+
+.getWeights <- function(dist, cd, eta.bar, includeTrans=TRUE)
+{
+  set <- cd@settings
+  alpha = set$weightAlpha
+  beta = set$weightBeta
+  gamma = set$weightGamma
+  delta = set$weightDelta
   
   ##4. Calculate weights
   eta <- expit(alpha + beta*log(naToInf(dist)))
@@ -1529,6 +1684,8 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   
 }  
 
+## Hidden "read" functions ----------------------
+
 .readRmap = function(s){
   fread(s$rmapfile, colClasses = list(character=1))
 }
@@ -1695,151 +1852,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
   proxOE
   }
 
-.addTLB = function(cd, adjBait2bait=TRUE){
-  ##Assigns each fragment a "tlb" - a range containing the number of trans
-  ##1) The bins are constructed based on reduced data - (outliers trimmed, )
-  ##2) The bin endpoints are readjusted such that no fragments fall outside.
-  ##3) These bins are then applied to the entire dataset.
-  
-  # cd is the current chicagoData object
-  x = cd@x
-  s = cd@settings
-  
-  filterTopPercent = s$tlb.filterTopPercent
-  minProxOEPerBin = s$tlb.minProxOEPerBin
-  minProxB2BPerBin = s$tlb.minProxB2BPerBin
-  
-  message("Preprocessing input...")
-  
-  # Checking whether in the input, we had distances at trans-interactions labeled as NA 
-  # (as opposed to a dummy maximum distance)
-  transNA = FALSE
-  if(any(is.na(x$distSign))){
-    transNA = TRUE
-    transD = max(x[is.na(distSign)==FALSE]$distSign)+s$binsize
-    x[is.na(distSign), distSign := transD]
-  }
-  else{
-    transD = max(x$distSign)
-    message("Warning: No NAs found in input. Assuming the max distance of ", transD, " is a dummy for trans-counts.")
-  }
-  
-  message("Computing trans-counts...")
-  
-  if (adjBait2bait){
-    if (!"isBait2bait" %in% names(x)){
-      x[, isBait2bait := FALSE]
-      x[wb2b(otherEndID), isBait2bait:= TRUE] 
-    }
-    setkey(x, otherEndID, distSign)
-    # we are interested in the minimum distance for interactions that involve each other end
-    # to then be able to check how many other ends we are pooling together for each tlb bin 
-    # note that distSign[1] here means min(distSign) as it's keyed by this column
-    # sum(distSign==transD) is a bit faster than length(.I[distSign==transD])
-
-    # MEMORY-HUNGRY CODE
-    # Watch this thread for possible solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1#comment46288765_29022185
-    # Note that B2B interactions appear twice, once each way - this means that by=otherEndID is fine (no need for a by=baitID fudge).
-    transLen = x[, list(sum(distSign==transD), isBait2bait[1], distSign[1]), by=otherEndID]
-    
-    setnames(transLen, "V2", "isBait2bait")
-    setnames(transLen, "V3", "distSign")
-  }
-  else{
-    setkey(x, otherEndID, distSign)
-    transLen = x[, list(length(.I[distSign==transD]), distSign[1]), by=otherEndID]    
-    setnames(transLen, "V2", "distSign")
-  }
-  
-  setnames(transLen, "V1", "transLength")
-  
-  transLen0 = transLen
-  transLen = transLen[transLength<=quantile(transLen$transLength,1-filterTopPercent/100)] 
-  filteredLen = nrow(transLen0[!otherEndID %in% transLen$otherEndID])
-  message("Filtering out ", filteredLen, " other ends with top ", filterTopPercent, "% number of trans-interactions")
-  
-  # first use cut2 to compute bin boundaries on the proximal range based on the desired minProxOEPerBin
-  # (note cut2 doesn't guarantee that all bins will contain this min number of observations)
-  # then use cut to split the whole dataset based on these bins
-  # note we'll need the full dataset (and not only proximal interactions) assigned to tlb bins
-  # when estimating technical noise
-  # If adjBait2bait == TRUE, do this separately for bait2bait and non-bait2bait other ends.  
-  
-  if (adjBait2bait){
-    transLen0 = transLen
-    transLen = transLen0[isBait2bait==FALSE]
-    transLenB2B = transLen0[isBait2bait==TRUE]
-  }
-  
-  message("Binning...")
-  
-  cuts = cut2(transLen[abs(distSign)<= s$maxLBrownEst]$transLength, 
-              m=minProxOEPerBin, onlycuts=TRUE)
-  # for really depleted data sets, cuts is a single number, usually 0.
-  if(length(cuts) == 1)
-  {
-    tlbClasses <- factor(rep(cuts, nrow(transLen)))
-  } else {
-    # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-    # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-    if (min(cuts)>min(transLen$transLength)){
-      cuts[1] = min(transLen$transLength)
-    }
-    if (max(cuts)<max(transLen$transLength)){
-      cuts[length(cuts)] = max(transLen$transLength)
-    }
-    tlbClasses <- cut(transLen$transLength, breaks=cuts, include.lowest=TRUE)
-  }
-  set(transLen, NULL, "tlb" , tlbClasses)
-  
-  if (adjBait2bait){
-    
-    cutsB2B = cut2(transLenB2B[abs(distSign)<= s$maxLBrownEst]$transLength, 
-                   m=minProxB2BPerBin, onlycuts=TRUE)
-    # for really depleted data sets, cutsB2B is a single number, usually 0.
-    if(length(cutsB2B) == 1)
-    {
-      tlbClassesB2B <- factor(rep(cutsB2B, nrow(transLenB2B)))
-    } else {
-      # If some other ends that do not feature in any proximal interactions have transLen's outside of the range
-      # determined based on the proximal interactions, just move the boundaries of the first or last tlb bin accordingly...
-      if (min(cutsB2B)>min(transLenB2B$transLength)){
-        cutsB2B[1] = min(transLenB2B$transLength)
-      }
-      if (max(cutsB2B)<max(transLenB2B$transLength)){
-        cutsB2B[length(cutsB2B)] = max(transLenB2B$transLength)
-      }
-      tlbClassesB2B <- cut(transLenB2B$transLength, breaks=cutsB2B, include.lowest=TRUE)
-    }
-    set(transLenB2B, NULL, "tlb", tlbClassesB2B)
-    levels(transLenB2B$tlb) = paste0(levels(transLenB2B$tlb), "B2B")
-    
-    transLen = rbind(transLen, transLenB2B)
-  }      
-  
-  set(transLen, NULL, "transLength", NULL)
-  set(transLen, NULL, "isBait2bait", NULL)
-  set(transLen, NULL, "distSign", NULL)
-  
-  setkey(x, otherEndID)
-  setkey(transLen, otherEndID)
-  
-  ##discard TLB if already present
-  if("tlb" %in% colnames(x))
-  {
-    set(x, NULL, "tlb", NULL)
-  }
-  
-  x = x[transLen] # note that if mode="even_filtered", we're not just merging, but also trimming x, 
-  # removing the interactions with too "sticky" other ends and those mapping to very sparse bins
-  
-  if(transNA){
-    x[distSign==max(x$distSign), distSign := NA]
-  }
-  
-  x
-}
-
+## Export/plotting functions ----------------------
 
 plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=TRUE, plotBprof=FALSE,plevel1 = 5, plevel2 = 3, outfile=NULL, removeBait2bait=TRUE, width=20, height=20, maxD=1e6, bgCol="black", lev2Col="blue", lev1Col="red", bgPch=1, lev1Pch=20, lev2Pch=20, ...)
 {
@@ -1934,6 +1947,17 @@ plotBaits=function(cd, pcol="score", Ncol="N", n=16, baits=NULL, plotBaitNames=T
     dev.off()
   }
   baits
+}
+
+plotDistFun <- function(cd, ...){
+  ##TODO: alternative method where we get the observed values too
+  params <- cd@params$distFunParams
+  
+  my.log.d <- seq(from = params$obs.min, to = params$obs.max, length.out = 101)
+  my.d <- exp(my.log.d)
+  plot(my.log.d, log(.distFun(my.d, params)), type = "l", 
+       main = "Distance function estimate", xlab = "log distance", 
+       ylab = "log f", col = "Red", ...)
 }
 
 exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcutoff=NULL,
@@ -2097,7 +2121,7 @@ exportResults <- function(cd, outfileprefix, scoreCol="score", cutoff=5, b2bcuto
       sel <- order(out$bait_chr, out$bait_start)
       out <- out[sel,]
       
-      res = apply(out,1,function(x){
+      res = apply(out, 1, function(x){
         lines = paste0(x["bait_chr"], "\t", x["bait_start"], "\t", x["bait_end"], "\t", x["otherEnd_chr"],":", x["otherEnd_start"], "-", x["otherEnd_end"], ",", x["score"],"\t", x["i"], "\t", ".") 
         lines
       })
@@ -2213,6 +2237,8 @@ copyCD <- function(cd)
   newCD
 }
 
+## Misc functions ---------------------------
+
 wb2b = function(oeID, s, baitmap=NULL){
   # s is the current chicagoData object's settings list
   if (is.null(baitmap)){
@@ -2246,4 +2272,18 @@ removeNAs <- function(x) {x[!is.na(x)]}
 naToInf <- function(x)
 {
   ifelse(is.na(x), Inf, x) ##Convert NAs to infs.
+}
+
+ifnotnull = function(var, res){ if(!is.null(var)){res}}
+
+locateFile = function(what, where, pattern){
+  message("Locating ", what, " in ", where, "...")
+  filename = list.files(where, pattern)
+  
+  if (length(filename)!=1){
+    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
+  }
+  
+  message("Found ", filename)
+  file.path(where, filename)
 }

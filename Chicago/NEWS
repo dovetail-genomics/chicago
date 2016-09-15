@@ -1,0 +1,15 @@
+Chicago 1.1.5
+-------------
+
+We fixed a bug in .addTLB() (called by estimateTechnicalNoise()) that reduced the number of trans-count bins used, though the read counts in those bins were still calculated correctly. Since fixing this bug increased the number of trans-count bins, we adjusted the default values of two settings accordingly:
+
+tlb.minProxOEPerBin: 1,000 changed to 50,000
+tlb.minProxB2BPerBin: 100 changed to 2,500
+
+These values have been chosen to ensure that results should change as little as possible from Chicago 1.1.4. Unless you were using custom values, you should not notice any qualitative differences.
+
+If you need to re-run chicagoPipeline() (or just estimateTechnicalNoise()) on a chicagoData object created using version 1.1.4 or earlier, please manually update the parameters to their new settings:
+
+cd <- modifySettings(cd, settings=list(tlb.minProxOEPerBin=50000, tlb.minProxB2BPerBin=2500))
+
+Many thanks to Thomas Sexton for bringing the bug to our attention and helping us fix it.
