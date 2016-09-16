@@ -12,6 +12,10 @@ This repository contains the following files:
 
 Please refer to the Chicago R package vignette and the chicagoTools README file for more information.
 
+*News*
+
+- Version 1.1.5: Default values of tlb.minProxOEPerBin and tlb.minProxB2BPerBin have changed. No action is required unless you specified non-default values, or wish to re-run the pipeline on old chicagoData objects. See the [NEWS](https://bitbucket.org/chicagoTeam/chicago/src/master/Chicago/NEWS?fileviewer=file-view-default) file for more details.
+
 *Installation instructions*
 
 1. Make sure that you have R version >= 3.1.2. chicagoTools requires some additional dependencies: bedtools, perl and python >= 2.7 need to be pre-installed and added to PATH, plus the R package ``argparser`` is required - install with the R code:
