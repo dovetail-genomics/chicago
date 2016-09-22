@@ -26,7 +26,7 @@ my %config = (
 	matrix => ''
 );
 
-if ( !@ARGV ) {    #No argumnets, no files
+if ( !@ARGV ) {    #No arguments, no files
     print while (<DATA>);
     exit(0);
 }
@@ -39,7 +39,7 @@ my $config_result = GetOptions(    #Stores parameters
 	"help"   => \$config{help},
 	"hold_jid=s" => \$config{hold_jid},
 	"config=s"   => \$config{config},
-    "settings=s" => \$config{settings},
+	"settings=s" => \$config{settings},
     "matrix" => \$config{matrix} 
 	);
 
@@ -56,9 +56,6 @@ if ( $config{help} ) {
     print while (<DATA>);
     exit(0);
 }
-
-
-
 
 
 if( hasval($config{matrix}) ){    #Running the peak matrix only
@@ -78,11 +75,9 @@ if( hasval($config{config}) ) {
 	process_config($config{config}, \%config)
 }
 
-
 check_parameters();
 processInputfile();
-  
-    
+ 
 #Create a log file
 open(LOG, '>', 'chicagoLog.txt') or die "Could not write to 'chicagoLog.txt' : $!";
 	
@@ -404,6 +399,69 @@ sub check_parameters{
 	}else{
 		warn "Please specify an --input file\n";
 		$parameters_ok = 0;		
+	}
+	
+	
+	#Read the input file and check everything is fine
+	if( (hasval ($config{input})) and (-e $config{input}) ){	
+		my @data_files;
+		my @features_files;
+		
+		open(INPUT_FILE, '<', $config{input}) or die "Could not open '$config{input}' : $!";
+		while(<INPUT_FILE>){
+			my $line = $_;
+			chomp $line;
+			next if($line =~ /^\s*$/);
+			my ($data_file, undef, undef, $feature_file) = split(/\t/, $line);
+			
+			if(defined $data_file){
+				unless(defined $data_file) {
+					warn "Need to specify a features file for data file '$data_file'\n";
+					$parameters_ok = 0;
+				}
+			}			
+			push(@data_files, $data_file);
+			push(@features_files, $feature_file);	
+		}
+		close INPUT_FILE or die "Could not close '$config{input}' : $!";
+			
+		if(@data_files){
+			@data_files	= deduplicate_array(@data_files);
+			@features_files = deduplicate_array(@features_files);
+						
+			$parameters_ok = 0 unless(check_files_exist(\@data_files, 'EXISTS'));
+			$parameters_ok = 0 unless(check_files_exist(\@features_files, 'EXISTS'));	
+		} else {
+			warn "Specify file to process in the input list file\n";
+			$parameters_ok = 0;
+		}
+		
+		#Check the overlap control files exists and there are no duplicates in the features.txt (name by convention) file
+		foreach my $feature_file (@features_files){
+			open(FEATURE_FILE, '<', $feature_file) or die "Could not open '$feature_file' : $!";
+				my @feature_track_files;
+				while(<FEATURE_FILE>){
+					my $line = $_;
+					chomp $line;
+					next if($line =~ /^\s*$/);
+					my ($description, $feature_track_file) = split(/\t/, $line);
+					unless( (defined $description) and (defined $feature_track_file) ){
+						warn "Feature file '$feature_file' contains empty fields\n";
+						$parameters_ok = 0;
+					}
+					push(@feature_track_files, $feature_track_file) if defined($feature_track_file);					
+				}
+			close FEATURE_FILE or die "Could not close $feature_file : $!";
+					
+			if( (scalar @feature_track_files) == (scalar deduplicate_array(@feature_track_files)) ){
+				unless(check_files_exist(\@feature_track_files, 'EXISTS')){
+					$parameters_ok = 0;
+				}
+			} else {
+				warn "Features file '$feature_file' contains duplicate feature files\n";
+				$parameters_ok = 0;
+			}
+		}
 	}
 	
 	if( hasval($config{email}) ){
