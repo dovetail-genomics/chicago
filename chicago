@@ -23,7 +23,8 @@ my %config = (
 	hold_jid => '',
 	config => '',
 	settings => '',
-	matrix => ''
+	matrix => '',
+	map => '',
 );
 
 if ( !@ARGV ) {    #No arguments, no files
@@ -40,7 +41,8 @@ my $config_result = GetOptions(    #Stores parameters
 	"hold_jid=s" => \$config{hold_jid},
 	"config=s"   => \$config{config},
 	"settings=s" => \$config{settings},
-    "matrix" => \$config{matrix} 
+    "matrix" => \$config{matrix},
+	"map" => \$config{map}
 	);
 
 die "Command line options need to be in the correct format (chicago --help for more details).\n" unless ($config_result);
@@ -55,6 +57,32 @@ my @inputData;    #Array of arrays storing the data from the input file
 if ( $config{help} ) {
     print while (<DATA>);
     exit(0);
+}
+
+
+if( hasval($config{map}) ){
+	die "Specify i) digest file and ii) oligos file\n" unless( scalar @ARGV == 2);
+	my ($digest_file, $oligo_file) = @ARGV;
+	my $email = `whoami`;
+	chomp $email;
+	$email .= '@babraham.ac.uk';
+	my $random_string = generateRandomString(10); 
+	my $step1_job_id = "makeFiles.$random_string";
+	my $step2_job_id = "makeDesign.$random_string";
+	
+	#Make baitmap and Rmap
+	my $command = "$Bin/chicagoTools/create_baitmap_rmap.pl $digest_file $oligo_file";
+	my $cluster_command = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=20G -o $step1_job_id.out -j y -N $step1_job_id -m eas -M $email";	
+	!system($cluster_command) or die "Could not run cluster command: '$cluster_command'\n";
+	
+	#Make remaining files
+	$command = "python $Bin/chicagoTools/makeDesignFiles.py";
+	$cluster_command = "echo \"$command\" | qsub -clear -b n -V -cwd -l h_vmem=20G -o $step2_job_id.out -j y -N $step2_job_id -m eas -M $email -hold_jid $step1_job_id";	
+	!system($cluster_command) or die "Could not run cluster command: '$cluster_command'\n";
+
+	print "Jobs sent to Cluster.\n";
+	
+	exit (0);
 }
 
 
@@ -438,18 +466,22 @@ sub check_parameters{
 		
 		#Check the overlap control files exists and there are no duplicates in the features.txt (name by convention) file
 		foreach my $feature_file (@features_files){
+			my $feature_file_folder = dirname($feature_file);
 			open(FEATURE_FILE, '<', $feature_file) or die "Could not open '$feature_file' : $!";
 				my @feature_track_files;
+				my @feature_track_descriptions;
 				while(<FEATURE_FILE>){
 					my $line = $_;
 					chomp $line;
 					next if($line =~ /^\s*$/);
 					my ($description, $feature_track_file) = split(/\t/, $line);
+					$feature_track_file = "$feature_file_folder/$feature_track_file";
 					unless( (defined $description) and (defined $feature_track_file) ){
 						warn "Feature file '$feature_file' contains empty fields\n";
 						$parameters_ok = 0;
 					}
 					push(@feature_track_files, $feature_track_file) if defined($feature_track_file);					
+					push(@feature_track_descriptions, $description) if defined($feature_track_file);
 				}
 			close FEATURE_FILE or die "Could not close $feature_file : $!";
 					
@@ -461,6 +493,11 @@ sub check_parameters{
 				warn "Features file '$feature_file' contains duplicate feature files\n";
 				$parameters_ok = 0;
 			}
+			
+			unless( (scalar @feature_track_descriptions) == (scalar deduplicate_array(@feature_track_descriptions)) ){
+				warn "Features file '$feature_file' contains duplicate feature descriptions\n";
+				$parameters_ok = 0;	
+			}		
 		}
 	}
 	
@@ -767,5 +804,8 @@ COMMAND LINE OPTIONS
 --features              Process the features enrichment plots only
 --help	              	Print program help and exit
 --hold_jid            	Place jobs on hold until specified cluster jobs have completed
+--map                   Makes Rmap, baitmap and other design files required by CHiCAGO.
+                        Pass HiCUP digest file and oligos file (made by Simon Andrews'
+                        script) as input
 --matrix                Process CHiCAGO output files to generate a Peak Matrix file
 --version             	Print the program version and exit
