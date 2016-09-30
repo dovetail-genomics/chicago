@@ -387,7 +387,7 @@ mergeSamples = function(cdl, normalise = TRUE, NcolOut="N", NcolNormPrefix="NNor
   
   setkey(attr, baitID, otherEndID)
   # remove duplicates by key
-  attr = unique(attr)
+  attr = unique(attr, by=key(attr))
   
   message("Merging samples...")
   
@@ -637,7 +637,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
   # NB: we need to some only once for each other end, but each other end is present
   # more than once for each tlb
   setkeyv(nbpb, c("otherEndID", "distbin"))
-  nbpb = unique(nbpb)
+  nbpb = unique(nbpb, by=key(nbpb))
   
   nbpbSum = nbpb[, sum(get(paste0("bin",as.integer(distbin)))), by=c("tlb","distbin")]
   setkeyv(nbpbSum, c("tlb", "distbin"))
@@ -651,7 +651,7 @@ normaliseOtherEnds = function(cd, Ncol="NNb", normNcol="NNboe", plot=TRUE, outfi
                              Ncol=Ncol, npb = NULL, shrink=FALSE, adjBait2bait=FALSE, refExcludeSuffix="B2B")
   
   setkey(x, tlb)
-  x = unique(x) # we don't need any other info than s_i for each tlb and it's one per tlb
+  x = unique(x, by=key(x)) # we don't need any other info than s_i for each tlb and it's one per tlb
   set(x, NULL, "NNb", NULL)
   set(x, NULL, "distbin", NULL)
   set(x, NULL, "ntot", NULL)
@@ -705,11 +705,8 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   }
   
   # Get f(d_b)
-  #   f.d <- unique(x[!is.na(x$refBinMean),c("distbin", "refBinMean")]) ##delete rows with NAs from baits that are too far away
   setkey(cd@x, distbin, refBinMean)
-  f.d <- unique(cd@x)[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=FALSE]
-  
-  #   f.d <- f.d[order(f.d$refBinMean, decreasing=TRUE),]
+  f.d <- unique(cd@x, by=key(cd@x))[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=FALSE]
   f.d <- f.d[order(refBinMean, decreasing=TRUE)]
   
   setDF(f.d) # f.d is tiny, so no need to bother with it being a data.table
