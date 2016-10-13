@@ -28,7 +28,7 @@ awk 'BEGIN{
    print "Checking rmap and baitmap files..." 
    ok=1
 }{
- gsub(/[^a-zA-Z,0-9]+/, "", $4); 
+ gsub(/[^a-zA-Z,0-9]+$/, "", $4); 
  if(FNR==NR){
    if(!id[$4]){
      id[$4]=1;
