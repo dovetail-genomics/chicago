@@ -31,4 +31,10 @@ test_that("getPvals reproduces cdUnitTest data", {
   expect_equal(cdUnitTest@x$log.p, cdRecalc@x$log.p)
 })
 
-# getScores ##Not expected to be recapitulated
+# getScores
+test_that("getScores reproduces cdUnitTest data", {
+  cdRecalc <- copyCD(cdUnitTest)
+  cdRecalc <- getScores(cdRecalc)
+  setkey(cdRecalc@x, baitID, otherEndID)
+  expect_equal(cdUnitTest@x$score, cdRecalc@x$score)
+})
