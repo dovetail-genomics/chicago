@@ -1,3 +1,4 @@
+#! /usr/bin/env Rscript
 # Determine the weighting function based on call overlap across replicates
 
 # Functions used to fit a bounded logistic regression model.

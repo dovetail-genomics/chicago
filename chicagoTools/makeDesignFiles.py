@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import getopt
 import sys
 import random
