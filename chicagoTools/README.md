@@ -51,7 +51,7 @@ Data in each file is preceded by a comment line listing the input parameters use
    
 The script takes the following input parameters:  
    
-``` python makeDesignFiles.py  
+```python makeDesignFiles.py  
 	[--designDir=.]  
     [--rmapfile=designDir/*.rmap]  
 	[--baitmapfile=designDir/*.baitmap]  
