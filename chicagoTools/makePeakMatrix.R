@@ -1,3 +1,4 @@
+#! /usr/bin/env Rscript
 message("***makePeakMatrix.R***\n")
 
 library(argparser)

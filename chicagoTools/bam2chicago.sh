@@ -28,6 +28,7 @@ awk 'BEGIN{
    print "Checking rmap and baitmap files..." 
    ok=1
 }{
+ gsub(/[[:space:]]$/, "", $4);
  if(FNR==NR){
    if(!id[$4]){
      id[$4]=1;
@@ -37,7 +38,7 @@ awk 'BEGIN{
    }
    if(NF != 4){
      print "Error! Wrong number of columns in rmap file at line "FNR", should be 4.";
-   } 
+   }
    rmap[$1"_"$2"_"$3"_"$4] = 1;
  }else{
    if(!bid[$4]){
