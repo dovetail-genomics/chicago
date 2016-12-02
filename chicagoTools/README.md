@@ -51,7 +51,7 @@ Data in each file is preceded by a comment line listing the input parameters use
    
 The script takes the following input parameters:  
    
-``` python makeDesignFiles.py  
+```python makeDesignFiles.py  
 	[--designDir=.]  
     [--rmapfile=designDir/*.rmap]  
 	[--baitmapfile=designDir/*.baitmap]  
@@ -61,8 +61,7 @@ The script takes the following input parameters:
     [--maxLBrownEst=1500000]  
     [--binsize=20000]  
     [--removeb2b=True]  
-    [--removeAdjacent=True]
-```
+    [--removeAdjacent=True]```
    
 - The following parameters specify the input files that need to be created prior to running these scripts and the output file name:  
     + rmapfile: path to rmap file   
