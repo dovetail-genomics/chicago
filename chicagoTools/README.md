@@ -61,7 +61,8 @@ The script takes the following input parameters:
     [--maxLBrownEst=1500000]  
     [--binsize=20000]  
     [--removeb2b=True]  
-    [--removeAdjacent=True] ```
+    [--removeAdjacent=True]
+```
    
 - The following parameters specify the input files that need to be created prior to running these scripts and the output file name:  
     + rmapfile: path to rmap file   
@@ -82,7 +83,7 @@ The script takes the following input parameters:
     + removeAdjacent: True, meaning that fragments immediately adjacent to bait should not be counted.  
 
 
-** The script for processing BAM files into Chicago input files **
+**The script for processing BAM files into Chicago input files**
 
 The Unix shell script bam2chicago.sh takes as input a BAM file corresponding to aligned Capture HiC reads for a single experiment and the capture design files .rmap and .baitmap.  
 The output is an ASCII .chinput file used as input by the Chicago package. 
@@ -155,7 +156,8 @@ The full list of the parameters is however more extensive:
 [--design-dir DESIGN-DIR] [--cutoff CUTOFF] [--export-format EXPORT-FORMAT] [--export-order EXPORT-ORDER] [--examples-prox-dist EXAMPLES-PROX-DIST] [--output-dir OUTPUT-DIR] 
 [--en-feat-list EN-FEAT-LIST] [--en-feat-files EN-FEAT-FILES] [--en-feat-folder EN-FEAT-FOLDER] [--en-full-cis-range] [--en-trans] 
 [--en-min-dist EN-MIN-DIST] [--en-max-dist EN-MAX-DIST] [--en-sample-no EN-SAMPLE-NO] [--features-only]
-<input-files> <output-prefix>```   
+<input-files> <output-prefix>
+```   
    
 - help: print a help message
 - print-memory: print memory use during ```chicagoPipeline()``` execution   
@@ -246,4 +248,4 @@ Rscript fitDistCurve.R cellTypeLargerBin --summaryInput cellType_summaryInput.Rd
 - summaryInput: An .Rda file of summary information -- the max P-val for each putative interaction, and the location of the .rmap file. This file will be generated if it wasn't provided.  
 - threshold: Threshold applied to log(p) values (NB: not the CHiCAGO score!). In other words, log(p) must be below this value in all of the samples. [default: -10]  
 - subsets: To ensure robustness, the data are partitioned into approximately equal subsets. Parameters are estimated separately on each subset. Then, an estimate for each parameter is derived from its median value across subsets. The number of subsets is controlled by this argument. [default: 5]  
-- largeBinSize, binNumber, halfNumber: Parameters pertaining to the bins used in the analysis. Default breaks occur at 0, 31.25k, 62.5k, 125k, 250k, 500k, 1m, 2m, 3m, 4m, ..., 16m. The breaks are constructed by taking [binNumber] bins of size [largeBinSize], then breaking the first bin into two, iterating [halfNumber] times. [default: 1000000, 16, 5]  
+- largeBinSize, binNumber, halfNumber: Parameters pertaining to the bins used in the analysis. Default breaks occur at 0, 31.25k, 62.5k, 125k, 250k, 500k, 1m, 2m, 3m, 4m, ..., 16m. The breaks are constructed by taking [binNumber] bins of size [largeBinSize], then breaking the first bin into two, iterating [halfNumber] times. [default: 1000000, 16, 5]

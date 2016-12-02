@@ -1,3 +1,4 @@
+#! /usr/bin/env Rscript
 message("\n***runChicago.R\n\n")
 
 ### Parsing the command line ###
