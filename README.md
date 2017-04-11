@@ -12,6 +12,12 @@ This repository contains the following files:
 
 Please refer to the Chicago R package vignette and the chicagoTools README file for more information.
 
+*Compatibility notices*
+
+- CHiCAGO is not compatible with R package Delaporte v2.3.0. The compatibility issue has been kindly fixed but Delaporte package author in all subsequent versions.
+
+- CHiCAGO is currently not compatible with bedtools v2.26 due to BED format compliance checking introduced in this version. Please do not upgrade from v2.25 while we are working to resolve this issue.
+
 *News*
 
 - Version 1.1.5: Default values of tlb.minProxOEPerBin and tlb.minProxB2BPerBin have changed. No action is required unless you specified non-default values, or wish to re-run the pipeline on old chicagoData objects. See the [NEWS](https://bitbucket.org/chicagoTeam/chicago/src/master/Chicago/NEWS?fileviewer=file-view-default) file for more details.
