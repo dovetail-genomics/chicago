@@ -298,7 +298,8 @@ readSample = function(file, cd){
 }
 
 readAndMerge = function(files, cd, ...){
-  mergeSamples(lapply(files, readSample, cd), ...)
+  if (length(files)==1) readSample(files, cd)
+  else mergeSamples(lapply(files, readSample, cd), ...)
 }
 
 getSkOnly <- function(files, cd)
