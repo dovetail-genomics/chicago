@@ -298,7 +298,8 @@ readSample = function(file, cd){
 }
 
 readAndMerge = function(files, cd, ...){
-  mergeSamples(lapply(files, readSample, cd), ...)
+  if (length(files)==1) readSample(files, cd)
+  else mergeSamples(lapply(files, readSample, cd), ...)
 }
 
 getSkOnly <- function(files, cd)
@@ -2229,6 +2230,7 @@ exportToGI <- function(cd, scoreCol="score", cutoff=5, b2bcutoff=NULL,
 
 copyCD <- function(cd)
 {
+  if(class(cd) != "chicagoData") {stop ("cd is not a chicagoData object")}
   newCD <- cd
   newCD@x <- copy(cd@x)
   newCD
