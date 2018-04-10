@@ -126,7 +126,9 @@ awk -v fless=$lessfilename -v fmore=${samplename}/${bamname}_mappedToBaitsBoRAnd
     }
     }
 END{
-    printf ("Filtered out %f reads with <60%% overlap with a single digestion fragment\n", i/(i+k));
+    if(i>0){ 
+	printf ("Filtered out %f reads with <60%% overlap with a single digestion fragment\n", i/(i+k)) 
+    }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
 
 if [ "$nodelete" != "nodelete" ]; then
