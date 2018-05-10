@@ -206,8 +206,7 @@ for i in xrange(len(st)):
   if not id[i] in bid:
     continue
     
-  n = [0]*int(maxLBrownEst/binsize)
-  
+  n = [0]*int(round(float(maxLBrownEst)/binsize))
   for j in xrange(i-1,0,-1):
    if chr[j] != chr[i]:
      break
@@ -272,7 +271,7 @@ of.write("#\tmaxLBrownEst=%d\tbinsize=%d\trmapfile=%s\tbaitmapfile=%s\n" % (maxL
 
 for i in xrange(len(st)):
     
-  n = [0]*int(maxLBrownEst/binsize)
+  n = [0]*int(round(float(maxLBrownEst)/binsize))
   
   if removeAdjacent:
     iSt=i-2
