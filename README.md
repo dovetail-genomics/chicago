@@ -44,7 +44,7 @@ install_bitbucket("chicagoTeam/Chicago", subdir="PCHiCdata")
 ```
 (This strategy downloads the repository multiple times. To avoid this, you can manually install Chicago's dependencies, then install the packages from the source directories using ``R CMD INSTALL`` or ``install.packages()``.)
 
-The R packages are also part of Bioconductor 3.3, and installation using ```biocLite()``` is available. However, as Bioconductor releases only happen twice a year, more recent versions of the R packages may be available from here.
+The R packages are also part of Bioconductor starting from version 3.3, and installation using ```biocLite()``` is available. However, as Bioconductor releases only happen twice a year, more recent versions of the R packages may be available from here.
 
 If you encounter any problems, please [post an issue](https://bitbucket.org/chicagoTeam/chicago/issues) or email the developers. In the email, include output from the R command ``sessionInfo()``, along with any error messages encountered.
 
