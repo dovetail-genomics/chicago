@@ -55,7 +55,7 @@ Chicago is mainly developed and maintained by:
 - Jonathan Cairns 
 - Paula Freire Pritchett
 - Steven Wingett
-- Mikhail Spivakov ([spivakov@lms.mrc.ac.uk](mailto:spivakov@lms.mrc.ac.uk))
+- Mikhail Spivakov ([mikhail.spivakov@lms.mrc.ac.uk](mailto:mikhail.spivakov@lms.mrc.ac.uk))
 
 CHiCAGO was developed at the Regulatory Genomics Group, Babraham Institute, Cambridge UK. From July 2018, the group is based at MRC London Institute of Medical Sciences in London, where it is known as [Functional Gene Control](http://www.lms.mrc.ac.uk/groups/functional-gene-control) group.
 
