@@ -39,7 +39,7 @@ if(packageVersion("argparser") < 0.4)
   names(opts) <- gsub("-", "_", names(opts))
 }
 
-outputPrefix = opts[["<output-prefix>"]]
+outputPrefix = opts[["<output_prefix>"]]
 inputs <- opts[["inputs"]]
 summaryInput <- opts[["summaryInput"]]
 threshold <- opts[["threshold"]]
