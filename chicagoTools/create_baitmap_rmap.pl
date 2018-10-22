@@ -44,6 +44,10 @@ while (<DIGEST>) {
 }
 close DIGEST or die "Could not close filehandle on '$digest_file' : $! ";
 
+#print Dumper \%digest_fragments;
+
+
+
 
 
 #Read in oligos file and identify baited restriction fragment
@@ -63,8 +67,8 @@ while(<OLIGO>){
 }
 close OLIGO or die "Could not close filehandle on '$oligo_file' : $!";
 
-
-
+#print Dumper \%digest_fragments;
+#exit;
 
 #Read in digest file again and print out results to file and reported the 
 #number of baited fragments
@@ -82,6 +86,10 @@ open( BAITMAP, '>', $baitmap_file) or die "Couldn't read '$baitmap_file' : $!";
 scalar <DIGEST2>;    #Ignore headers
 scalar <DIGEST2>;
 my $index = 1;
+
+
+#print Dumper \%digest_fragments;
+
 while (<DIGEST2>) {
 
 	my $chromosome_name            = ( split /\t/ )[0];
@@ -103,7 +111,7 @@ close DIGEST2 or die "Could not close filehandle on '$digest_file' : $! ";
 close RMAP or die "Could not close filehandle on '$rmap_file' : $! ";
 close BAITMAP or die "Could not close filehandle on '$baitmap_file' : $! ";
 
-print "Processing complete\n";
+print "Done";
 
 exit (0);
 
@@ -117,21 +125,58 @@ exit (0);
 sub add_feature{
 
 	my ($csome, $start, $end, $feature) = @_;
+	#print join("\t", $csome, $start, $end, $feature);
+	#print "\n";
 	my $pos = int( ($end - $start) / 2 ) + $start;
-	my $ten_kb_region = ceil( $pos / 10_000 );
+	my $pos_ten_kb_region = ceil( $pos / 10_000 );
 
-    foreach ( keys %{ $digest_fragments{"$csome\t$ten_kb_region"} } ) {
-    	my $lookup_start_end_site = $_;                               #Assign value here to ensure $lookup_start_site1 is initialized outside the foreach loop
-    	
-    	#Check whether read1 is on this fragment
-    	my ($lookup_start, $lookup_end) = split(/\t/, $lookup_start_end_site);
-    	
+	#Find the fragment
+	unless(exists $digest_fragments{"$csome\t$pos_ten_kb_region"}) {
+		die "Could not find '$csome\t$pos_ten_kb_region' in digest_fragments hash - the digest file and oligo probes file appear to be incompatible.\n";   
+	}
 
-    	if ( ( $lookup_start <= $pos ) and ( $lookup_end >= $pos ) ) {
-    		$digest_fragments{"$csome\t$ten_kb_region"}->{$lookup_start_end_site} = $feature;
-    		last;
-    	}
-    }	
+
+	my ($start_frag, $end_frag);
+	foreach ( keys %{ $digest_fragments{"$csome\t$pos_ten_kb_region"} } ) {
+	    my $lookup_start_end_site = $_;                               
+	    ($start_frag, $end_frag) = split(/\t/, $lookup_start_end_site);
+	    
+	    if ( ( $start_frag <= $pos ) and ( $end_frag >= $pos ) ) {
+	    	last; 
+	    }
+	}
+
+
+
+	#Now populate the hash
+	my $start_ten_kb_region = ceil( $start_frag / 10_000 );
+	my $end_ten_kb_region = ceil( $end_frag / 10_000 );
+
+
+	unless(exists $digest_fragments{"$csome\t$start_ten_kb_region"}) {
+		die "Could not find '$csome\t$start_ten_kb_region' in digest_fragments hash - the digest file and oligo probes file appear to be incompatible.\n";   
+	}
+
+	unless(exists $digest_fragments{"$csome\t$end_ten_kb_region"}) {
+		die "Could not find '$csome\t$end_ten_kb_region' in digest_fragments hash - the digest file and oligo probes file appear to be incompatible.\n";   
+	}
+
+	for(my $ten_kb_region = $start_ten_kb_region; $ten_kb_region <= $end_ten_kb_region; $ten_kb_region++){    #Ensure all regions overlapping the frament have been included
+	    
+		#print "$ten_kb_region\n";
+	    foreach ( keys %{ $digest_fragments{"$csome\t$ten_kb_region"} } ) {
+	    	my $lookup_start_end_site = $_;                               
+	    	my ($lookup_start, $lookup_end) = split(/\t/, $lookup_start_end_site);
+	    	
+
+	    	#print "$lookup_start_end_site\n";
+
+	    	if ( ( $lookup_start <= $pos ) and ( $lookup_end >= $pos ) ) {
+	    		$digest_fragments{"$csome\t$ten_kb_region"}->{$lookup_start_end_site} = $feature;
+	    		#last;
+	    	}
+	    }
+	}
 }
 
 

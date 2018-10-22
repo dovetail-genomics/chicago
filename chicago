@@ -464,6 +464,15 @@ sub check_parameters{
 			$parameters_ok = 0;
 		}
 		
+		#Check input files only have alphanumeric (underscore) characters, else this will crash the pipeline later on
+		foreach my $file (@data_files){
+				unless($file =~ /^[a-zA-Z0-9_\.]*$/){
+					warn "File '$file' is not in the correct format\n";
+					$parameters_ok = 0;
+				}
+		}
+		
+			
 		#Check the overlap control files exists and there are no duplicates in the features.txt (name by convention) file
 		foreach my $feature_file (@features_files){
 			my $feature_file_folder = dirname($feature_file);
