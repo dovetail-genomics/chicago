@@ -51,7 +51,7 @@ halfNumber = opts[["halfNumber"]]
 
 
 ##number of subsets to estimate parameters from, individually
-Nsub <- 5
+Nsub <- subsets
 
 ##bins
 breaks <- c(0, (2^((-halfNumber):0))*largeBinSize)
@@ -253,7 +253,7 @@ if(!is.na(summaryInput))
 rmap = fread(rmapfile)
 setnames(rmap, "V1", "chr")
 setnames(rmap, "V3", "end")
-rmap <- rmap[rmap$chr != "MT",]
+rmap <- rmap[! chr %in% c("MT", "chrM"),]
 chrMax <- rmap[,max(end),by="chr"] ##length of each chr
 
 ##Chromsome lengths
@@ -292,7 +292,7 @@ maxPvals$bin <- cut(abs(maxPvals$distSign), c(breaks, Inf))
 
 #We will get a matrix "obsJack". Each column contains one subset.
 
-maxPvals$BIDbin <- cut(maxPvals$baitID, 5)
+maxPvals$BIDbin <- cut(maxPvals$baitID, Nsub)
 table(maxPvals$BIDbin)
 
 outJack <- vector("list", Nsub)
