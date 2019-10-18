@@ -18,7 +18,11 @@ Please refer to the Chicago R package vignette and the chicagoTools README file 
 
 - CHiCAGO is currently not compatible with bedtools v2.26 due to BED format compliance checking introduced in this version. Please do not upgrade from v2.25 while we are working to resolve this issue.
 
+- Please note that if you are using Chicago with four-cutter enzymes such as DpnII and MboI, we recommend that the minFragLen setting is reduced from the default value of 150. A smaller setting (such as 75) needs to be provided both as an argument to makeDesignFiles.py and to the setExperiment() function in the Chicago R package. If using the runChicago.R wrapper, the new setting should be saved in a settings file and its name supplied to the wrapper as an argument to the --settings-file option. See chicagoTools README and ?defaultSettings in the Chicago package for details. We are working on a more user-friendly solution to set this parameter.
+
 *News*
+
+- Check out Chicdiff, our new differential caller for Capture Hi-C data that works jointly with Chicago. Chicdiff is available on [github](https://github.com/RegulatoryGenomicsGroup/chicdiff/) and is presented in [this paper](https://doi.org/10.1093/bioinformatics/btz450): Cairns J / Orchard W / Malysheva V, Spivakov M. Chicdiff: a computational pipeline for detecting differential chromosomal interactions in Capture Hi-C data. Bioinformatics. 2019. AOP: btz450. 
 
 - Version 1.1.5: Default values of tlb.minProxOEPerBin and tlb.minProxB2BPerBin have changed. No action is required unless you specified non-default values, or wish to re-run the pipeline on old chicagoData objects. See the [NEWS](https://bitbucket.org/chicagoTeam/chicago/src/master/Chicago/NEWS?fileviewer=file-view-default) file for more details.
 
