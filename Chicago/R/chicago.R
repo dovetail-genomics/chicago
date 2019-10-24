@@ -189,6 +189,108 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
      stop()
   }
 
+  message("Reading the settings from NPB file header...")
+  header = readLines(def.settings[["nperbinfile"]], n=1)
+  params = sapply(sapply(strsplit(header, "\t")[[1]],function(x)strsplit(x,"=")[[1]]), function(x)x[2])
+  params = params[2:length(params)]
+  names(params) = gsub("(\\S+)=.+", "\\1", names(params))
+  minsize = as.numeric(params[["minFragLen"]])
+  if (!is.null(settings[["minFragLen"]])){
+    if (settings[["minFragLen"]] != minsize){
+      stop("The minFragLen in the .npb file header is not equal to the custom-defined setting. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if (!is.null(modSettings[["minFragLen"]])){
+    if (modSettings[["minFragLen"]] != minsize){
+      stop("The minFragLen in the .npb file header is not equal to the same setting defined in the settings file. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if(def.settings[["minFragLen"]] != minsize){
+    message("Amending the default maxFragLen setting from ", def.settings[["minFragLen"]], " to ", minsize, " specified in .npb file header.")
+    def.settings[["minFragLen"]] = minsize
+  }
+  
+  maxsize = as.numeric(params[["maxFragLen"]])
+  if (!is.null(settings[["maxFragLen"]])){
+    if (settings[["maxFragLen"]] != maxsize){
+      stop("The maxFragLen in the .npb file header is not equal to the custom-defined setting. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if (!is.null(modSettings[["maxFragLen"]])){
+    if (modSettings[["maxFragLen"]] != maxsize){
+      stop("The maxFragLen in the .npb file header is not equal to the same setting defined in the settings file. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if(def.settings[["maxFragLen"]] != maxsize){
+    message("Amending the default maxFragLen setting from ", def.settings[["maxFragLen"]], " to ", maxsize, " specified in .npb file header.")
+    def.settings[["maxFragLen"]] = maxsize
+  }
+  
+  maxl = as.numeric(params[["maxLBrownEst"]])
+  if (!is.null(settings[["maxLBrownEst"]])){
+    if (settings[["maxLBrownEst"]] != maxl){
+      stop("The maxLBrownEst in the .npb file header is not equal to the custom-defined setting. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if (!is.null(modSettings[["maxLBrownEst"]])){
+    if (modSettings[["maxLBrownEst"]] != maxl){
+      stop("The maxLBrownEst in the .npb file header is not equal to the same setting defined in the settings file. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if(def.settings[["maxLBrownEst"]] != maxl){
+    message("Amending the default maxLBrownEst setting from ", def.settings[["maxLBrownEst"]], " to ", maxl, " specified in .npb file header.")
+    def.settings[["maxLBrownEst"]] = maxl
+  }
+  
+  binsz = as.numeric(params[["binsize"]]) 
+  if (!is.null(settings[["binsize"]])){
+    if (settings[["binsize"]] != binsz){
+      stop("The binsize in the .npb file header is not equal to the custom-defined setting. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if (!is.null(modSettings[["binsize"]])){
+    if (modSettings[["binsize"]] != binsz){
+      stop("The binsize in the .npb file header is not equal to the same setting defined in the settings file. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if(def.settings[["binsize"]] != binsz){
+    message("Amending the default binsize setting from ", def.settings[["binsize"]], " to ", binsz, " specified in .npb file header.")
+    def.settings[["binsize"]] = binsz
+  }
+
+  ra = params[["removeAdjacent"]]
+  if (!is.null(settings[["removeAdjacent"]])){
+    if ((settings[["removeAdjacent"]] == TRUE & toupper(ra)!="TRUE") | (settings[["removeAdjacent"]] == FALSE & toupper(ra)!="FALSE")){
+      stop("The removeAdjacent setting in the .npb file header is not equal to the custom-defined setting. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if (!is.null(modSettings[["removeAdjacent"]])){
+    if ((modSettings[["removeAdjacent"]] == TRUE & toupper(ra)!="TRUE") | (modSettings[["removeAdjacent"]] == FALSE & toupper(ra)!="FALSE")){
+      stop("The removeAdjacent in the .npb file header is not equal to the same setting defined in the settings file. Amend either setting (and if needed, generate a new .npb file) before running the analysis\n")
+    }
+  }
+  if(def.settings[["removeAdjacent"]] == TRUE & toupper(ra)=="FALSE"){
+    message("Amending the default removeAdjacent setting from ", def.settings[["removeAdjacent"]], " to FALSE specified in .npb file header.")
+    def.settings[["removeAdjacent"]] = FALSE
+  }
+  if(def.settings[["removeAdjacent"]] == FALSE & toupper(ra)=="TRUE"){
+    message("Amending the default removeAdjacent setting from ", def.settings[["removeAdjacent"]], " to TRUE specified in .npb file header.")
+    def.settings[["removeAdjacent"]] = TRUE
+  }
+
+
+  if(basename(params[["rmapfile"]]) != basename(def.settings[["rmapfile"]])){
+    stop("The basename of .rmap file used for generating the .npb file (according to the .npb header) and the one defined in experiment settings do not match. Amend either setting (and if needed, generate a new .npb file or rename your rmap file if sure it's for the same design) before running the analysis\n")
+  }
+  
+  if(basename(params[["baitmapfile"]]) != basename(def.settings[["baitmapfile"]])){
+    warning("The basename of .baitmap file used for generating the .npb file (according to the .npb header) and the one defined in experiment settings do not match. Please check this is intended.\n")
+  }
+  
+  if (params[["removeb2b"]]!="True"){
+    stop("The .npb file must be generated with removeb2b==True. Please generate a new file.\n")
+  }
+
   def.settings
 }
 
