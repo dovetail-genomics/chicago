@@ -18,13 +18,13 @@ Please refer to the Chicago R package vignette and the chicagoTools README file 
 
 - CHiCAGO is currently not compatible with bedtools v2.26 due to BED format compliance checking introduced in this version. Please do not upgrade from v2.25 while we are working to resolve this issue.
 
-- Please note that if you are using Chicago with four-cutter enzymes such as DpnII and MboI, we recommend that the minFragLen setting is reduced from the default value of 150. A smaller setting (such as 75) needs to be provided as an argument to makeDesignFiles.py. With Chicago versions <1.13 they also needed to be specified separately in a settings file supplied to setExperiment() or as a parameter to runChicago.R 
-
 *News*
 
 - Check out Chicdiff, our new differential caller for Capture Hi-C data that works jointly with Chicago. Chicdiff is available on [github](https://github.com/RegulatoryGenomicsGroup/chicdiff/) and is presented in [this paper](https://doi.org/10.1093/bioinformatics/btz450): Cairns J / Orchard W / Malysheva V, Spivakov M. Chicdiff: a computational pipeline for detecting differential chromosomal interactions in Capture Hi-C data. Bioinformatics. 2019. AOP: btz450. 
 
 - Version 1.13: Default values of parameters related to restriction fragment sizes and binning are now propagated automatically from the design files. Therefore they only need to be provided to makeDesignFiles.py and not the Chicago package separately (as with previous versions).
+
+- chicagoTools: makeDesignFiles.py no longer has defaults for minFragLen and maxFragLen to avoid mistakes. Our recommended settings are: for HindIII - 150 and 40000, respectively; for DpnII - 75 and 1200, respectively. 
 
 - Version 1.1.5: Default values of tlb.minProxOEPerBin and tlb.minProxB2BPerBin have changed. No action is required unless you specified non-default values, or wish to re-run the pipeline on old chicagoData objects. See the [NEWS](https://bitbucket.org/chicagoTeam/chicago/src/master/Chicago/NEWS?fileviewer=file-view-default) file for more details.
 
