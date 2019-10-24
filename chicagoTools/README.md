@@ -51,7 +51,7 @@ Data in each file is preceded by a comment line listing the input parameters use
    
 The script takes the following input parameters:  
    
-```python makeDesignFiles.py [--designDir=.] [--rmapfile=designDir/*.rmap] [--baitmapfile=designDir/*.baitmap]  [--outfilePrefix=designDir/<rmapfileName>] [--minFragLen=150] [--maxFragLen=40000] [--maxLBrownEst=1500000] [--binsize=20000] [--removeb2b=True] [--removeAdjacent=True]```
+```python makeDesignFiles.py [--designDir=.] [--rmapfile=designDir/*.rmap] [--baitmapfile=designDir/*.baitmap]  [--outfilePrefix=designDir/<rmapfileName>] --minFragLen=150 --maxFragLen=40000 [--maxLBrownEst=1500000] [--binsize=20000] [--removeb2b=True] [--removeAdjacent=True]```
    
 - The following parameters specify the input files that need to be created prior to running these scripts and the output file name:  
     + rmapfile: path to rmap file   
@@ -63,14 +63,15 @@ The script takes the following input parameters:
           
 - The following options should be consistent with the corresponding settings in the Chicago R package, and the script needs to be rerun whenever these settings are modified:   
     + binsize: the size of the bins (in bps) for pooling restriction fragments   
-    + minFragLen: the min fragment length cutoff    
-    + maxFragLen: the max fragment length cutoff   
+    + minFragLen: the min fragment length cutoff (no default: recommended 75 for DpnII, 150 for HindIII)
+    + maxFragLen: the max fragment length cutoff (no default: recommended 1200 for DpnII, 40000 for HindIII)
     + maxLBrownEst: the "proximal distance range" for estimating Brownian noise    
    
 - The following options should always be set to defaults in the current implementation of Chicago:  
     + removeb2b: True, meaning that bait-to-bait interactions should not be counted when computing the total numbers of fragments at a given distance.  
     + removeAdjacent: True, meaning that fragments immediately adjacent to bait should not be counted.  
 
+Note that minFragLen and max no longer have defaults to avoid common mistakes.
 
 **The script for processing BAM files into Chicago input files**
 
