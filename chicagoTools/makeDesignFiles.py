@@ -20,8 +20,8 @@ sys.stdout = Unbuffered(sys.stdout)
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
-minFragLen=150
-maxFragLen=40000
+minFragLen=-1
+maxFragLen=-1
 maxLBrownEst = 1.5e6
 binsize = 20000
 removeB2B=True
@@ -32,8 +32,7 @@ outfilePrefix = ""
 designDir=""
 
 def usage():
-  print "Usage: python makeDesignFiles.py [--minFragLen=%d] [--maxFragLen=%d]  [--maxLBrownEst=%d] [--binsize=%d] [removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=<designDir>/*.rmap]\n\t[--baitmapfile=<designDir>/*.baitmap]\n\t[--designDir=.]\n\t[--outfilePrefix]\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output files will be saved in the designDir unless explicitly specified." \
-  % (minFragLen, maxFragLen, maxLBrownEst, binsize)
+  print "Usage: python makeDesignFiles.py --minFragLen=<n> --maxFragLen=<n>  [--maxLBrownEst=%d] [--binsize=%d] [removeb2b=True] [--removeAdjacent=True]\n\t[--rmapfile=<designDir>/*.rmap]\n\t[--baitmapfile=<designDir>/*.baitmap]\n\t[--designDir=.]\n\t[--outfilePrefix]\n\nminFragLen and maxFragLen no longer have defaults to prevent errors. Our recommended values for these parameters are:\n\tHindIII - 150 and 40000;\n\tDpnII - 75 and 1200, respectively\n\nIf designDir is provided and contains a single <baitmapfile>.baitmap and <rmapfile>.rmap, these will be used unless explicitly specified.\nLikewise, the output files will be saved in the designDir unless explicitly specified." % (maxLBrownEst, binsize)
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'm:x:l:b:Bjr:f:o:d:', \
@@ -69,6 +68,11 @@ for opt, arg in opts:
     designDir = arg
 
 
+if minFragLen==-1 or maxFragLen==-1:
+   print "--minFragLen and --maxFragLen need to be defined explicitly. Our recommended values for these parameters are:\nHindIII - 150 and 40000 bps;\nDpnII - 75 and 1200 bps, respectively"
+   usage()
+   sys.exit(1)
+   
 if designDir != "":
   if os.path.isdir(designDir):
     print "\nUsing designDir %s" % designDir;
