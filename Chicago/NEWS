@@ -1,7 +1,9 @@
-Chicago 1.1.9
+Chicago 1.13
 ------------
 
-Defaults now updated based on NPB file header
+Defaults are now updated based on .npb file header rather than just checking them for consistency with it.
+When using Chicago with four-cutter enzymes, make sure you reduce minFragLen parameter. However, this can now only be done when generating the design files, and not in the R package itself.
+
 
 Chicago 1.1.5
 -------------
