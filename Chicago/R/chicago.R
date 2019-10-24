@@ -280,11 +280,11 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
 
 
   if(basename(params[["rmapfile"]]) != basename(def.settings[["rmapfile"]])){
-    stop("The .rmap file used for generating the .npb file (according to the .npb header) and the one defined in experiment settings do not match. Amend either setting (and if needed, generate a new .npb file or rename your rmap file if sure it's for the same design) before running the analysis\n")
+    stop("The basename of .rmap file used for generating the .npb file (according to the .npb header) and the one defined in experiment settings do not match. Amend either setting (and if needed, generate a new .npb file or rename your rmap file if sure it's for the same design) before running the analysis\n")
   }
   
   if(basename(params[["baitmapfile"]]) != basename(def.settings[["baitmapfile"]])){
-    warning("The .baitmap file used for generating the .npb file (according to the .npb header) and the one defined in experiment settings do not match. Please check this is intended\n")
+    warning("The basename of .baitmap file used for generating the .npb file (according to the .npb header) and the one defined in experiment settings do not match. Please check this is intended.\n")
   }
   
   if (params[["removeb2b"]]!="True"){
