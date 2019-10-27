@@ -5,6 +5,12 @@ Default CHiCAGO settings
 }
 \description{
 A function that gives the default settings used for a CHiCAGO experiment.
+
+IMPORTANT: from version 1.13, the following parameters are set based on the values in .npb file header and checked for consistency with the headers of .npbp and .poe files and custom-defined settings. They should therefore be provided to the makeDesignFiles.py script, which needs to be rerun if they need to be modified:
+
+rmapfile (only the basename is checked; inconsistent baitmapfile will only generate a warning for compatibility with publicly released older designs), 
+minFragLen, maxFragLen, binsize, removeAdjacent, adjBait2bait.
+
 }
 \usage{
 defaultSettings()
@@ -20,9 +26,9 @@ A list of the following settings:
 \item{Ncol}{Default: "N". The column in intData(cd) that contains the number of reads.}
 \item{baitmapFragIDcol}{Default: 4. In the bait map file, the number of the column that specifies the fragment ID of each bait.}
 \item{baitmapGeneIDcol}{Default: 5. In the bait map file, the number of the column that specifies which gene(s) are on each fragment.}
-\item{maxLBrownEst}{Default: 1500000. The distance range to be used for estimating the Brownian component of the null model. 
-
+\item{maxLBrownEst}{Default: 1500000. The distance range to be used for estimating the Brownian component of the null model
 The parameter setting should approximately reflect the maximum distance, at which the power-law distance dependence is still observable. }
+
 \item{minFragLen}{Default: 150. (See maxFragLen.)}
 \item{maxFragLen}{Default: 40000. minFragLen and maxFragLen correspond to the limits within which we observed no clear dependence between fragment length and the numbers of reads mapping to these fragments in HindIII PCHiC data.
 
@@ -37,8 +43,8 @@ The bin size should, on average, include several (~4-5) restriction fragments to
 
 We remove fragments adjacent to baits by default, as the corresponding ligation products are indistinguishable from incomplete digestion. This setting however may be set to FALSE if the rmap and baitmap files represent bins over multiple fragments as opposed to fragment-level data (e.g., to address sparsity issues with low-coverage experiments).}
 \item{adjBait2bait}{Default: TRUE. Should baited fragments be treated separately?
-
 Baited fragments are treated separately from the rest in estimating other end-level scaling factors (si) and technical noise levels. It is a free parameter mainly for development purposes, and we do not recommend changing it.}
+
 \item{tlb.filterTopPercent}{Default: 0.01. Top percent of fragments with respect to accumulated trans-counts to be filtered out in the binning procedure.
 
 Other ends are pooled together when calculating their scaling factors and as part of technical noise estimation. Binning is performed by quantile, and for the most extreme outliers this approach is not going to be adequate. Increasing this value may potentially make the estimation for the highest-count bin more robust, but will exclude additional other ends from the analysis.}
