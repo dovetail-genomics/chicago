@@ -33,10 +33,9 @@ designDir <- file.path(system.file("extdata", package="Chicago"), "unitTestDesig
 
 cd <- setExperiment(designDir)
 
-##Suppose I want to increase the zone in which Brownian noise is assumed to dominate
-##(by default, 1500000):
-print(settings(cd)$maxLBrownEst)
+##Suppose I want to change the number of samples drawn for dispersion estimation 
+print(settings(cd)$brownianNoise.subset)
 
-cd <- modifySettings(cd, settings=list(maxLBrownEst = 3000000L))
-print(settings(cd)$maxLBrownEst)
+cd <- modifySettings(cd, settings=list(brownianNoise.subset = 10))
+print(settings(cd)$brownianNoise.subset)
 }
