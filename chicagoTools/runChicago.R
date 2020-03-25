@@ -35,7 +35,7 @@ p = add_argument(p, arg="--export-order", help = "Should the results be ordered 
 p = add_argument(p, arg="--rda", help = "Save the Chicago object as an RDa image (instead of the default RDS)", flag = T)
 p = add_argument(p, arg="--save-df-only", help = "Save only the data part of the Chicago object, as a data frame (for compatibility)", flag = T)
 
-p = add_argument(p, arg="--examples-prox-dist", help = "The distance limit for plotting \"proximal\" examples", default=1e6)
+p = add_argument(p, arg="--examples-prox-dist", help = "The distance limit for plotting \"proximal\" examples", default=1000000L, type = "numeric")
 p = add_argument(p, arg="--examples-full-range", help = "Also plot examples for the full distance range", flag = T)
 
 p = add_argument(p, arg="--output-dir", help = "The name of the output directory (can be a full path)", default="<output-prefix>")
@@ -51,7 +51,7 @@ p = add_argument(p, arg="--en-feat-folder",
                  default=NA)
 
 p = add_argument(p, arg="--en-min-dist", help = "The lower distance limit for computing enrichment for features", default="0")
-p = add_argument(p, arg="--en-max-dist", help = "The upper distance limit for computing enrichment for features", default=1e6)
+p = add_argument(p, arg="--en-max-dist", help = "The upper distance limit for computing enrichment for features", default=1000000L, type = "numeric" )
 p = add_argument(p, arg="--en-full-cis-range", help = "Assess the enrichment for features for the full distance range [same chromosome only; use --en-trans in addition to include trans-interactions] (can be very slow!)", flag = T)
 p = add_argument(p, arg="--en-sample-no", help = "The number of negative samples for computing enrichment for features", default=100)
 p = add_argument(p, arg="--en-trans", help = "Include trans-interactions into enrichment analysis", flag=T)
