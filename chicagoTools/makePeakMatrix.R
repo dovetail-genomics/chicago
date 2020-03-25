@@ -50,7 +50,7 @@ p = add_argument(p, arg="--fetchcol", help = "Column to fetch; i.e. the informat
 the --twopass mode will be enforced (unless --peaklist is used)", default = NA)
 
 p = add_argument(p, arg="--maxdist", help = "Max distance from bait to include into the peak matrix and clustering", 
-                 default = NA, type="numeric")
+                 default = NA)
 p = add_argument(p, arg="--notrans", help = "Exclude trans-interactions", flag = T)
 
 p = add_argument(p, arg="--vanilla", 
@@ -73,7 +73,7 @@ p = add_argument(p, arg="--rda", help="Load from an RDa archive rather than the 
 p = add_argument(p, arg="--var", help="The name of the variable containing the chicagoData object or the peak data frame in the RDa images", default="x")
 
 p = add_argument(p, arg="--clustmethod", help = "The clustering method to use (average/ward.D2/complete)", default = "average")
-p = add_argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering (full dataset used if total number of interactions in the peak matrix is below this number", default = 1000000)
+p = add_argument(p, arg="--clustsubset", help = "Number of interactions to randomly subset for clustering (full dataset used if total number of interactions in the peak matrix is below this number", default = 1000000L, type = "numeric")
 
 p = add_argument(p, arg="--print-memory", help = "Print memory info at each step", flag=T)
 
@@ -110,22 +110,22 @@ noTrans = opts[["notrans"]]
 
 twoPass = opts[["twopass"]]
 if(twoPass){
-	message("twoPass mode is on")
+  message("twoPass mode is on")
 }
 
 peaklistfile  = opts[["peaklist"]]
 if(!is.na(peaklistfile)){
-	message(paste("Using peaklistfile", peaklistfile))
+  message(paste("Using peaklistfile", peaklistfile))
 }
 
 fetchcol = opts[["fetchcol"]]
 if(is.na(fetchcol)) {
-	fetchcol <- scorecol
+  fetchcol <- scorecol
 }else{
-	if ((!twoPass & is.na(peaklistfile)) & (fetchcol != scorecol)){
-		message("Fetchcol is different from scorecol, therefore the twoPass mode is switched on\n")
-		twoPass <- TRUE
-	}
+  if ((!twoPass & is.na(peaklistfile)) & (fetchcol != scorecol)){
+    message("Fetchcol is different from scorecol, therefore the twoPass mode is switched on\n")
+    twoPass <- TRUE
+  }
 }
 
 clMethod = opts[["clustmethod"]]
@@ -197,7 +197,7 @@ if(twoPass){
         x = x[get(scorecol)<=cutoff]
     }
     else{
-    	x = x[get(scorecol)>=cutoff]  
+      x = x[get(scorecol)>=cutoff]  
     }
     cat("\t\t\tAfter filtering by score:", nrow(x), "interactions\n")
 
@@ -233,8 +233,8 @@ if(twoPass){
 if (!is.na(peaklistfile)){
   sel = fread(peaklistfile)
   if((!"baitID" %in% names(sel)) | (!"otherEndID" %in% names(sel))){
-	message("Warning! Expecting the names of the peaklist to be baitID and otherEndID. Since it's not the case, will use the first two columns of the peaklist as such")
-	setnames(sel, 1:2, c("baitID", "otherEndID"))
+  message("Warning! Expecting the names of the peaklist to be baitID and otherEndID. Since it's not the case, will use the first two columns of the peaklist as such")
+  setnames(sel, 1:2, c("baitID", "otherEndID"))
   }
   setkey(sel, baitID, otherEndID)
 }
