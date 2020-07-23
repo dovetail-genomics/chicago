@@ -291,6 +291,18 @@ and that the corresponding columns are specified in baitmapFragIDcol and baitmap
     stop("The .npb file must be generated with removeb2b==True. Please generate a new file.\n")
   }
 
+  message("Checking the integrity of the NPB file...")
+  npb = .readNPBfile(def.settings)
+  if(!all(bm[[4]] %in% npb[[1]]) | !all(npb[[1]] %in% bm[[4]]) ){
+	stop("The lists of baits in baitmap and NPB files don't overlap fully") 
+  }  
+    
+  message("Checking the integrity of the NBPB file...")
+  nbpb = .readNbaitsPBfile(def.settings)
+  if(!all(rmap[[4]] %in% nbpb[[1]]) | !all(nbpb[[1]] %in% rmap[[4]]) ){
+        stop("The lists of restriction fragments in rmap and NBPB files don't overlap fully")
+  }
+
   def.settings
 }
 
