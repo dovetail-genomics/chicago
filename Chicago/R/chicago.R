@@ -820,10 +820,9 @@ estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
   }
   
   # Get f(d_b)
-  setkey(cd@x, distbin, refBinMean)
+  setkey(cd@x, distbin)
   f.d <- unique(cd@x, by=key(cd@x))[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=FALSE]
-  f.d <- f.d[order(refBinMean, decreasing=TRUE)]
-  
+
   setDF(f.d) # f.d is tiny, so no need to bother with it being a data.table
   f.d$midpoint <- seq(from=round(cd@settings$binsize/2), by=cd@settings$binsize, length.out=nrow(f.d))
   
