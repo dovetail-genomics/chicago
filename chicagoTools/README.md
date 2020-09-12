@@ -2,27 +2,40 @@ chicagoTools are an assorted set of scripts associated with the Chicago R packag
 
 Currently, the following software is included:
 
-- The script for preparing "design files" needed for the Chicago package:
+- Script for preparing "design files" needed for the Chicago package:
        + makeDesignFiles.py
+
+- Developmental version of the above script for python3. Please report any issues you encounter using it:
+       + makeDesignFiles_py3.py
 
 - Deprecated individual scripts for preparing the same "design files":  
        + makeNBaitsPerBinFile.py  
        + makeNPerBinFile.py  
        + makeProxOEFile.py  
           
-- The script for processing BAM files into Chicago input files:  
+- Script for processing BAM files into Chicago input files:  
        + bam2chicago.sh  
    
-- The wrapper script for the Chicago package:  
+- Wrapper script for the Chicago package:  
        + runChicago.R  
     
-- The script for bundling the interaction calls from multiple samples into a single data matrix:  
-       + makePeakMatrix.R  
+- Script for bundling the interaction calls from multiple samples into a single data matrix:  
+       + makePeakMatrix.R (and makePeakMatrix_NA.R) 
        
-- The script for reestimating Chicago p-value weighting parameters based on user data:
+- Script for reestimating Chicago p-value weighting parameters based on user data:
        + fitDistCurve.R  
+
+- Script for binning rmap and baitmap design files:
+       + makeBins.R
+
+- Script for converting the washU_text.txt file from the “old” to the “new” format:
+       + washuOld2New.R
+
+- Script for generating plots of background sparsity to evaluate parameter settings:
+       + plotBackgroundSparsity.R
+
   
-**The script for preparing the "design files" needed for the Chicago package**
+**Script for preparing the "design files" needed for the Chicago package**
   
 A new set of design files needs to be generated for each combination of restriction enzyme and captured baits (i.e., when
 .baitmap and/or .rmap files are updated). (Note that it is possible to also create "virtual digests" in the same way, 
@@ -73,7 +86,7 @@ The script takes the following input parameters:
 
 Note that minFragLen and max no longer have defaults to avoid common mistakes.
 
-**The script for processing BAM files into Chicago input files**
+**Script for processing BAM files into Chicago input files**
 
 The Unix shell script bam2chicago.sh takes as input a BAM file corresponding to aligned Capture HiC reads for a single experiment and the capture design files .rmap and .baitmap.  
 The output is an ASCII .chinput file used as input by the Chicago package. 
@@ -107,7 +120,7 @@ The script takes the following input parameters:
 - sample-name: will be used for naming the output folder, in which the output files will be placed and as the basename of the output .chinput and .bedpe files  
 - nodelete: a flag to prevent the script from deleting intermediate files  
   
-**The wrapper script for the Chicago package**   
+**Wrapper script for the Chicago package**   
    
 The R script runChicago.R can be used to run a typical Chicago analysis. Please refer to Chicago vignette and the inline help for the individual R functions used
 for more details on each analysis step.   
@@ -183,7 +196,7 @@ corresponding to the multiple biological replicates of the same experimental con
 instead be deduplicated and pooled prior to running bam2chicago and submitted as a single .chinput file.   
 - <output-prefix> - experiment name used in the naming of the output folder and as a prefix for output file names.   
       
-**The script for bundling the interaction calls from multiple samples into a single data matrix**  
+**Script for bundling the interaction calls from multiple samples into a single data matrix**  
    
 When running multiple samples through CHiCAGO it is convenient to represent the results in the form of a "peak matrix". This matrix lists the coordinates, annotations and sample-wise scores for all interactions that pass a signal threshold in at at least one sample. The peak matrix can then be used for downstream analyses such as clustering by interaction and sample type and integration with other types of data.   
    
@@ -219,7 +232,9 @@ The full list of options for ```makePeakMatrix.R``` is listed below:
 - clustmethod: the clustering method to use for clustering columns (average/ward.D2/complete) (default: average)   
 - clustsubset: number of interactions to randomly subset for clustering. Full dataset used if total number of interactions in the peak matrix is below this number. (default: 1e+06)   
    
-**The script for reestimating Chicago p-value weighting parameters based on user data**  
+**Important**We are planning to change the default behaviour of makePeakMatrix.R such that it generates NA scores for interactions missing in a given dataset as opposed to 0. To revert to the old behaviour, users will be able to use the --setzero flag. We currently provide makePeakMatrix_NA.R that works this way in addition to the old makePeakMatrix.R script, but eventually makePeakMatrix_NA.R will become the new makePeakMatrix.R. 
+
+**Script for reestimating Chicago p-value weighting parameters based on user data**  
 
 CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. To weight appropriately, CHiCAGO needs to know how the probability of an interaction event between two fragments decreases as the distance between these fragments increases. The parametrization used has four parameters: alpha, beta, gamma, and delta (more details on the exact parametrization are given in the CHiCAGO paper).  
 
@@ -241,3 +256,90 @@ Rscript fitDistCurve.R cellTypeLargerBin --summaryInput cellType_summaryInput.Rd
 - threshold: Threshold applied to log(p) values (NB: not the CHiCAGO score!). In other words, log(p) must be below this value in all of the samples. [default: -10]  
 - subsets: To ensure robustness, the data are partitioned into approximately equal subsets. Parameters are estimated separately on each subset. Then, an estimate for each parameter is derived from its median value across subsets. The number of subsets is controlled by this argument. [default: 5]  
 - largeBinSize, binNumber, halfNumber: Parameters pertaining to the bins used in the analysis. Default breaks occur at 0, 31.25k, 62.5k, 125k, 250k, 500k, 1m, 2m, 3m, 4m, ..., 16m. The breaks are constructed by taking [binNumber] bins of size [largeBinSize], then breaking the first bin into two, iterating [halfNumber] times. [default: 1000000, 16, 5]
+
+**Script for binning rmap and baitmap design files**
+
+The R script makeBins.R joins adjacent restriction fragments into discrete, virtual bins of a defined minimum length. The script generates new, binned, rmap and baitmap files. Binning reduces the experimental resolution but can aid in the robust and sensitive signal detection by CHiCAGO in the case of low sequence coverage, as can occur when using 4-cutter enzymes that produce frequent restriction fragments. We recommend binning fragments from 4-cutter enzymes into 5Kb virtual bins alongside fragment-level analyses. 
+
+The R script makeBins.R takes as input the rmap file and the baitmap file from the original capture design. It will output the equivalents of these files in the specified binned setting. The script by default “opts-out” the baited fragments themselves from the binning but this can be overridden with the --include_baits option. Note that the CHiCAGO input file (.chinput) must be generated using bam2chicago.sh with the new binned rmap and baitmap files, prior to running CHiCAGO.
+
+A typical makeBins.R run for the rmap and baitmap is as follows:
+
+Rscript makeBins.R --baitmap BAITMAP --output_prefix OUTPUT_PREFIX 
+        --binsize BINSIZE <rmap>
+
+-	--baitmap: Full path to baitmap file (bed file containing coordinates of baited restriction fragments). Baitmap should be coordinate sorted. If not provided, it will look for .baitmap file matching rmap file name.
+-	--output_prefix: Prefix for resulting rmap with binning incorporated. If none is provided, it will default to the same prefix present in rmap file name.
+-	--binsize: Minimum size of bins in bp. Consecutive fragments are binned together until the minimum binsize is overshot. Default: 5000
+-	<rmap>: Full path to rmap file (bed file containing coordinates of the restriction fragments). Rmap should be coordinate sorted.
+
+The full usage of makeBins.R is as follows:
+
+Rscript makeBins.R [--] [--help] [--include_baits] [--verbose]
+       [--opts OPTS] [--baitmap BAITMAP] [--output_prefix
+       OUTPUT_PREFIX] [--binsize BINSIZE] [--start START] [--end END]
+       <rmap>
+
+-	--help: print help message and exit-	--include_baits: flag specifying whether to include baited fragments in the binning process
+-	--verbose: flag specifying whether to print process steps
+-	--opts: RDS file containing argument values 
+-	--baitmap: Full path to baitmap file (bed file containing coordinates of baited restriction fragments). Baitmap should be coordinate sorted. If not provided, it will look for .baitmap file matching rmap file header.
+-	--output_prefix: Prefix for resulting rmap with binning incorporated. If none is provided, it will default to the same prefix present in rmap file name.
+-	--binsize: Minimum size of bins in bp. Consecutive fragments are binned together until the minimum binsize is overshot. Default: 5000
+-	--start: Columm name of start coordinate from rmap. By default, it assumes that rmap does not contain a header, thus column wil be V2. Default: V2
+-	--end: Column name of end coordinate from rmap. By default, it assumes that rmap does not contain a header, thus column will be V3. Default: V3
+-	<rmap>: Full path to rmap file (bed file containing coordinates of the restriction fragments). Rmap should be coordinate sorted.
+
+**Script for converting the washU_text.txt file from the “old” to the “new” format**
+
+The R script washuOld2New.R converts the WashU_text file generated by runChicago.R wrapper script (or exportResults() if running Chicago step by step) from the “old” format to the “new” format, which is suitable to upload as a text track to the New (2018) WashU Epigenome Browser for visualisation of CHiCAGO interactions. 
+
+The legacy WashU Epigenome Browser is available here: http://epigenomegateway.wustl.edu/legacy/
+The New WashU Epigenome Browser is available here: https://epigenomegateway.wustl.edu
+
+Note that this script requires the tidyverse package in addition to packages used by other chicagoTools scripts (data.table, argparser).
+
+The washuOld2New.R script is used as follows:
+
+Rscript WashuOld2New.R [--] [--help] [--washuFile WASHUFILE]
+       [--outputDir OUTPUTDIR] [--name NAME]
+
+-	--help: print help message and exit
+-	--washuFile: full path to the washU_text.txt file that CHiCAGO produces as an output
+-	--outputDir: full path to the output directory. Defaults to the current working directory (“.”)
+-	--name: specify name of the output file .txt. Default: WashUNEW_text.txt
+
+**Script for generating plots of background sparsity**
+
+The R script plotBackgroundSparsity.R takes as input the CHiCAGO object (Rds file) and calculates the proportion of missing (zero-count) interactions per each bait at each distance bin within the range of the Brownian component of the background model. The script produces a boxplot graph for each sample that can be used as a guidance to understand the data sparsity for a given sample.
+
+The distance bins are defined by the binsize parameter and the distance of the Brownian component is defined by the maxLBrownEst parameter. Both of these parameters are defined during generation of the design files (makeDesignFiles.py). Proportion of missing interactions at a given bait within a specific distance bin is defined as the proportion of all potential other end fragments that had no reads in the data (N = 0).
+
+Whilst this graph should not be used as a strict diagnostic tool per se, we expect maxLBrownEst parameter to be sufficiently large to observe a distance decay of averaged read counts throughout the maxLBrownEst range for most baits, but not so large that the baits become overly sparse across the assessed distance.
+
+We recommend that binsize is set to correspond to the average length of four to five restriction fragments. This is to allow the bins to be large enough to estimate the average count per bin robustly, but small enough so the counts from individual interactions within each bin do not vary too greatly with distance.
+
+The script produces boxplots for each input Rds file. These are plotted in the same pdf file for comparison purposes:
+-	CHiCAGOplot_backgroundSparsity.pdf: boxplots of dropout rate per distance bin (binsize) from 0 to maxLBrownEst
+
+Note that this script requires the dplyr and ggplot2 packages in addition to packages used by other chicagoTools scripts (argparser, data.table, Chicago). Also note that the amount of computational memory required can be quite high so it may be necessary to subsample the baits in the interaction data of the Rds file before running. For example, the interaction data could be restricted to baits on chromosome 1.
+
+A typical plotBackgroundSparsity.R run is as follows:
+
+Rscript plotBackgroundSparsity.R --output_prefix OUTPUT_PREFIX --outdir OUTDIR <Rds>
+
+-	--output_prefix: Prefix of resulting graph. Default: CHiCAGOplot
+-	--outdir: full path to output directory. Default: current working directory (“.”)
+-	<Rds>: full path to Rds file(s), comma separated e.g. file1.Rds,file2.Rds,file3.Rds
+
+The full usage of plotBackgroundSparsity.R is as follows:
+
+Rscript plotBackgroundSparcity.R [--] [--help] [--verbose]
+       [--output_prefix OUTPUT_PREFIX] [--outdir
+       OUTDIR] <Rds>
+
+-	--help: print help message and exit
+-	--verbose: flag specifying whether to print process steps
+-	--output_prefix: Prefix of resulting graph. Default: CHiCAGOplot
+-	--outdir: full path to output directory. Default: current working directory (“.”)
+-	<Rds>: full path to Rds file(s), comma separated e.g. file1.Rds,file2.Rds,file3.Rds
