@@ -20,7 +20,7 @@ Currently, the following software is included:
        + runChicago.R  
     
 - Script for bundling the interaction calls from multiple samples into a single data matrix:  
-       + makePeakMatrix.R  
+       + makePeakMatrix.R (and makePeakMatrix_NA.R) 
        
 - Script for reestimating Chicago p-value weighting parameters based on user data:
        + fitDistCurve.R  
@@ -232,6 +232,8 @@ The full list of options for ```makePeakMatrix.R``` is listed below:
 - clustmethod: the clustering method to use for clustering columns (average/ward.D2/complete) (default: average)   
 - clustsubset: number of interactions to randomly subset for clustering. Full dataset used if total number of interactions in the peak matrix is below this number. (default: 1e+06)   
    
+**Important**We are planning to change the default behaviour of makePeakMatrix.R such that it generates NA scores for interactions missing in a given dataset as opposed to 0. To revert to the old behaviour, users will be able to use the --setzero flag. We currently provide makePeakMatrix_NA.R that works this way in addition to the old makePeakMatrix.R script, but eventually makePeakMatrix_NA.R will become the new makePeakMatrix.R. 
+
 **Script for reestimating Chicago p-value weighting parameters based on user data**  
 
 CHiCAGO uses a p-value weighting procedure to upweight proximal interactions and downweight distal interactions. To weight appropriately, CHiCAGO needs to know how the probability of an interaction event between two fragments decreases as the distance between these fragments increases. The parametrization used has four parameters: alpha, beta, gamma, and delta (more details on the exact parametrization are given in the CHiCAGO paper).  
