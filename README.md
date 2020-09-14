@@ -66,7 +66,7 @@ Chicago was originally developed by:
 - Steven Wingett
 - Mikhail Spivakov ([mikhail.spivakov@lms.mrc.ac.uk](mailto:mikhail.spivakov@lms.mrc.ac.uk)),
 
-with statistical advice from Vincent Plagnol and Daniel Zerbino, and recent contributions from Valeriya Malysheva, Helen Ray-Jones and Monica Della Rosa.
+with statistical advice from Vincent Plagnol and Daniel Zerbino, and subsequent contributions from Valeriya Malysheva, Helen Ray-Jones and Monica Della Rosa.
 
 CHiCAGO was developed at the Regulatory Genomics Group, Babraham Institute, Cambridge UK. From July 2018, the group is based at MRC London Institute of Medical Sciences in London, where it is known as [Functional Gene Control](http://www.lms.mrc.ac.uk/groups/functional-gene-control) group.
 
