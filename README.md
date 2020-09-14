@@ -59,12 +59,14 @@ If you encounter any problems, please [post an issue](https://bitbucket.org/chic
 
 *Contact information*
 
-Chicago is mainly developed and maintained by:
+Chicago was originally developed by:
 
 - Jonathan Cairns 
 - Paula Freire Pritchett
 - Steven Wingett
-- Mikhail Spivakov ([mikhail.spivakov@lms.mrc.ac.uk](mailto:mikhail.spivakov@lms.mrc.ac.uk))
+- Mikhail Spivakov ([mikhail.spivakov@lms.mrc.ac.uk](mailto:mikhail.spivakov@lms.mrc.ac.uk)),
+
+with statistical advice from Vincent Plagnol and Daniel Zerbino, and subsequent contributions from Valeriya Malysheva, Helen Ray-Jones and Monica Della Rosa.
 
 CHiCAGO was developed at the Regulatory Genomics Group, Babraham Institute, Cambridge UK. From July 2018, the group is based at MRC London Institute of Medical Sciences in London, where it is known as [Functional Gene Control](http://www.lms.mrc.ac.uk/groups/functional-gene-control) group.
 
