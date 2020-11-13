@@ -1,9 +1,8 @@
-
 **CHiCAGO: Capture HiC Analysis of Genomic Organisation** 
 
 CHiCAGO is a set of tools for Capture HiC data analysis. 
 
-CHiCAGO is presented in [this paper](http://www.genomebiology.com/2016/17/1/127): Cairns J / Freire-Pritchett P, Wingett SW, V rnai C, Dimond A, Plagnol V, ZerbinoÿD, Schoenfelder S, Javierre B-M, Osborne C, Fraser P, Spivakov M. CHiCAGO: Robust Detection of DNA Looping Interactions in Capture Hi-C data. Genome Biology. 2016. 17:127. 
+CHiCAGO is presented in [this paper](http://www.genomebiology.com/2016/17/1/127): Cairns J / Freire-Pritchett P, Wingett SW, VÃ¡rnai C, Dimond A, Plagnol V, ZerbinoÂ D, Schoenfelder S, Javierre B-M, Osborne C, Fraser P, Spivakov M. CHiCAGO: Robust Detection of DNA Looping Interactions in Capture Hi-C data. Genome Biology. 2016. 17:127. 
 
 This repository contains the following files:
 
@@ -20,8 +19,6 @@ Please refer to the Chicago R package vignette and the chicagoTools README file 
 - CHiCAGO is currently not compatible with bedtools v2.26 due to BED format compliance checking introduced in this version. Please do not upgrade from v2.25 while we are working to resolve this issue.
 
 *News*
-
-- Suggested parameter set for four-cutters (tested with DpnII): MaxLBrowndist=75000, binsize=1500, minFragLen=75, maxFragLen=1200.
 
 - Check out Chicdiff, our new differential caller for Capture Hi-C data that works jointly with Chicago. Chicdiff is available on [github](https://github.com/RegulatoryGenomicsGroup/chicdiff/) and is presented in [this paper](https://doi.org/10.1093/bioinformatics/btz450): Cairns J / Orchard W / Malysheva V, Spivakov M. Chicdiff: a computational pipeline for detecting differential chromosomal interactions in Capture Hi-C data. Bioinformatics. 2019. AOP: btz450. 
 
@@ -59,14 +56,12 @@ If you encounter any problems, please [post an issue](https://bitbucket.org/chic
 
 *Contact information*
 
-Chicago was originally developed by:
+Chicago is mainly developed and maintained by:
 
 - Jonathan Cairns 
 - Paula Freire Pritchett
 - Steven Wingett
-- Mikhail Spivakov ([mikhail.spivakov@lms.mrc.ac.uk](mailto:mikhail.spivakov@lms.mrc.ac.uk)),
-
-with statistical advice from Vincent Plagnol and Daniel Zerbino, and subsequent contributions from Valeriya Malysheva, Helen Ray-Jones and Monica Della Rosa.
+- Mikhail Spivakov ([mikhail.spivakov@lms.mrc.ac.uk](mailto:mikhail.spivakov@lms.mrc.ac.uk))
 
 CHiCAGO was developed at the Regulatory Genomics Group, Babraham Institute, Cambridge UK. From July 2018, the group is based at MRC London Institute of Medical Sciences in London, where it is known as [Functional Gene Control](http://www.lms.mrc.ac.uk/groups/functional-gene-control) group.
 
