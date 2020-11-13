@@ -20,6 +20,10 @@ Please refer to the Chicago R package vignette and the chicagoTools README file 
 
 *News*
 
+- A new version of bam2chicago script is released, bam2chicago_V02.sh, with improved usability and compatibility with HiCUP combinations script. 
+
+- Suggested parameter set for four-cutters (tested with DpnII): MaxLBrowndist=75000, binsize=1500, minFragLen=75, maxFragLen=1200.
+
 - Check out Chicdiff, our new differential caller for Capture Hi-C data that works jointly with Chicago. Chicdiff is available on [github](https://github.com/RegulatoryGenomicsGroup/chicdiff/) and is presented in [this paper](https://doi.org/10.1093/bioinformatics/btz450): Cairns J / Orchard W / Malysheva V, Spivakov M. Chicdiff: a computational pipeline for detecting differential chromosomal interactions in Capture Hi-C data. Bioinformatics. 2019. AOP: btz450. 
 
 - Version 1.13: Default values of parameters related to restriction fragment sizes and binning are now propagated automatically from the design files. Therefore they only need to be provided to makeDesignFiles.py and not the Chicago package separately (as with previous versions).
