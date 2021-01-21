@@ -9,7 +9,7 @@ Description: Subsets of Promoter Capture Hi-C data conveniently packaged for
 	Chicago users. Data includes interactions detected for chromosomes 20 and 21 in 
 	GM12878 cells and for chromosomes 18 and 19 in mESC.
 License: Artistic-2.0
-Depends: R (>= 3.2), Chicago
+Depends: R (>= 3.3.1), Chicago
 Suggests: testthat, BiocStyle, knitr
 VignetteBuilder: knitr
 LazyData: true
