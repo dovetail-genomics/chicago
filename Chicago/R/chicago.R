@@ -1671,7 +1671,7 @@ getScores <- function(cd, method="weightedRelative", includeTrans=TRUE, plot=TRU
     # MEMORY-HUNGRY CODE
     # watch this thread for possible better solutions: http://stackoverflow.com/questions/29022185/how-to-make-this-r-data-table-code-more-memory-efficient?noredirect=1
     setkeyv(x, c(idcol, "distbin"))
-    x[, binCol:=do.call(paste0, list("bin", as.integer(distbin))), by=distbin][, ntot:=get(binCol)[1],by=c(idcol, "distbin")]
+    x[, binCol:=do.call(paste0, list("bin", as.integer(distbin))), by=distbin][, ntot:=get(binCol[1])[1],by=c(idcol, "distbin")]
     set(x, NULL, "binCol", NULL)
     
   }
