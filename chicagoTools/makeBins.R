@@ -22,7 +22,7 @@ p = add_argument(p, arg="--start",
 p = add_argument(p, arg="--end",
                  help = "Column name of end coordinate from rmap. By default, it assumes that rmap does not contain a header, thus column will be V3.", default = "V3")
 p = add_argument(p, arg="--include_baits",
-                 help = "Flag specifying whether to include baited fragments in the binning process.", flag=TRUE)
+                 help = "Flag specifying whether to include baited fragments in the bins. By default, the baited fragments will be left 'solitary' as separate bins.", flag=TRUE)
 p = add_argument(p, arg="--verbose",
                  help = "Flag specifying whether to print process steps.", flag=TRUE)
 
@@ -39,14 +39,15 @@ include_baits = opts[["include_baits"]]
 verb = opts[["verbose"]]
 
 if(is.na(baitmap)){
-  aux <- unlist(strsplit(rmap,split = "/"))
-  aux2 <- aux[-1]
-  aux2 <- gsub(".rmap",".baitmap",aux2)
-  aux <- c(aux[1:length(aux)-1],aux2)
-  baitmap <- paste0(aux,collapse = "/")
+  baitmap <- gsub(".rmap",".baitmap",rmap)
+  message("Using baitmap file: ", baitmap) 
 }
 baitmap_dt = fread(baitmap)
 baitmap_dt[,V1:=as.character(V1)]
+
+if (is.na(output_prefix)){
+  output_prefix = gsub(".rmap","",rmap)
+}
 
 
 rmap_dt = fread(rmap)
@@ -143,9 +144,9 @@ binRmap <- function(test,bins,binsize,agg_baits=TRUE){
   } else {
     tag = paste0("_",binsize/1000,"kb_sol_baits.rmap")
   }
-  if (is.na(output_prefix)){
-    output_prefix = gsub(".rmap","",rmap)
-  }
+  #if (is.na(output_prefix)){
+  #  output_prefix = gsub(".rmap","",rmap)
+  #}
   brmp_filename = paste0(output_prefix,tag)
   
   test[,bin:=allBins]
@@ -177,9 +178,9 @@ editBaitmap <- function(bm,brmp,binsize,agg_baits=TRUE){
   } else {
     # “leave baited fragments unbinned” approach
     tag = paste0(tag,"_sol_baits.baitmap")
-    bm2 <- bm2[, .(V1[1],i.V2[1],i.V3[1], paste(V5, collapse=",")), by="bin"]
-    setcolorder(bm2, c(2:4,1,5))
   }
+  bm2 <- bm2[, .(V1[1],i.V2[1],i.V3[1], paste(V5, collapse=",")), by="bin"]
+  setcolorder(bm2, c(2:4,1,5))
   bm2_filename = paste0(output_prefix,tag)
   write.table(bm2, bm2_filename, col.names=F, sep="\t", quote=F, row.names=F)
   return(bm2)
