@@ -24,6 +24,15 @@ samplename=$4
 samplename1=`basename ${samplename}`
 nodelete=$5
 
+# Exit if subcommands error
+function check_error {
+retval=$1
+  if [ $retval -ne 0 ]; then
+    exit $retval;
+  fi
+}
+
+
 awk 'BEGIN{
    print "Checking rmap and baitmap files..." 
    ok=1
@@ -82,6 +91,7 @@ fi
 
 echo "Intersecting with bait fragments (using min overhang of 0.6)..."
 bedtools pairtobed -abam $bam -bedpe -b $baitfendsid -f 0.6 > ${samplename}/${bamname}_mappedToBaits.bedpe
+check_error $?
 
 echo "Flipping all reads that overlap with the bait on to the right-hand side..."
 awk 'BEGIN{ OFS="\t" }
@@ -95,6 +105,7 @@ awk 'BEGIN{ OFS="\t" }
               print $0
      }
 }' ${samplename}/${bamname}_mappedToBaits.bedpe > ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
+check_error $?
 
 if [ "$nodelete" != "nodelete" ]; then
 	rm ${samplename}/${bamname}_mappedToBaits.bedpe
@@ -103,9 +114,11 @@ fi
 echo "Intersecting with bait fragments again to produce a list of bait-to-bait interactions that can be used separately; note they will also be retained in the main output..."
 echo "##	samplename=${samplename}	bamname=${bamname}	baitmapfile=${baitfendsid}	digestfile=${digestbed}" > ${samplename}/${samplename1}_bait2bait.bedpe
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid >> ${samplename}/${samplename1}_bait2bait.bedpe
+check_error $?
 
 echo "Intersecting with restriction fragments (using min overhang of 0.6)..."
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wao -f 0.6 -b $digestbed > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
+check_error $?
 
 if [ "$nodelete" != "nodelete" ]; then
 	rm ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
@@ -130,6 +143,7 @@ END{
 	printf ("Filtered out %f reads with <60%% overlap with a single digestion fragment\n", i/(i+k)) 
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
+check_error $?
 
 if [ "$nodelete" != "nodelete" ]; then
         rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
@@ -150,6 +164,7 @@ perl -ne '{
            print "$_\t$l\t$d\n" 
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06.bedpe > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe
+check_error $?
 
 if [ "$nodelete" != "nodelete" ]; then
         rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06.bedpe
@@ -172,6 +187,7 @@ awk '{
          print key"\t"baitOtherEndN[key]"\t"baitOtherEndInfo[key];
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T ${samplename} >> ${samplename}/${samplename1}.chinput
+check_error $?
 
 if [ "$nodelete" != "nodelete" ]; then
 	rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe

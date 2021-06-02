@@ -20,7 +20,7 @@ Please refer to the Chicago R package vignette and the chicagoTools README file 
 
 *News*
 
-- A new version of bam2chicago script is released, bam2chicago_V02.sh, with improved usability and compatibility with HiCUP combinations script. 
+- A new version of bam2chicago script is released, bam2chicago_V02.sh, with improved usability and compatibility with HiCUP combinations script. Thanks to Richard Thompson for contributing further usability improvements to bam2chicago and bam2chicago_V02.
 
 - Suggested parameter set for four-cutters (tested with DpnII): maxLBrownEst=75000, binsize=1500, minFragLen=75, maxFragLen=1200.
 
