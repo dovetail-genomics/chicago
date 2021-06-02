@@ -59,6 +59,14 @@ function margs_check {
 	    exit 1 # error
 	fi
 }
+
+# Exit if subcommands error
+function check_error {
+retval=$1
+  if [ $retval -ne 0 ]; then
+    exit $retval;
+  fi
+}
 # Common functions - END
 
 # Main
@@ -89,8 +97,7 @@ do
                                   ;;
    -n    | --nodelete  )   nodelete="TRUE"
                                   ;;
-   -c    | --combinations  )  shift
-                            combinations="TRUE"
+   -c    | --combinations  ) combinations="TRUE"
                                   ;;
    -h     | --help )        help
                             exit
@@ -174,31 +181,37 @@ fi
 ###### Edit to parse bam files aligned by HiCUP Combinations branch. They have modified read names where pairs do not match; this throws a bedtools error. HiCUP adds 6 extra fields to the name, delimited by ":". We remove the extra fields and give each pair a unique number. Note that the HiCUP output file always has read pairs one after the other. Therefore, the order determines pairs and the readnames just need to match for bedtools to work.
 
 if [ $combinations == "TRUE" ]; then
+   command -v samtools >/dev/null 2>&1 || { echo >&2 "Error: Cannot execute Samtools. Check that it's installed and added to PATH. Aborting."; exit 1; } ## Added HRJ 13th May 2021
    samtools view $bam | cut -f 1 > ${samplename}/${bamname}_qnames
    bamcolno=`awk -F: '{print NF; exit}' ${samplename}/${bamname}_qnames`
-   if [ $bamcolno -gt 6 ]; then
+   if [ $bamcolno -gt 6 ]; then # makes sure that you have more than 6 fields
        echo "Removing excess fields in qnames made by HiCUP Combinations... "
        awk -F: '{for(i=0;++i<=NF-7;)printf $i":";print $(NF-6)}' ${samplename}/${bamname}_qnames > ${samplename}/${bamname}_newnames1
        sed 'N;s/\n/\t/' ${samplename}/${bamname}_newnames1 | cat -n | awk 'OFS="\t"{print $2"_"$1"\n"$3"_"$1}' > ${samplename}/${bamname}_newnames # Gives each pair an index, because some pairs will now have the same readname but represent different ditag permutations
        samtools view $bam | cut -f 2- > ${samplename}/${bamname}_torename
+       check_error $?
        samtools view -H $bam > ${samplename}/${bamname}_header
+       check_error $?
        paste ${samplename}/${bamname}_newnames ${samplename}/${bamname}_torename > ${samplename}/${bamname}_temp
        cat ${samplename}/${bamname}_header ${samplename}/${bamname}_temp > ${samplename}/${bamname}_2.sam
        samtools view -h -b ${samplename}/${bamname}_2.sam -o ${samplename}/${bamname}_2.bam
+       check_error $?
        rm ${samplename}/${bamname}_qnames ${samplename}/${bamname}_newnames1 ${samplename}/${bamname}_newnames ${samplename}/${bamname}_header ${samplename}/${bamname}_torename ${samplename}/${bamname}_temp ${samplename}/${bamname}_2.sam
        echo "Intersecting with bait fragments (using min overhang of 0.6)..."
        bedtools pairtobed -abam ${samplename}/${bamname}_2.bam -bedpe -b $baitfendsid -f 0.6 > ${samplename}/${bamname}_mappedToBaits.bedpe
+       check_error $?
        rm ${samplename}/${bamname}_2.bam
    else 
        echo "No excess fields detected in bam readnames. Are you sure that you used HiCUP Combinations?"
        echo "Attempting to intersect with bait fragments (using min overhang of 0.6)..."
        bedtools pairtobed -abam $bam -bedpe -b $baitfendsid -f 0.6 > ${samplename}/${bamname}_mappedToBaits.bedpe
-       rm ${bamname}_qnames
+       check_error $?
+       rm ${samplename}/${bamname}_qnames
    fi
 else 
    echo "Intersecting with bait fragments (using min overhang of 0.6)..."
    bedtools pairtobed -abam $bam -bedpe -b $baitfendsid -f 0.6 > ${samplename}/${bamname}_mappedToBaits.bedpe
-   rm ${bamname}_qnames
+   check_error $?
 fi
 
 
@@ -215,7 +228,8 @@ awk 'BEGIN{ OFS="\t" }
      else {
               print $0
      }
-}' ${samplename}/${bamname}_mappedToBaits.bedpe > ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
+}' ${samplename}/${bamname}_mappedToBaits.bedpe | sed 's/\t$//' > ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
+check_error $?
 
 if [ "$nodelete" != "TRUE" ]; then
 	rm ${samplename}/${bamname}_mappedToBaits.bedpe
@@ -224,9 +238,11 @@ fi
 echo "Intersecting with bait fragments again to produce a list of bait-to-bait interactions that can be used separately; note they will also be retained in the main output..."
 echo "##	samplename=${samplename}	bamname=${bamname}	baitmapfile=${baitfendsid}	digestfile=${digestbed}" > ${samplename}/${samplename1}_bait2bait.bedpe
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wo -f 0.6 -b $baitfendsid >> ${samplename}/${samplename1}_bait2bait.bedpe
+check_error $?
 
 echo "Intersecting with restriction fragments (using min overhang of 0.6)..."
 bedtools intersect -a ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe -wao -f 0.6 -b $digestbed > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
+check_error $?
 
 if [ "$nodelete" != "TRUE" ]; then
 	rm ${samplename}/${bamname}_mappedToBaits_baitOnRight.bedpe
@@ -251,6 +267,7 @@ END{
 	printf ("Filtered out %f reads with <60%% overlap with a single digestion fragment\n", i/(i+k)) 
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
+check_error $?
 
 if [ "$nodelete" != "TRUE" ]; then
         rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag.bedpe
@@ -271,6 +288,7 @@ perl -ne '{
            print "$_\t$l\t$d\n" 
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06.bedpe > ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe
+check_error $?
 
 if [ "$nodelete" != "TRUE" ]; then
         rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06.bedpe
@@ -293,6 +311,7 @@ awk '{
          print key"\t"baitOtherEndN[key]"\t"baitOtherEndInfo[key];
     }
 }' ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe | sort -k1,1 -k2,2n -T ${samplename} >> ${samplename}/${samplename1}.chinput
+check_error $?
 
 if [ "$nodelete" != "TRUE" ]; then
 	rm ${samplename}/${bamname}_mappedToBaitsBoRAndRFrag_fmore06_withDistSignLen.bedpe
