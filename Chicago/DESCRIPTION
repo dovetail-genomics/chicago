@@ -12,3 +12,4 @@ Suggests: argparser, BiocStyle, knitr, rmarkdown, PCHiCdata, testthat, Rsamtools
   GenomicInteractions, GenomicRanges, IRanges, AnnotationHub
 VignetteBuilder: knitr
 biocViews: Epigenetics, HiC, Sequencing, Software
+URL: https://github.com/dovetail-genomics/chicago
