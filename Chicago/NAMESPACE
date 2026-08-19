@@ -5,7 +5,7 @@ export(chicagoPipeline, copyCD, defaultSettings, estimateBrownianComponent, esti
 exportMethods(intData, settings, params, "intData<-", "params<-")
 
 
-import(data.table)
+importFrom(data.table, ":=", "%between%", .I, copy, data.table, first, foverlaps, fread, is.data.table, key, last, rbindlist, set, setcolorder, setDF, setDT, setkey, setkeyv, setnames, tables)
 import(methods)
 import(matrixStats)
 
